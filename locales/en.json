@@ -1,0 +1,61 @@
+{
+  "navigation": {
+    "home": "Home",
+    "browseTasks": "Browse Tasks",
+    "postTask": "Post a Task",
+    "howItWorks": "How it Works",
+    "becomeTasker": "Become a Tasker",
+    "login": "Log In",
+    "signUp": "Sign Up"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Get Anything Done",
+      "subtitle": "Post any task. Pick the best person. Get it done.",
+      "postTaskButton": "Post your task for free",
+      "earnMoneyButton": "Earn money as a Tasker"
+    },
+    "stats": {
+      "customers": "1M+ customers",
+      "tasksDone": "2.5M+ tasks done",
+      "reviews": "4M+ user reviews"
+    },
+    "howItWorks": {
+      "title": "Post your first task in seconds",
+      "subtitle": "Save yourself hours and get your to-do list completed",
+      "step1": "Describe what you need done",
+      "step2": "Set your budget",
+      "step3": "Receive quotes and pick the best Tasker"
+    },
+    "popularCategories": {
+      "title": "Popular Categories",
+      "cleaning": "Home Cleaning",
+      "delivery": "Delivery Services",
+      "handyman": "Handyman",
+      "gardening": "Gardening & Landscaping",
+      "painting": "Painting",
+      "assembly": "Furniture Assembly",
+      "removals": "Removals",
+      "business": "Business & Admin",
+      "marketing": "Marketing & Design"
+    }
+  },
+  "common": {
+    "currency": "LKR",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "location": "Location",
+    "budget": "Budget",
+    "date": "Date",
+    "viewAll": "View All",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started"
+  },
+  "language": {
+    "switch": "Language",
+    "english": "English",
+    "sinhala": "සිංහල",
+    "tamil": "தமிழ்"
+  }
+}
