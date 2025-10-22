@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { Search, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
 import { formatCurrency } from '@/lib/utils';
@@ -77,7 +76,6 @@ const mockTasks = [
 ];
 
 export default function BrowseTasksPage() {
-  const t = useTranslations('navigation');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -107,7 +105,7 @@ export default function BrowseTasksPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('browseTasks')}
+            Browse Tasks
           </h1>
           <p className="text-gray-600">
             Find tasks that match your skills and start earning today.

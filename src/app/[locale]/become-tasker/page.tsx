@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield } from 'lucide-react';
 
 export default function BecomeTaskerPage() {
-  const t = useTranslations('navigation');
   const [formData, setFormData] = useState({
     name: '',
     email: '',

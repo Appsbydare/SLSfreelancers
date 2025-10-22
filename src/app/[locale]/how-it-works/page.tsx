@@ -1,9 +1,7 @@
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Star, Shield, Clock, MessageCircle } from 'lucide-react';
 
 export default function HowItWorksPage() {
-  const t = useTranslations('homepage');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,7 +33,7 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {t('howItWorks.step1')}
+                Create Your Profile
               </h3>
               <p className="text-gray-600 mb-6">
                 Post your task with details, budget, and location. Be specific about what you need done.
@@ -54,7 +52,7 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-blue-600">2</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {t('howItWorks.step2')}
+                Browse & Apply
               </h3>
               <p className="text-gray-600 mb-6">
                 Set your budget range to help taskers understand your expectations and attract quality offers.
@@ -66,7 +64,7 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-blue-600">3</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {t('howItWorks.step3')}
+                Complete & Get Paid
               </h3>
               <p className="text-gray-600 mb-6">
                 Review offers from skilled taskers, check their profiles and reviews, then choose the best one.

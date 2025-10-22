@@ -1,22 +1,19 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header() {
-  const t = useTranslations('navigation');
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: t('browseTasks'), href: '/browse-tasks' },
-    { name: t('postTask'), href: '/post-task' },
-    { name: t('howItWorks'), href: '/how-it-works' },
-    { name: t('becomeTasker'), href: '/become-tasker' },
+    { name: 'Browse Tasks', href: '/browse-tasks' },
+    { name: 'Post a Task', href: '/post-task' },
+    { name: 'How it Works', href: '/how-it-works' },
+    { name: 'Become a Tasker', href: '/become-tasker' },
   ];
 
   return (
@@ -52,22 +49,21 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right side - Language switcher and auth buttons */}
+          {/* Right side - auth buttons */}
           <div className="flex items-center space-x-4">
-            <LanguageSwitcher />
             
             <div className="hidden md:flex items-center space-x-4">
               <Link
                 href="/login"
                 className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium"
               >
-                {t('login')}
+                Log In
               </Link>
               <Link
                 href="/signup"
                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
               >
-                {t('signUp')}
+                Sign Up
               </Link>
             </div>
 
@@ -109,14 +105,14 @@ export default function Header() {
                   className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {t('login')}
+                  Log In
                 </Link>
                 <Link
                   href="/signup"
                   className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {t('signUp')}
+                  Sign Up
                 </Link>
               </div>
             </div>

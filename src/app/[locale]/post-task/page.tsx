@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { ArrowRight, Upload, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
 
 export default function PostTaskPage() {
-  const t = useTranslations('navigation');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,7 +44,7 @@ export default function PostTaskPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('postTask')}
+            Post a Task
           </h1>
           <p className="text-gray-600">
             Describe what you need done and get quotes from skilled professionals.

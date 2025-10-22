@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 
 export default function Footer() {
-  const t = useTranslations('navigation');
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -41,22 +39,22 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/browse-tasks" className="text-gray-300 hover:text-white">
-                  {t('browseTasks')}
+                  Browse Tasks
                 </Link>
               </li>
               <li>
                 <Link href="/post-task" className="text-gray-300 hover:text-white">
-                  {t('postTask')}
+                  Post a Task
                 </Link>
               </li>
               <li>
                 <Link href="/how-it-works" className="text-gray-300 hover:text-white">
-                  {t('howItWorks')}
+                  How it Works
                 </Link>
               </li>
               <li>
                 <Link href="/become-tasker" className="text-gray-300 hover:text-white">
-                  {t('becomeTasker')}
+                  Become a Tasker
                 </Link>
               </li>
             </ul>

@@ -1,22 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
 import { categories } from '@/data/categories';
 
 export default function CategoryGrid() {
-  const t = useTranslations('homepage.popularCategories');
-  const locale = useLocale();
 
   const getCategoryName = (category: typeof categories[0]) => {
-    switch (locale) {
-      case 'si':
-        return category.nameSi;
-      case 'ta':
-        return category.nameTa;
-      default:
-        return category.name;
-    }
+    return category.name;
   };
 
   return (
@@ -24,7 +14,7 @@ export default function CategoryGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            {t('title')}
+            Popular Categories
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Find the perfect person for any task, from home cleaning to business services.
@@ -58,7 +48,7 @@ export default function CategoryGrid() {
             href="/browse-tasks"
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
           >
-            {t('viewAll')}
+            View All
           </Link>
         </div>
       </div>

@@ -1,10 +1,8 @@
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Star, Users, Clock } from 'lucide-react';
 import CategoryGrid from '@/components/CategoryGrid';
 
 export default function Home() {
-  const t = useTranslations('homepage');
 
   return (
     <div className="min-h-screen">
@@ -13,10 +11,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              {t('hero.title')}
+              Get Anything Done
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              {t('hero.subtitle')}
+              Post any task. Pick the best person. Get it done.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -24,14 +22,14 @@ export default function Home() {
                 href="/post-task"
                 className="inline-flex items-center px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {t('hero.postTaskButton')}
+                Post your task for free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 href="/become-tasker"
                 className="inline-flex items-center px-8 py-4 bg-white text-blue-600 text-lg font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors"
               >
-                {t('hero.earnMoneyButton')}
+                Earn money as a Tasker
               </Link>
             </div>
 
@@ -39,15 +37,15 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">1M+</div>
-                <div className="text-gray-600">{t('stats.customers')}</div>
+                <div className="text-gray-600">1M+ customers</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">2.5M+</div>
-                <div className="text-gray-600">{t('stats.tasksDone')}</div>
+                <div className="text-gray-600">2.5M+ tasks done</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">4M+</div>
-                <div className="text-gray-600">{t('stats.reviews')}</div>
+                <div className="text-gray-600">4M+ user reviews</div>
               </div>
             </div>
           </div>
@@ -59,10 +57,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('howItWorks.title')}
+              Post your first task in seconds
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {t('howItWorks.subtitle')}
+              Save yourself hours and get your to-do list completed
             </p>
           </div>
 
@@ -72,7 +70,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('howItWorks.step1')}
+                Describe what you need done
               </h3>
             </div>
             <div className="text-center">
@@ -80,7 +78,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-blue-600">2</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('howItWorks.step2')}
+                Set your budget
               </h3>
             </div>
             <div className="text-center">
@@ -88,7 +86,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-blue-600">3</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('howItWorks.step3')}
+                Receive quotes and pick the best Tasker
               </h3>
             </div>
           </div>
