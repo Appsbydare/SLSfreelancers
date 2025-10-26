@@ -158,21 +158,17 @@ export default function SriLankaMap({
             ))}
 
             {/* Legend */}
-            <g transform="translate(50, 1100)">
-              <rect width="320" height="80" fill="white" fillOpacity="0.95" rx="12" stroke="#e5e7eb" strokeWidth="2" />
-              <text x="20" y="30" className="text-base font-semibold fill-gray-800" style={{ fontSize: '20px' }}>
-                {t('legend.title')}
-              </text>
-              <circle cx="30" cy="56" r="8" fill="#10b981" />
-              <text x="50" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
+            <g transform="translate(450, 1100)">
+              <circle cx="10" cy="20" r="8" fill="#10b981" />
+              <text x="25" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.popular')}
               </text>
-              <circle cx="160" cy="56" r="8" fill="#e5e7eb" />
-              <text x="180" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
+              <circle cx="10" cy="45" r="8" fill="#e5e7eb" />
+              <text x="25" y="53" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.regular')}
               </text>
-              <circle cx="280" cy="56" r="8" fill="#3b82f6" />
-              <text x="300" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
+              <circle cx="10" cy="70" r="8" fill="#3b82f6" />
+              <text x="25" y="78" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.selected')}
               </text>
             </g>
