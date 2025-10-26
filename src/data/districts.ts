@@ -1,6 +1,6 @@
 // Sri Lankan districts data with accurate geographic coordinates
-// SVG paths created based on actual geographic boundaries of Sri Lanka
-// ViewBox: 0 0 800 1200 (proportional to Sri Lanka's actual dimensions)
+// Generated from GeoJSON data source: SimpleMaps
+// Coordinates are converted to SVG paths for optimal rendering
 
 export interface District {
   id: string;
@@ -17,347 +17,561 @@ export interface District {
 }
 
 export const districts: District[] = [
-  // Northern Province
   {
-    id: 'jaffna',
-    name: 'Jaffna',
-    nameSi: 'යාපනය',
-    nameTa: 'யாழ்ப்பாணம்',
-    province: 'Northern',
-    population: 583882,
-    area: 1025,
-    coordinates: 'M 400,50 L 480,40 L 520,60 L 530,90 L 500,110 L 450,100 L 420,80 Z',
-    center: { x: 470, y: 75 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin']
+    "id": "ampara",
+    "name": "Ampara",
+    "nameSi": "අම්පාර",
+    "nameTa": "அம்பாறை",
+    "province": "Eastern",
+    "population": 649402,
+    "area": 4415,
+    "coordinates": "M 695.2,982.2 L 685.5,979.3 L 680.7,974.1 L 673.6,973.4 L 664.9,963.3 L 672.5,862.4 L 665.5,841.7 L 667.4,831.1 L 640.5,820.5 L 633.3,806 L 636.7,797.5 L 647.6,787.2 L 641.2,779 L 636.3,766.5 L 629.9,761.2 L 626.2,731.2 L 622.4,729.8 L 626.8,723.5 L 621,722.1 L 607,728.2 L 603.9,733.7 L 596.9,734.9 L 598.9,745 L 594.2,751.9 L 588.3,755 L 581,754.7 L 582.6,775.5 L 571.3,781.2 L 559.5,755.8 L 553.4,755.8 L 545.8,745.3 L 541.9,726.4 L 547.4,707.7 L 546.3,694 L 533.3,691.3 L 512.8,704.2 L 501,707.9 L 493.8,696.6 L 489.2,681.7 L 484,678.4 L 486.8,665.4 L 484.3,649.3 L 506,647.4 L 516.6,651.2 L 525.2,659.3 L 551.9,667.8 L 557.4,656.9 L 557.8,644.2 L 582.9,647.6 L 599.3,666.9 L 617.5,670.9 L 614.8,691.8 L 631.6,705.5 L 650.7,708.6 L 670.1,706.7 L 677,703.1 L 682.4,736.7 L 698.5,722.8 L 712.1,720.8 L 714.7,722.3 L 717.1,719.5 L 718.9,719.5 L 721.1,734.7 L 723.1,734.7 L 727.1,721.4 L 726.3,717.3 L 731,719.5 L 744.4,757.5 L 743,822.2 L 747.2,842 L 732.1,896.6 L 730,912 L 723.2,927.8 L 714.9,940 L 716.9,946.7 L 713.7,954.6 L 695.2,982.2 Z",
+    "center": {
+      "x": 628,
+      "y": 764
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'kilinochchi',
-    name: 'Kilinochchi',
-    nameSi: 'කිලිනොච්චිය',
-    nameTa: 'கிளிநொச்சி',
-    province: 'Northern',
-    population: 113510,
-    area: 1279,
-    coordinates: 'M 380,130 L 450,120 L 480,140 L 470,180 L 420,170 L 390,160 Z',
-    center: { x: 430, y: 150 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements']
+    "id": "anuradhapura",
+    "name": "Anuradhapura",
+    "nameSi": "අනුරාධපුරය",
+    "nameTa": "அனுராதபுரம்",
+    "province": "North Central",
+    "population": 860575,
+    "area": 7179,
+    "coordinates": "M 415.5,323.6 L 423.7,320.5 L 432.3,320.6 L 452.4,332.9 L 462,342.4 L 453.7,356.3 L 453.8,368.1 L 461.5,384.9 L 456.9,394.8 L 457.2,400.4 L 462.8,405.9 L 464,412.4 L 483.7,442.1 L 473.6,452 L 465.4,479.9 L 461.6,483.5 L 458.2,493.2 L 454.5,495.3 L 430,497.3 L 419.1,529.7 L 416.6,550 L 422.5,554.4 L 416.8,561.9 L 416.4,569.1 L 404.7,574.1 L 393.6,583.9 L 388.5,583.3 L 386.9,592.9 L 380.4,600.5 L 381.2,603.7 L 375.1,609.4 L 370.8,612.2 L 362.6,609.8 L 357.4,615.7 L 341.4,623.4 L 334,616.7 L 335.1,607.2 L 330.2,589.7 L 327.7,585.9 L 319,584 L 318.4,561.4 L 303.2,555.1 L 289.7,544 L 232,521.8 L 218.2,511.4 L 212.3,511.6 L 207,507.9 L 196.1,510 L 187,477.4 L 182.7,469.7 L 185.9,462.9 L 190.8,460.8 L 192.5,456.4 L 201.7,449.4 L 207,438.9 L 205.3,427.6 L 210.5,429 L 211.1,403.5 L 208.8,387.4 L 221.8,392.3 L 236.1,392.4 L 264.5,385.4 L 264.6,394.3 L 267.6,402.1 L 276.3,405.3 L 282.4,418.3 L 294.4,422.3 L 298.9,414.8 L 304.1,412.7 L 309.5,400.8 L 321,386.9 L 329.9,383.1 L 340.2,389 L 349.5,389 L 364.6,377.2 L 385.6,355.4 L 377.8,341.8 L 370.2,339.3 L 369.6,333.3 L 391.3,332.6 L 399.8,327.1 L 415.5,323.6 Z",
+    "center": {
+      "x": 343,
+      "y": 462
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'mannar',
-    name: 'Mannar',
-    nameSi: 'මන්නාරම',
-    nameTa: 'மன்னார்',
-    province: 'Northern',
-    population: 99570,
-    area: 1996,
-    coordinates: 'M 280,140 L 360,135 L 380,160 L 370,200 L 320,210 L 290,190 L 270,170 Z',
-    center: { x: 325, y: 170 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery']
+    "id": "badulla",
+    "name": "Badulla",
+    "nameSi": "බදුල්ල",
+    "nameTa": "பதுளை",
+    "province": "Uva",
+    "population": 815405,
+    "area": 2861,
+    "coordinates": "M 484,678.4 L 489.2,681.7 L 493.8,696.6 L 501,707.9 L 512.8,704.2 L 533.3,691.3 L 546.3,694 L 547.4,707.7 L 541.9,726.4 L 545.8,745.3 L 553.4,755.8 L 559.5,755.8 L 566.4,771.4 L 555,773.9 L 552.8,784.8 L 542.2,798.5 L 537.3,800.4 L 533.2,796.3 L 528.5,795.7 L 525,800.6 L 524.1,806.2 L 538.6,823.7 L 549.3,821 L 556.2,828.6 L 558.5,841.2 L 550.3,867.9 L 543.6,867.4 L 533.9,877.6 L 520.2,882.8 L 527.3,892.1 L 518.9,894.5 L 516.3,899.1 L 506.4,899.9 L 506.3,911.6 L 503.9,916.6 L 505,920.2 L 510.1,921.4 L 510.5,926.3 L 506.1,932.6 L 505.6,940.8 L 512.7,954.9 L 506.6,956.9 L 505.7,963.4 L 499.4,960.1 L 495.3,966.1 L 494.1,973.4 L 488.2,965.7 L 486.9,956.9 L 482.9,954.9 L 478.2,943.2 L 473.6,941.6 L 470,933.6 L 461.2,933.7 L 448.2,940.5 L 437.1,935.9 L 434,931.4 L 435.4,927.8 L 443.3,924.4 L 446,918.6 L 437,913 L 432.7,914.8 L 431.9,904.7 L 437.4,903.4 L 440.4,899.5 L 435.1,896.6 L 439.3,890.1 L 433.1,878.5 L 423.8,874.1 L 423.5,869.7 L 434.2,869.7 L 444.2,856.1 L 460.5,851.5 L 476.2,825.9 L 474.2,819.1 L 477.6,814.3 L 474.6,809.1 L 473.3,794.8 L 483.2,791 L 491.1,784.2 L 491.6,775.2 L 485.2,755.3 L 481.2,691.3 L 484,678.4 Z",
+    "center": {
+      "x": 495,
+      "y": 850
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'mullaitivu',
-    name: 'Mullaitivu',
-    nameSi: 'මුලතිව්',
-    nameTa: 'முல்லைத்தீவு',
-    province: 'Northern',
-    population: 92238,
-    area: 2617,
-    coordinates: 'M 460,130 L 540,125 L 560,150 L 550,190 L 490,195 L 470,170 Z',
-    center: { x: 510, y: 160 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery']
+    "id": "batticaloa",
+    "name": "Batticaloa",
+    "nameSi": "මඩකලපුව",
+    "nameTa": "மட்டக்களப்பு",
+    "province": "Eastern",
+    "population": 526567,
+    "area": 2610,
+    "coordinates": "M 578,501.7 L 582.9,500.1 L 609,502.7 L 618.3,537.3 L 613,544.2 L 605.2,519.8 L 603.1,519.8 L 603.1,535 L 614.5,546.9 L 619.5,546.5 L 621.2,540.6 L 622.9,540.6 L 627.7,554.5 L 639.1,572.7 L 643.2,568.8 L 645.1,576.3 L 651,572.7 L 652.6,576.1 L 651,583.9 L 661.2,595.2 L 657.2,596.9 L 655.5,602.9 L 658.9,612.3 L 664.9,618.8 L 673.1,617.7 L 678.1,628.1 L 694.8,646.4 L 695.5,651.7 L 689,653.6 L 675.1,640.1 L 670.2,638.4 L 663.2,641.7 L 661.2,647.8 L 668,649.7 L 673.1,645.9 L 679.7,648.6 L 681.1,653.6 L 695,668.6 L 693.2,671.8 L 695,676.3 L 696.9,674.2 L 695.8,670.5 L 706,676.3 L 712.9,691.3 L 711,698.8 L 712.9,703.4 L 708.5,708.5 L 714.9,717.6 L 712.1,720.8 L 698.5,722.8 L 682.4,736.7 L 677,703.1 L 670.1,706.7 L 650.7,708.6 L 631.6,705.5 L 614.8,691.8 L 617.5,670.9 L 599.3,666.9 L 582.9,647.6 L 557.8,644.2 L 553.7,623 L 558.5,593.8 L 565,589.7 L 586.6,589.7 L 577.2,559.4 L 579.5,516 L 578,501.7 Z",
+    "center": {
+      "x": 647,
+      "y": 621
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'vavuniya',
-    name: 'Vavuniya',
-    nameSi: 'වවුනියාව',
-    nameTa: 'வவுனியா',
-    province: 'Northern',
-    population: 171511,
-    area: 1967,
-    coordinates: 'M 370,210 L 450,200 L 470,230 L 460,270 L 410,280 L 380,260 L 360,240 Z',
-    center: { x: 415, y: 240 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin']
-  },
-
-  // North Central Province
-  {
-    id: 'anuradhapura',
-    name: 'Anuradhapura',
-    nameSi: 'අනුරාධපුරය',
-    nameTa: 'அனுராதபுரம்',
-    province: 'North Central',
-    population: 860575,
-    area: 7179,
-    coordinates: 'M 300,240 L 390,230 L 450,250 L 470,310 L 440,370 L 380,380 L 320,360 L 290,310 L 280,270 Z',
-    center: { x: 375, y: 305 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive']
+    "id": "colombo",
+    "name": "Colombo",
+    "nameSi": "කොළඹ",
+    "nameTa": "கொழும்பு",
+    "province": "Western",
+    "population": 2323826,
+    "area": 699,
+    "coordinates": "M 151.9,857.1 L 168.1,862.9 L 173.1,860.8 L 187.6,864.8 L 197.6,863.5 L 208.3,870.5 L 216.8,872.3 L 223.1,872 L 224.6,861.4 L 229.2,857.1 L 235,854.6 L 254.5,854 L 259.6,856.4 L 260.5,861.4 L 256.6,864.8 L 257.1,870.2 L 247.5,886.2 L 254.6,893.4 L 248.2,898.8 L 239.7,896.9 L 230.2,900.7 L 232.1,908.7 L 226.4,907.3 L 222.6,899 L 219.3,897.9 L 211.1,904 L 204.7,902.9 L 193.5,912 L 178.4,917 L 164.9,909.2 L 166.8,926.7 L 155.9,900.5 L 151.5,877.7 L 151.9,857.1 Z",
+    "center": {
+      "x": 212,
+      "y": 882
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "business-admin",
+      "creative-digital",
+      "events-entertainment",
+      "beauty-wellness",
+      "automotive",
+      "pet-care",
+      "lessons-training"
+    ]
   },
   {
-    id: 'polonnaruwa',
-    name: 'Polonnaruwa',
-    nameSi: 'පොළොන්නරුව',
-    nameTa: 'பொலன்னறுவை',
-    province: 'North Central',
-    population: 406088,
-    area: 3293,
-    coordinates: 'M 470,310 L 540,300 L 570,330 L 580,380 L 550,420 L 490,430 L 460,390 L 450,350 Z',
-    center: { x: 515, y: 365 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
-  },
-
-  // North Western Province
-  {
-    id: 'kurunegala',
-    name: 'Kurunegala',
-    nameSi: 'කුරුණෑගල',
-    nameTa: 'குருணாகல்',
-    province: 'North Western',
-    population: 1618465,
-    area: 4816,
-    coordinates: 'M 250,370 L 340,360 L 410,380 L 430,430 L 410,490 L 350,510 L 290,500 L 250,460 L 230,420 Z',
-    center: { x: 330, y: 440 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive', 'pet-care']
+    "id": "galle",
+    "name": "Galle",
+    "nameSi": "ගාල්ල",
+    "nameTa": "காலி",
+    "province": "Southern",
+    "population": 1063334,
+    "area": 1652,
+    "coordinates": "M 190.6,1001.2 L 195.9,1005.2 L 200.7,1002.8 L 204.4,1007.1 L 226.2,1015.2 L 235.7,1022.1 L 248.4,1024.4 L 256.3,1020.2 L 265.2,1019.5 L 282.9,1033.2 L 281.2,1015.8 L 296.8,1007.6 L 307.2,1005.4 L 314.8,1012 L 337.8,1018 L 340.3,1021.4 L 330.3,1026.9 L 338.3,1036 L 336.6,1043.8 L 327.5,1041.8 L 315.8,1032.6 L 306.3,1032.4 L 321.1,1049.3 L 323.3,1057.1 L 318.2,1063 L 308,1061.3 L 312.4,1069.2 L 307.7,1080.2 L 309.5,1085.5 L 323.8,1096.8 L 309.5,1109.7 L 310.4,1112.6 L 317.8,1115.8 L 307.5,1126.3 L 308.1,1132.5 L 300.4,1128.4 L 295.3,1130.5 L 291.3,1126.6 L 268,1120 L 257.4,1113.2 L 255.3,1115.3 L 224.1,1086.1 L 205.2,1049.3 L 199.3,1023.1 L 194,1014.1 L 190.6,1001.2 Z",
+    "center": {
+      "x": 280,
+      "y": 1055
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'puttalam',
-    name: 'Puttalam',
-    nameSi: 'පුත්තලම',
-    nameTa: 'புத்தளம்',
-    province: 'North Western',
-    population: 762396,
-    area: 3072,
-    coordinates: 'M 200,280 L 270,270 L 290,310 L 280,370 L 240,420 L 200,430 L 170,390 L 160,340 L 180,300 Z',
-    center: { x: 225, y: 355 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements']
-  },
-
-  // Central Province
-  {
-    id: 'kandy',
-    name: 'Kandy',
-    nameSi: 'මහනුවර',
-    nameTa: 'கண்டி',
-    province: 'Central',
-    population: 1375382,
-    area: 1940,
-    coordinates: 'M 380,510 L 450,500 L 480,530 L 490,570 L 460,600 L 410,610 L 370,590 L 360,550 Z',
-    center: { x: 425, y: 555 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'events-entertainment', 'beauty-wellness', 'automotive', 'pet-care']
+    "id": "gampaha",
+    "name": "Gampaha",
+    "nameSi": "ගම්පහ",
+    "nameTa": "கம்பஹா",
+    "province": "Western",
+    "population": 2300000,
+    "area": 1387,
+    "coordinates": "M 145.6,771.6 L 163.6,769.9 L 165.9,772.3 L 173.6,770.2 L 178.7,772 L 196,761.6 L 203,761.3 L 211.1,766.6 L 234.8,758.2 L 252.3,776.8 L 249.1,792 L 240.7,797.6 L 239.5,805.4 L 243,812.3 L 250.2,810.7 L 256.3,812.4 L 246.2,827.8 L 244.7,835.8 L 249,848.8 L 248.2,853.6 L 229.2,857.1 L 224.6,861.4 L 223.1,872 L 216.8,872.3 L 208.3,870.5 L 197.6,863.5 L 187.6,864.8 L 173.1,860.8 L 168.1,862.9 L 151.9,857.1 L 155.5,844.2 L 141.5,797.8 L 143.4,791 L 143.3,795.2 L 151.5,813.7 L 155.5,809.9 L 155.5,801.5 L 153.3,794.7 L 145.2,789.6 L 147.4,783.5 L 145.6,771.6 Z",
+    "center": {
+      "x": 195,
+      "y": 812
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "business-admin",
+      "creative-digital",
+      "events-entertainment",
+      "beauty-wellness",
+      "automotive",
+      "pet-care",
+      "lessons-training"
+    ]
   },
   {
-    id: 'matale',
-    name: 'Matale',
-    nameSi: 'මාතලේ',
-    nameTa: 'மாத்தளை',
-    province: 'Central',
-    population: 484531,
-    area: 1993,
-    coordinates: 'M 380,420 L 450,410 L 480,440 L 490,480 L 470,510 L 420,520 L 380,510 L 360,470 Z',
-    center: { x: 435, y: 465 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
+    "id": "hambantota",
+    "name": "Hambantota",
+    "nameSi": "හම්බන්තොට",
+    "nameTa": "அம்பாந்தோட்டை",
+    "province": "Southern",
+    "population": 599903,
+    "area": 2609,
+    "coordinates": "M 408.7,1129.2 L 399.6,1125.2 L 396.2,1120.2 L 398.4,1116.8 L 389,1112.8 L 388.3,1108.4 L 397.8,1104.6 L 394.6,1094 L 398.3,1089.3 L 386.9,1086.8 L 385.9,1082.1 L 389,1076.8 L 374.3,1070.4 L 377.8,1058.6 L 389,1050.6 L 387,1046.3 L 388.5,1039.4 L 407.9,1041.3 L 429.3,1048.7 L 446.1,1047.7 L 453.9,1054.7 L 470.7,1058.6 L 472.2,1053.8 L 464.1,1041.2 L 493.2,1026 L 490.4,1019.9 L 491.8,1013.6 L 499.5,1013.4 L 501.8,1006.5 L 505.4,1008.9 L 508.2,1006 L 522.7,1006.8 L 532.8,1013.9 L 542.3,1011.6 L 552.2,1025.4 L 559.5,1028.2 L 570.4,1021.4 L 603.8,1009.1 L 607.1,1010.2 L 614.9,1007.6 L 623,1009.3 L 629.3,995.2 L 627.6,986.8 L 651.8,970.4 L 659.6,969 L 664.9,963.3 L 673.6,973.4 L 680.7,974.1 L 685.5,979.3 L 695.2,982.2 L 686.3,995.4 L 677.1,1004 L 660.2,1015.3 L 647.2,1020.6 L 593.1,1060.5 L 547.1,1077.7 L 546.6,1073.5 L 542.2,1072.6 L 539,1081.1 L 520.3,1089.4 L 459.1,1103 L 451.8,1105.7 L 447.3,1111.5 L 439.4,1110.1 L 431.8,1112.8 L 408.7,1129.2 Z",
+    "center": {
+      "x": 509,
+      "y": 1046
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'nuwara-eliya',
-    name: 'Nuwara Eliya',
-    nameSi: 'නුවරඑළිය',
-    nameTa: 'நுவரெலியா',
-    province: 'Central',
-    population: 711644,
-    area: 1741,
-    coordinates: 'M 380,610 L 450,600 L 480,630 L 490,670 L 460,700 L 410,710 L 370,690 L 360,650 Z',
-    center: { x: 425, y: 655 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'events-entertainment', 'beauty-wellness']
-  },
-
-  // Eastern Province
-  {
-    id: 'trincomalee',
-    name: 'Trincomalee',
-    nameSi: 'ත්‍රිකුණාමලය',
-    nameTa: 'திருகோணமலை',
-    province: 'Eastern',
-    population: 379541,
-    area: 2727,
-    coordinates: 'M 540,330 L 620,320 L 650,350 L 660,400 L 640,450 L 590,460 L 560,430 L 550,380 Z',
-    center: { x: 600, y: 390 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive']
+    "id": "jaffna",
+    "name": "Jaffna",
+    "nameSi": "යාපනය",
+    "nameTa": "யாழ்ப்பாணம்",
+    "province": "Northern",
+    "population": 583882,
+    "area": 1025,
+    "coordinates": "M 270.5,128.2 L 246.5,119.1 L 247.2,125.8 L 254.2,132.7 L 250.1,136.9 L 223.3,120.2 L 235.4,131.4 L 221.3,127.5 L 196.1,112 L 180.4,106.9 L 177.5,97.5 L 169.5,86.2 L 192.5,71.2 L 231.5,72.3 L 233.8,83.7 L 245.7,86.5 L 248.5,89.7 L 257.4,88.3 L 260.7,90 L 280.6,110.3 L 270.5,128.2 Z",
+    "center": {
+      "x": 233,
+      "y": 107
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'batticaloa',
-    name: 'Batticaloa',
-    nameSi: 'මඩකලපුව',
-    nameTa: 'மட்டக்களப்பு',
-    province: 'Eastern',
-    population: 526567,
-    area: 2610,
-    coordinates: 'M 580,480 L 650,470 L 670,510 L 680,570 L 660,620 L 610,630 L 580,600 L 570,550 Z',
-    center: { x: 625, y: 550 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive']
+    "id": "kalutara",
+    "name": "Kalutara",
+    "nameSi": "කළුතර",
+    "nameTa": "களுத்துறை",
+    "province": "Western",
+    "population": 1222000,
+    "area": 1598,
+    "coordinates": "M 166.8,926.7 L 164.9,909.2 L 178.4,917 L 193.5,912 L 204.7,902.9 L 211.1,904 L 219.3,897.9 L 222.6,899 L 226.4,907.3 L 232.1,908.7 L 230.2,900.7 L 239.7,896.9 L 248.2,898.8 L 258.6,932.1 L 267.5,940.2 L 269.2,948.2 L 283,958.1 L 287.2,965.7 L 282.8,967.3 L 284.3,971.9 L 307.2,1005.4 L 296.8,1007.6 L 281.2,1015.8 L 282.9,1033.2 L 265.2,1019.5 L 256.3,1020.2 L 248.4,1024.4 L 235.7,1022.1 L 226.2,1015.2 L 204.4,1007.1 L 200.7,1002.8 L 195.9,1005.2 L 185.4,992.7 L 189.4,990.9 L 187,975.3 L 166.8,926.7 Z",
+    "center": {
+      "x": 233,
+      "y": 959
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'ampara',
-    name: 'Ampara',
-    nameSi: 'අම්පාර',
-    nameTa: 'அம்பாறை',
-    province: 'Eastern',
-    population: 649402,
-    area: 4415,
-    coordinates: 'M 540,630 L 620,620 L 650,650 L 660,710 L 640,760 L 590,770 L 550,750 L 530,710 L 520,670 Z',
-    center: { x: 590, y: 695 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
-  },
-
-  // Uva Province
-  {
-    id: 'badulla',
-    name: 'Badulla',
-    nameSi: 'බදුල්ල',
-    nameTa: 'பதுளை',
-    province: 'Uva',
-    population: 815405,
-    area: 2861,
-    coordinates: 'M 460,710 L 530,700 L 560,730 L 570,780 L 550,830 L 500,840 L 460,820 L 440,770 Z',
-    center: { x: 505, y: 770 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
+    "id": "kandy",
+    "name": "Kandy",
+    "nameSi": "මහනුවර",
+    "nameTa": "கண்டி",
+    "province": "Central",
+    "population": 1375382,
+    "area": 1940,
+    "coordinates": "M 331,839.7 L 333.3,830 L 326.7,816.7 L 330.1,813.8 L 340.2,812.2 L 344.7,807.6 L 351.1,806.7 L 355.1,799.7 L 347.4,791.8 L 348.1,782.9 L 334.7,773.4 L 335.1,768 L 322.5,757.7 L 318.9,749.3 L 330.2,748.4 L 332.7,736.8 L 346.4,740.1 L 346.3,734.2 L 358,731.2 L 353.9,724 L 360.8,721.7 L 366.8,729.4 L 385.3,740.3 L 396.1,740.9 L 402.3,734.4 L 401.3,724.3 L 403,720.1 L 407.1,717.8 L 422.3,727.7 L 430.7,726.5 L 439.9,719.4 L 451.9,719.5 L 456.7,717.3 L 460.2,721.4 L 467.5,713.7 L 482.6,713.8 L 485.2,755.3 L 491.6,775.2 L 491.1,784.2 L 483.2,791 L 473.3,794.8 L 461.2,792.5 L 438,793.4 L 431.3,783.5 L 425.7,782.2 L 416.5,772.7 L 420.1,791 L 395.4,821.2 L 384.7,820 L 376.2,825.5 L 359.7,825.5 L 353.1,830.5 L 357.8,830.7 L 370.7,847.9 L 367.2,857.1 L 360.9,863.4 L 352.4,858.7 L 339.4,840.4 L 331,839.7 Z",
+    "center": {
+      "x": 388,
+      "y": 777
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "business-admin",
+      "creative-digital",
+      "events-entertainment",
+      "beauty-wellness",
+      "automotive",
+      "pet-care",
+      "lessons-training"
+    ]
   },
   {
-    id: 'monaragala',
-    name: 'Monaragala',
-    nameSi: 'මොණරාගල',
-    nameTa: 'மொனராகலை',
-    province: 'Uva',
-    population: 451058,
-    area: 5639,
-    coordinates: 'M 490,840 L 560,830 L 590,860 L 600,920 L 580,970 L 530,980 L 490,960 L 470,910 Z',
-    center: { x: 535, y: 905 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements']
-  },
-
-  // Sabaragamuwa Province
-  {
-    id: 'ratnapura',
-    name: 'Ratnapura',
-    nameSi: 'රත්නපුර',
-    nameTa: 'இரத்தினபுரி',
-    province: 'Sabaragamuwa',
-    population: 1088007,
-    area: 3275,
-    coordinates: 'M 320,660 L 390,650 L 430,680 L 450,730 L 440,780 L 390,800 L 340,790 L 310,750 L 300,710 Z',
-    center: { x: 375, y: 725 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
+    "id": "kegalle",
+    "name": "Kegalle",
+    "nameSi": "කෑගල්ල",
+    "nameTa": "கேகாலை",
+    "province": "Sabaragamuwa",
+    "population": 840648,
+    "area": 1693,
+    "coordinates": "M 248.2,853.6 L 249,848.8 L 244.7,835.8 L 246.2,827.8 L 256.3,812.4 L 250.2,810.7 L 243,812.3 L 239.5,805.4 L 240.7,797.6 L 249.1,792 L 252.3,776.8 L 270.7,764.2 L 294.9,758.1 L 297.9,752.2 L 298.6,741.4 L 305,739 L 312,739.8 L 316.3,744 L 322.5,757.7 L 335.1,768 L 334.7,773.4 L 348.1,782.9 L 347.4,791.8 L 355.1,799.7 L 351.1,806.7 L 344.7,807.6 L 340.2,812.2 L 330.1,813.8 L 326.7,816.7 L 333.3,830 L 331.2,834.3 L 332.4,840.8 L 321.9,850.8 L 325.4,854.7 L 323.4,864.9 L 325.9,872.9 L 341.1,880.1 L 343.8,891 L 340.5,893.8 L 334.7,894 L 310.2,887.2 L 297.7,892.3 L 290.4,890.7 L 286.9,885.7 L 281.8,887.4 L 277.3,884.1 L 261.6,868.2 L 257.1,870.2 L 256.6,864.8 L 260.5,861.4 L 259.6,856.4 L 248.2,853.6 Z",
+    "center": {
+      "x": 298,
+      "y": 826
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'kegalle',
-    name: 'Kegalle',
-    nameSi: 'කෑගල්ල',
-    nameTa: 'கேகாலை',
-    province: 'Sabaragamuwa',
-    population: 840648,
-    area: 1693,
-    coordinates: 'M 320,540 L 390,530 L 420,560 L 430,610 L 410,650 L 360,660 L 320,650 L 300,610 Z',
-    center: { x: 365, y: 595 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
-  },
-
-  // Western Province
-  {
-    id: 'colombo',
-    name: 'Colombo',
-    nameSi: 'කොළඹ',
-    nameTa: 'கொழும்பு',
-    province: 'Western',
-    population: 2323826,
-    area: 699,
-    coordinates: 'M 260,560 L 320,555 L 340,585 L 340,625 L 310,645 L 270,640 L 250,610 Z',
-    center: { x: 295, y: 600 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'business-admin', 'creative-digital', 'events-entertainment', 'beauty-wellness', 'automotive', 'pet-care', 'lessons-training']
+    "id": "kilinochchi",
+    "name": "Kilinochchi",
+    "nameSi": "කිලිනොච්චිය",
+    "nameTa": "கிளிநொச்சி",
+    "province": "Northern",
+    "population": 113510,
+    "area": 1279,
+    "coordinates": "M 375.1,174.8 L 373.1,180.7 L 366.9,185.2 L 366.8,197.8 L 350.8,187.6 L 346.8,200.1 L 341.9,202.6 L 317.3,202.5 L 312.3,214.4 L 288.7,213.8 L 266.3,216.3 L 258.7,225.5 L 259.4,233.1 L 251.8,232.3 L 240,239.1 L 227.9,239.9 L 230.3,214.9 L 215.1,206 L 211.3,189.8 L 221.2,183.4 L 236.9,179.2 L 243.3,171.2 L 253.3,167.3 L 242.9,154.3 L 215.6,138.5 L 211.3,133.5 L 220.7,133.8 L 247.2,146.6 L 263.9,150.6 L 275.2,158.9 L 276.9,161.9 L 273.4,163.5 L 275.2,167.3 L 273.4,169.2 L 279.5,173 L 320.3,159.9 L 375.1,174.8 Z",
+    "center": {
+      "x": 279,
+      "y": 185
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'gampaha',
-    name: 'Gampaha',
-    nameSi: 'ගම්පහ',
-    nameTa: 'கம்பஹா',
-    province: 'Western',
-    population: 2300000,
-    area: 1387,
-    coordinates: 'M 260,480 L 330,470 L 360,500 L 360,540 L 330,560 L 280,565 L 250,540 L 240,510 Z',
-    center: { x: 300, y: 520 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive', 'pet-care']
+    "id": "kurunegala",
+    "name": "Kurunegala",
+    "nameSi": "කුරුණෑගල",
+    "nameTa": "குருணாகல்",
+    "province": "North Western",
+    "population": 1618465,
+    "area": 4816,
+    "coordinates": "M 178.7,772 L 178,755.7 L 167.2,701.5 L 167.3,682.5 L 178,662.2 L 185.6,659.4 L 180.5,656 L 183.9,649.2 L 191.9,647.8 L 197.1,644.1 L 194.4,638.1 L 199.7,617.9 L 207,613.8 L 209.3,608 L 215.5,605 L 218.9,595.9 L 226.7,592.3 L 228.5,586.3 L 234.5,589.5 L 238.2,586.8 L 234.7,580.7 L 238.6,574.4 L 240.5,553.9 L 233,550.5 L 230.3,545.6 L 225.7,518.5 L 274.6,539.8 L 289.7,544 L 303.2,555.1 L 318.4,561.4 L 319,584 L 327.7,585.9 L 330.2,589.7 L 335.1,607.2 L 334,616.7 L 341.4,623.4 L 340.8,632.7 L 345.6,634.6 L 350.6,643.4 L 355.2,655.6 L 357.7,673.3 L 363,678.2 L 362.1,687.1 L 356.9,693 L 356.2,698.8 L 362.4,710 L 362.6,716.8 L 360.8,721.7 L 353.9,724 L 358,731.2 L 346.3,734.2 L 346.4,740.1 L 332.7,736.8 L 330.2,748.4 L 325,749.9 L 318.9,749.3 L 312,739.8 L 305,739 L 298.6,741.4 L 297.9,752.2 L 294.9,758.1 L 270.7,764.2 L 252.3,776.8 L 234.8,758.2 L 211.1,766.6 L 203,761.3 L 196,761.6 L 178.7,772 Z",
+    "center": {
+      "x": 273,
+      "y": 664
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
   },
   {
-    id: 'kalutara',
-    name: 'Kalutara',
-    nameSi: 'කළුතර',
-    nameTa: 'களுத்துறை',
-    province: 'Western',
-    population: 1222000,
-    area: 1598,
-    coordinates: 'M 270,650 L 330,640 L 360,670 L 360,720 L 330,750 L 280,755 L 260,725 L 250,690 Z',
-    center: { x: 305, y: 695 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'automotive']
-  },
-
-  // Southern Province
-  {
-    id: 'galle',
-    name: 'Galle',
-    nameSi: 'ගාල්ල',
-    nameTa: 'காலி',
-    province: 'Southern',
-    population: 1063334,
-    area: 1652,
-    coordinates: 'M 250,820 L 310,810 L 340,840 L 350,890 L 330,930 L 280,940 L 250,910 L 230,870 Z',
-    center: { x: 290, y: 875 },
-    popular: true,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'business-admin', 'events-entertainment', 'automotive']
+    "id": "mannar",
+    "name": "Mannar",
+    "nameSi": "මන්නාරම",
+    "nameTa": "மன்னார்",
+    "province": "Northern",
+    "population": 99570,
+    "area": 1996,
+    "coordinates": "M 251.8,232.3 L 253.9,250.6 L 259.8,260.6 L 259.5,277.2 L 259.1,282.9 L 252.7,284.9 L 248.9,293.8 L 247.9,297 L 250.6,301.3 L 246.9,311.2 L 295,308.8 L 302.9,312.2 L 311.9,329.5 L 310.4,339.1 L 294.7,344.5 L 267.7,345.4 L 259.6,349.6 L 255.2,358.8 L 247.7,359.5 L 246.5,367.2 L 264.5,385.4 L 236.1,392.4 L 221.8,392.3 L 208.8,387.4 L 211.1,403.5 L 210.5,429 L 207.7,428.7 L 190,420.5 L 181.4,419.8 L 170.4,415.2 L 178.8,395.8 L 181.4,369.1 L 174.4,352 L 175.5,329.3 L 171.2,314.4 L 180.4,311.6 L 197.3,297.3 L 209.8,290.3 L 227.9,239.9 L 240,239.1 L 251.8,232.3 Z",
+    "center": {
+      "x": 234,
+      "y": 333
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'matara',
-    name: 'Matara',
-    nameSi: 'මාතර',
-    nameTa: 'மாத்தறை',
-    province: 'Southern',
-    population: 814048,
-    area: 1283,
-    coordinates: 'M 290,940 L 350,930 L 380,960 L 390,1010 L 370,1050 L 320,1060 L 280,1040 L 260,1000 Z',
-    center: { x: 325, y: 995 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
+    "id": "matale",
+    "name": "Matale",
+    "nameSi": "මාතලේ",
+    "nameTa": "மாத்தளை",
+    "province": "Central",
+    "population": 484531,
+    "area": 1993,
+    "coordinates": "M 484.3,649.3 L 486.8,665.4 L 481.2,691.3 L 482.6,713.8 L 467.5,713.7 L 460.2,721.4 L 456.7,717.3 L 451.9,719.5 L 439.9,719.4 L 430.7,726.5 L 422.3,727.7 L 407.1,717.8 L 403,720.1 L 401.3,724.3 L 402.3,734.4 L 396.1,740.9 L 385.3,740.3 L 366.8,729.4 L 360.8,721.7 L 363.2,713.4 L 356.2,698.8 L 356.9,693 L 362.1,687.1 L 363,678.2 L 357.7,673.3 L 355.2,655.6 L 350.6,643.4 L 345.6,634.6 L 340.8,632.7 L 340,627.9 L 341.4,623.4 L 357.4,615.7 L 362.6,609.8 L 370.8,612.2 L 375.1,609.4 L 381.2,603.7 L 380.4,600.5 L 386.9,592.9 L 388.5,583.3 L 393.6,583.9 L 404.7,574.1 L 416.4,569.1 L 423,575.7 L 424.5,582.2 L 426.9,583 L 432.4,578.6 L 444.7,582.8 L 436,591.3 L 427.9,625.7 L 419.5,627.5 L 417.5,635 L 420.9,657.1 L 423.8,661 L 431.5,662.5 L 444.6,654.7 L 451.6,660.6 L 453.5,650.9 L 469.2,651.9 L 484.3,649.3 Z",
+    "center": {
+      "x": 408,
+      "y": 657
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   },
   {
-    id: 'hambantota',
-    name: 'Hambantota',
-    nameSi: 'හම්බන්තොට',
-    nameTa: 'அம்பாந்தோட்டை',
-    province: 'Southern',
-    population: 599903,
-    area: 2609,
-    coordinates: 'M 360,1000 L 430,990 L 470,1020 L 490,1070 L 480,1120 L 440,1140 L 390,1130 L 360,1090 L 350,1040 Z',
-    center: { x: 425, y: 1065 },
-    popular: false,
-    services: ['home-cleaning', 'moving-delivery', 'home-improvements', 'automotive']
+    "id": "matara",
+    "name": "Matara",
+    "nameSi": "මාතර",
+    "nameTa": "மாத்தறை",
+    "province": "Southern",
+    "population": 814048,
+    "area": 1283,
+    "coordinates": "M 308.1,1132.5 L 307.5,1126.3 L 317.8,1115.8 L 310.4,1112.6 L 309.5,1109.7 L 323.8,1096.8 L 309.5,1085.5 L 307.7,1080.2 L 312.4,1069.2 L 308,1061.3 L 318.2,1063 L 323.3,1057.1 L 321.1,1049.3 L 306.3,1032.4 L 315.8,1032.6 L 327.5,1041.8 L 336.6,1043.8 L 338.3,1036 L 330.3,1026.9 L 334.3,1023.1 L 351.7,1019.4 L 353.7,1015 L 371.5,1013.3 L 375.7,1020.6 L 373.8,1025.5 L 386,1025.3 L 392.8,1034.3 L 388.5,1039.4 L 387,1046.3 L 389,1050.6 L 377.8,1058.6 L 374.3,1070.4 L 389,1076.8 L 385.9,1082.1 L 386.9,1086.8 L 398.3,1089.3 L 394.6,1094 L 397.8,1104.6 L 388.3,1108.4 L 389,1112.8 L 398.4,1116.8 L 396.2,1120.2 L 399.6,1125.2 L 408.7,1129.2 L 404.2,1134.1 L 387.2,1134.1 L 368.2,1143.5 L 353.2,1137.8 L 331.5,1138.8 L 325.3,1130.5 L 320.4,1133.2 L 308.1,1132.5 Z",
+    "center": {
+      "x": 354,
+      "y": 1080
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "monaragala",
+    "name": "Monaragala",
+    "nameSi": "මොණරාගල",
+    "nameTa": "மொனராகலை",
+    "province": "Uva",
+    "population": 451058,
+    "area": 5639,
+    "coordinates": "M 664.9,963.3 L 659.6,969 L 651.8,970.4 L 627.6,986.8 L 629.3,995.2 L 623,1009.3 L 614.9,1007.6 L 607.1,1010.2 L 603.8,1009.1 L 570.4,1021.4 L 559.5,1028.2 L 552.2,1025.4 L 542.3,1011.6 L 532.8,1013.9 L 522.7,1006.8 L 508.2,1006 L 505.4,1008.9 L 501.8,1006.5 L 499.5,1013.4 L 491.8,1013.6 L 490.4,1019.9 L 493.2,1026 L 464.1,1041.2 L 459,1029.7 L 448.1,1023.4 L 440.8,1012.4 L 440.5,995.4 L 437.8,986.5 L 447.7,971.4 L 453.4,953.3 L 466.5,933.4 L 470,933.6 L 473.6,941.6 L 478.2,943.2 L 482.9,954.9 L 486.9,956.9 L 488.2,965.7 L 494.1,973.4 L 495.3,966.1 L 499.4,960.1 L 505.7,963.4 L 506.6,956.9 L 512.7,954.9 L 505.6,940.8 L 506.1,932.6 L 510.5,926.3 L 510.1,921.4 L 505,920.2 L 503.9,916.6 L 506.3,911.6 L 506.4,899.9 L 516.3,899.1 L 518.9,894.5 L 527.3,892.1 L 520.2,882.8 L 533.9,877.6 L 543.6,867.4 L 550.3,867.9 L 556.1,853.8 L 558.5,841.2 L 556.2,828.6 L 549.3,821 L 538.6,823.7 L 524.1,806.2 L 525,800.6 L 528.5,795.7 L 533.2,796.3 L 537.3,800.4 L 542.2,798.5 L 552.8,784.8 L 555,773.9 L 566.4,771.4 L 571.3,781.2 L 582.6,775.5 L 581,754.7 L 588.3,755 L 594.2,751.9 L 598.9,745 L 596.9,734.9 L 603.9,733.7 L 607,728.2 L 621,722.1 L 626.8,723.5 L 622.4,729.8 L 626.2,731.2 L 629.9,761.2 L 636.3,766.5 L 641.2,779 L 647.6,787.2 L 636.7,797.5 L 633.3,806 L 640.5,820.5 L 667.4,831.1 L 665.5,841.7 L 672.5,862.4 L 664.9,963.3 Z",
+    "center": {
+      "x": 549,
+      "y": 897
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "mullaitivu",
+    "name": "Mullaitivu",
+    "nameSi": "මුලතිව්",
+    "nameTa": "முல்லைத்தீவு",
+    "province": "Northern",
+    "population": 92238,
+    "area": 2617,
+    "coordinates": "M 465,300.5 L 419.2,314.9 L 424.5,296.3 L 411.7,286.5 L 402.5,285.2 L 393.7,289 L 397,281.4 L 393.6,275.8 L 385.8,275 L 384.7,266.2 L 375.7,262.9 L 366.2,263.2 L 365,265.9 L 347.1,275.9 L 342.6,269.6 L 335.3,265.3 L 319.7,265.2 L 314.4,265.7 L 313.7,269.7 L 320.2,273.2 L 321.9,287.3 L 308.5,300.8 L 295,308.8 L 246.9,311.2 L 250.6,301.3 L 247.9,297 L 248.9,293.8 L 252.7,284.9 L 259.1,282.9 L 259.5,277.2 L 259.8,260.6 L 253.9,250.6 L 251.8,232.3 L 259.4,233.1 L 258.7,225.5 L 266.3,216.3 L 288.7,213.8 L 312.3,214.4 L 317.3,202.5 L 341.9,202.6 L 346.8,200.1 L 350.8,187.6 L 366.8,197.8 L 366.9,185.2 L 373.1,180.7 L 373.7,176.1 L 378.4,172.4 L 412.9,198.6 L 428.8,216.4 L 425.3,218.2 L 419.9,213.5 L 412.9,211.9 L 410.6,212.5 L 412.2,215.4 L 433.2,231.6 L 430.2,222.8 L 436.1,223.1 L 453.1,257.6 L 440.9,254.6 L 439.2,258.5 L 450.5,262.7 L 451.1,269 L 457.3,265.4 L 463.1,280.4 L 468.6,288.3 L 475.4,292.6 L 471.3,297.3 L 467.3,291.7 L 451.1,286.1 L 465,300.5 Z",
+    "center": {
+      "x": 367,
+      "y": 254
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "nuwara-eliya",
+    "name": "Nuwara Eliya",
+    "nameSi": "නුවරඑළිය",
+    "nameTa": "நுவரெலியா",
+    "province": "Central",
+    "population": 711644,
+    "area": 1741,
+    "coordinates": "M 431.9,904.7 L 415.4,912.8 L 406.3,914 L 383.2,915.2 L 345,909.4 L 339,905.1 L 342.3,900.3 L 340.5,893.8 L 343.8,891 L 341.1,880.1 L 325.9,872.9 L 323.4,864.9 L 325.4,854.7 L 321.9,850.8 L 329.8,844.7 L 332.4,840.8 L 331,839.7 L 339.4,840.4 L 352.4,858.7 L 360.9,863.4 L 367.2,857.1 L 370.7,847.9 L 357.8,830.7 L 353.1,830.5 L 359.7,825.5 L 376.2,825.5 L 384.7,820 L 395.4,821.2 L 420.1,791 L 416.5,772.7 L 425.7,782.2 L 431.3,783.5 L 438,793.4 L 461.2,792.5 L 473.3,794.8 L 474.6,809.1 L 477.6,814.3 L 474.2,819.1 L 476.2,825.9 L 460.5,851.5 L 444.2,856.1 L 434.2,869.7 L 423.5,869.7 L 423.8,874.1 L 433.1,878.5 L 439.3,890.1 L 435.1,896.6 L 440.4,899.5 L 437.4,903.4 L 431.9,904.7 Z",
+    "center": {
+      "x": 395,
+      "y": 854
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
+  },
+  {
+    "id": "polonnaruwa",
+    "name": "Polonnaruwa",
+    "nameSi": "පොළොන්නරුව",
+    "nameTa": "பொலன்னறுவை",
+    "province": "North Central",
+    "population": 406088,
+    "area": 3293,
+    "coordinates": "M 465.4,479.9 L 469.8,478.7 L 473.2,483.4 L 482.4,488.4 L 483.6,494.1 L 487.2,497.5 L 499.5,496.4 L 526.8,501.5 L 541.5,509.9 L 545.2,509.6 L 548.6,524.6 L 543.7,530.1 L 546.3,531.3 L 553.6,529.7 L 561,510.9 L 569.8,501.7 L 578,501.7 L 579.5,516 L 577.2,559.4 L 586.6,589.7 L 565,589.7 L 558.5,593.8 L 553.7,623 L 557.8,644.2 L 557.4,656.9 L 551.9,667.8 L 525.2,659.3 L 516.6,651.2 L 506,647.4 L 469.2,651.9 L 453.5,650.9 L 451.6,660.6 L 444.6,654.7 L 431.5,662.5 L 423.8,661 L 420.9,657.1 L 417.5,635 L 419.5,627.5 L 427.9,625.7 L 436,591.3 L 444.7,582.8 L 432.4,578.6 L 426.9,583 L 424.5,582.2 L 423,575.7 L 416.4,569.1 L 416.8,561.9 L 422.5,554.4 L 416.6,550 L 419.1,529.7 L 430,497.3 L 454.5,495.3 L 458.2,493.2 L 461.6,483.5 L 465.4,479.9 Z",
+    "center": {
+      "x": 488,
+      "y": 567
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "puttalam",
+    "name": "Puttalam",
+    "nameSi": "පුත්තලම",
+    "nameTa": "புத்தளம்",
+    "province": "North Western",
+    "population": 762396,
+    "area": 3072,
+    "coordinates": "M 170.4,415.2 L 181.4,419.8 L 190,420.5 L 205.3,427.6 L 207,438.9 L 201.7,449.4 L 192.5,456.4 L 190.8,460.8 L 185.9,462.9 L 182.7,469.7 L 187,477.4 L 196.1,510 L 207,507.9 L 222.5,514.6 L 225.7,518.5 L 230.3,545.6 L 233,550.5 L 240.5,553.9 L 238.6,574.4 L 234.7,580.7 L 238.2,586.8 L 234.5,589.5 L 228.5,586.3 L 226.7,592.3 L 218.9,595.9 L 215.5,605 L 209.3,608 L 207,613.8 L 199.7,617.9 L 194.4,638.1 L 197.1,644.1 L 191.9,647.8 L 183.9,649.2 L 180.5,656 L 185.6,659.4 L 178,662.2 L 167.3,682.5 L 167.2,701.5 L 178,755.7 L 178.7,772 L 173.6,770.2 L 169.3,772.7 L 163.6,769.9 L 145.6,771.6 L 131.3,681.7 L 135.5,681.7 L 138.1,666.2 L 134.2,658.3 L 133.4,643.1 L 125.9,608.7 L 114.7,576.5 L 107.4,545.5 L 107.4,536.7 L 109.4,538.5 L 110.4,533.4 L 107.4,512.3 L 116.7,503.8 L 122.6,488.9 L 131.3,476.2 L 121.3,495.2 L 125,500 L 131.3,501 L 125.5,514 L 121.8,515.8 L 121.3,527.3 L 116.4,542 L 116.9,550.2 L 123.5,557.5 L 117.7,568.9 L 127,575.2 L 140.5,576.2 L 147.4,571.7 L 143,561.4 L 135.6,552.5 L 145.4,535 L 138.9,509.5 L 145.4,496.1 L 151.5,452 L 156.7,445.6 L 159,424.5 L 170.4,415.2 Z",
+    "center": {
+      "x": 167,
+      "y": 565
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "ratnapura",
+    "name": "Ratnapura",
+    "nameSi": "රත්නපුර",
+    "nameTa": "இரத்தினபுரி",
+    "province": "Sabaragamuwa",
+    "population": 1088007,
+    "area": 3275,
+    "coordinates": "M 248.2,898.8 L 254.6,893.4 L 247.5,886.2 L 250.2,879.2 L 257.1,870.2 L 261.6,868.2 L 277.3,884.1 L 281.8,887.4 L 286.9,885.7 L 290.4,890.7 L 297.7,892.3 L 306.5,887.6 L 314.6,887.3 L 328.9,893.2 L 340.5,893.8 L 342.3,900.3 L 339,905.1 L 345,909.4 L 383.2,915.2 L 406.3,914 L 415.4,912.8 L 431.9,904.7 L 432.7,914.8 L 437,913 L 446,918.6 L 443.3,924.4 L 435.4,927.8 L 434,931.4 L 437.1,935.9 L 448.2,940.5 L 461.2,933.7 L 466.5,933.4 L 453.4,953.3 L 447.7,971.4 L 437.8,986.5 L 440.5,995.4 L 440.8,1012.4 L 448.1,1023.4 L 459,1029.7 L 464.1,1041.2 L 469.5,1046.8 L 472.2,1053.8 L 470.7,1058.6 L 453.9,1054.7 L 446.1,1047.7 L 429.3,1048.7 L 391.3,1038.4 L 392.8,1034.3 L 386,1025.3 L 373.8,1025.5 L 375.7,1020.6 L 371.5,1013.3 L 353.7,1015 L 351.7,1019.4 L 340.3,1021.4 L 337.8,1018 L 314.8,1012 L 307.2,1005.4 L 284.3,971.9 L 282.8,967.3 L 287.2,965.7 L 283,958.1 L 269.2,948.2 L 267.5,940.2 L 258.6,932.1 L 248.2,898.8 Z",
+    "center": {
+      "x": 366,
+      "y": 956
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
+  },
+  {
+    "id": "trincomalee",
+    "name": "Trincomalee",
+    "nameSi": "ත්‍රිකුණාමලය",
+    "nameTa": "திருகோணமலை",
+    "province": "Eastern",
+    "population": 379541,
+    "area": 2727,
+    "coordinates": "M 465,300.5 L 465.1,304.9 L 468.6,307.1 L 462.7,312.9 L 467.3,316.3 L 472.2,315.9 L 481.2,303 L 501.1,329.9 L 514.6,338.3 L 520.8,352.5 L 531.3,358.8 L 539,380.3 L 540.7,376.6 L 545.1,378.4 L 544.3,381.1 L 555.1,393.5 L 555.1,398.4 L 547.1,404.7 L 553.1,402.9 L 560.3,422.4 L 553.1,423.5 L 554.6,419.1 L 552.6,415.5 L 549.4,415 L 547.1,419.7 L 551.1,428.8 L 548.9,433 L 533.9,425.5 L 529,427.4 L 525.2,432.2 L 526.6,434.6 L 537.2,429.3 L 549.7,442.6 L 569.5,444.1 L 574,441.4 L 571,434.9 L 581.7,430.8 L 588.5,432.9 L 594.2,439.9 L 600.8,465.1 L 601.1,472.5 L 590.1,461.2 L 591.5,472.8 L 593.1,476.2 L 604,479.2 L 609,502.7 L 582.9,500.1 L 569.8,501.7 L 561,510.9 L 553.6,529.7 L 546.3,531.3 L 543.7,530.1 L 548.6,524.6 L 545.2,509.6 L 541.5,509.9 L 526.8,501.5 L 499.5,496.4 L 487.2,497.5 L 483.6,494.1 L 482.4,488.4 L 473.2,483.4 L 469.8,478.7 L 465.4,479.9 L 473.6,452 L 483.7,442.1 L 464,412.4 L 462.8,405.9 L 457.2,400.4 L 456.9,394.8 L 461.5,384.9 L 453.8,368.1 L 453.7,356.3 L 462,342.4 L 452.4,332.9 L 432.3,320.6 L 423.7,320.5 L 415.5,323.6 L 419.2,314.9 L 465,300.5 Z",
+    "center": {
+      "x": 521,
+      "y": 418
+    },
+    "popular": true,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "business-admin",
+      "automotive",
+      "pet-care"
+    ]
+  },
+  {
+    "id": "vavuniya",
+    "name": "Vavuniya",
+    "nameSi": "වවුනියාව",
+    "nameTa": "வவுனியா",
+    "province": "Northern",
+    "population": 171511,
+    "area": 1967,
+    "coordinates": "M 419.2,314.9 L 415.5,323.6 L 399.8,327.1 L 391.3,332.6 L 369.6,333.3 L 370.2,339.3 L 377.8,341.8 L 385.6,355.4 L 364.6,377.2 L 349.5,389 L 340.2,389 L 329.9,383.1 L 321,386.9 L 309.5,400.8 L 304.1,412.7 L 298.9,414.8 L 294.4,422.3 L 282.4,418.3 L 276.3,405.3 L 267.6,402.1 L 264.6,394.3 L 264.5,385.4 L 246.5,367.2 L 247.7,359.5 L 255.2,358.8 L 259.6,349.6 L 267.7,345.4 L 294.7,344.5 L 310.4,339.1 L 311.9,329.5 L 307.4,319 L 302.9,312.2 L 295,308.8 L 316.7,294.7 L 321.9,287.3 L 320.2,273.2 L 313.7,269.7 L 314.4,265.7 L 335.3,265.3 L 342.6,269.6 L 347.1,275.9 L 365,265.9 L 366.2,263.2 L 375.7,262.9 L 384.7,266.2 L 385.8,275 L 393.6,275.8 L 397,281.4 L 393.7,289 L 402.5,285.2 L 411.7,286.5 L 424.5,296.3 L 419.2,314.9 Z",
+    "center": {
+      "x": 336,
+      "y": 331
+    },
+    "popular": false,
+    "services": [
+      "home-cleaning",
+      "moving-delivery",
+      "home-improvements",
+      "automotive"
+    ]
   }
 ];
 
