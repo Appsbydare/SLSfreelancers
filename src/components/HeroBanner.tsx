@@ -44,9 +44,11 @@ export default function HeroBanner() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         {/* Advertisement Carousel */}
-        <div className="mb-6 animate-fade-in-up">
-          <AdCarousel images={adImages} interval={10000} />
-        </div>
+        {adImages.length > 0 && (
+          <div className="mb-6 animate-fade-in-up">
+            <AdCarousel images={adImages} interval={10000} />
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">

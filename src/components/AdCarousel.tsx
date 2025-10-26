@@ -28,23 +28,21 @@ export default function AdCarousel({ images, interval = 10000 }: AdCarouselProps
   if (images.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden bg-black rounded-xl">
-      <div className="relative h-full">
+    <div className="relative w-full overflow-hidden bg-black rounded-xl" style={{ minHeight: '100px' }}>
+      <div className="relative w-full">
         {images.map((image, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+            className={`w-full transition-all duration-1000 ease-in-out ${
               index === currentIndex
-                ? 'opacity-100 scale-100'
-                : isTransitioning && index === (currentIndex - 1 + images.length) % images.length
-                ? 'opacity-0 scale-95'
-                : 'opacity-0 scale-105 pointer-events-none'
+                ? 'opacity-100 scale-100 relative'
+                : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'
             }`}
           >
             <img
               src={image}
               alt={`Advertisement ${index + 1}`}
-              className="w-full h-auto object-contain"
+              className="w-full h-auto object-contain block"
               loading={index === 0 ? 'eager' : 'lazy'}
             />
           </div>
