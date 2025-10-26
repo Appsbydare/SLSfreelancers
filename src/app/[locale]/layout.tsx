@@ -3,6 +3,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { DistrictProvider } from '@/contexts/DistrictContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const locales = ['en', 'si', 'ta'];
 
@@ -29,11 +30,13 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <DistrictProvider>
-        <Layout>
-          {children}
-        </Layout>
-      </DistrictProvider>
+      <AuthProvider>
+        <DistrictProvider>
+          <Layout>
+            {children}
+          </Layout>
+        </DistrictProvider>
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }
