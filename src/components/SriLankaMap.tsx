@@ -88,14 +88,14 @@ export default function SriLankaMap({
         {/* Map SVG */}
         <div className="flex justify-center">
           <svg
-            viewBox="0 0 400 400"
-            className="w-full max-w-md h-auto transition-all duration-500 hover:scale-105"
+            viewBox="0 0 800 1200"
+            className="w-full max-w-2xl h-auto transition-all duration-500 hover:scale-105"
             style={{ filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1))' }}
           >
             {/* Background */}
             <rect
-              width="400"
-              height="400"
+              width="800"
+              height="1200"
               fill="url(#mapGradient)"
               className="animate-fade-in"
             />
@@ -144,9 +144,9 @@ export default function SriLankaMap({
                     x={district.center.x}
                     y={district.center.y}
                     textAnchor="middle"
-                    className="text-xs font-medium fill-gray-700 pointer-events-none"
+                    className="font-medium fill-gray-700 pointer-events-none"
                     style={{ 
-                      fontSize: district.popular ? '10px' : '8px',
+                      fontSize: district.popular ? '18px' : '14px',
                       fontWeight: district.popular ? 'bold' : 'normal'
                     }}
                   >
@@ -157,9 +157,9 @@ export default function SriLankaMap({
                 {/* Popular District Indicator */}
                 {district.popular && (
                   <circle
-                    cx={district.center.x + 15}
-                    cy={district.center.y - 10}
-                    r="3"
+                    cx={district.center.x + 30}
+                    cy={district.center.y - 20}
+                    r="6"
                     fill="#f59e0b"
                     className="animate-pulse"
                   />
@@ -168,21 +168,21 @@ export default function SriLankaMap({
             ))}
 
             {/* Legend */}
-            <g transform="translate(20, 350)">
-              <rect width="160" height="40" fill="white" fillOpacity="0.9" rx="8" />
-              <text x="10" y="15" className="text-xs font-semibold fill-gray-800">
+            <g transform="translate(50, 1100)">
+              <rect width="320" height="80" fill="white" fillOpacity="0.95" rx="12" stroke="#e5e7eb" strokeWidth="2" />
+              <text x="20" y="30" className="text-base font-semibold fill-gray-800" style={{ fontSize: '20px' }}>
                 {t('legend.title')}
               </text>
-              <circle cx="15" cy="28" r="4" fill="#10b981" />
-              <text x="25" y="32" className="text-xs fill-gray-600">
+              <circle cx="30" cy="56" r="8" fill="#10b981" />
+              <text x="50" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
                 {t('legend.popular')}
               </text>
-              <circle cx="80" cy="28" r="4" fill="#e5e7eb" />
-              <text x="90" y="32" className="text-xs fill-gray-600">
+              <circle cx="160" cy="56" r="8" fill="#e5e7eb" />
+              <text x="180" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
                 {t('legend.regular')}
               </text>
-              <circle cx="140" cy="28" r="4" fill="#3b82f6" />
-              <text x="150" y="32" className="text-xs fill-gray-600">
+              <circle cx="280" cy="56" r="8" fill="#3b82f6" />
+              <text x="300" y="64" className="text-sm fill-gray-600" style={{ fontSize: '18px' }}>
                 {t('legend.selected')}
               </text>
             </g>
