@@ -85,13 +85,13 @@ export default function Header() {
             
             <div className="hidden md:flex items-center space-x-4">
               <Link
-                href={`/${locale}/login`}
+                href="/login"
                 className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
               >
                 {t('login')}
               </Link>
               <Link
-                href={`/${locale}/signup`}
+                href="/signup"
                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
               >
                 {t('signUp')}
@@ -135,14 +135,14 @@ export default function Header() {
               ))}
               <div className="pt-4 pb-3 border-t border-gray-200">
                 <Link
-                  href={`/${locale}/login`}
+                  href="/login"
                   className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 transition-all duration-300 hover:scale-105"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {t('login')}
                 </Link>
                 <Link
-                  href={`/${locale}/signup`}
+                  href="/signup"
                   className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 transition-all duration-300 hover:scale-105"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
