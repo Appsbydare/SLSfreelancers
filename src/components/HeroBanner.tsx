@@ -41,94 +41,94 @@ export default function HeroBanner() {
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
-            {/* Left Column - Get Any Task Done Card */}
-            <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+          {/* Main Content Grid - Single Unified Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8 items-start mb-6">
+            {/* Left Column - Get Any Task Done Content */}
+            <div className="flex flex-col animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6 self-start">
                 <Sparkles className="h-4 w-4 mr-2" />
                 {t('badge')}
               </div>
 
-              {/* Main Heading */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              {/* Main Heading - Made Bigger */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 mb-8 leading-tight">
                 {t('mainTitle')}
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-2">
                   {t('subTitle')}
                 </span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-xl lg:text-2xl text-gray-600 mb-10 max-w-2xl">
                 {t('description')}
               </p>
 
               {/* Features */}
-              <div className="flex flex-wrap gap-6 mb-8">
-                <div className="flex items-center space-x-2 text-gray-700">
-                  <div className="text-blue-600"><Users className="h-6 w-6" /></div>
-                  <span className="text-sm font-medium">{t('feature1')}</span>
+              <div className="flex flex-wrap gap-8 mb-10">
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="text-blue-600"><Users className="h-7 w-7" /></div>
+                  <span className="text-base font-medium">{t('feature1')}</span>
                 </div>
-                <div className="flex items-center space-x-2 text-gray-700">
-                  <div className="text-blue-600"><Clock className="h-6 w-6" /></div>
-                  <span className="text-sm font-medium">{t('feature2')}</span>
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="text-blue-600"><Clock className="h-7 w-7" /></div>
+                  <span className="text-base font-medium">{t('feature2')}</span>
                 </div>
-                <div className="flex items-center space-x-2 text-gray-700">
-                  <div className="text-blue-600"><Shield className="h-6 w-6" /></div>
-                  <span className="text-sm font-medium">{t('feature3')}</span>
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="text-blue-600"><Shield className="h-7 w-7" /></div>
+                  <span className="text-base font-medium">{t('feature3')}</span>
                 </div>
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
                 <Link
                   href={`/${locale}/browse-tasks`}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-10 py-5 bg-blue-600 text-white text-xl font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
                   {t('browseTasksButton')}
-                  <ChevronRight className="ml-2 h-5 w-5" />
+                  <ChevronRight className="ml-2 h-6 w-6" />
                 </Link>
                 <Link
                   href={`/${locale}/post-task`}
-                  className="inline-flex items-center justify-center px-8 py-4 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105"
+                  className="inline-flex items-center justify-center px-10 py-5 border-2 border-blue-600 text-blue-600 text-xl font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105"
                 >
                   {t('postTaskButton')}
                 </Link>
               </div>
 
               {/* Stats */}
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="mt-auto pt-8">
+                <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">500+</p>
+                    <p className="text-3xl font-bold text-blue-600">500+</p>
                     <p className="text-sm text-gray-500">{t('stats.tasks')}</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-600">98%</p>
+                    <p className="text-3xl font-bold text-green-600">98%</p>
                     <p className="text-sm text-gray-500">{t('stats.success')}</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-purple-600">24/7</p>
+                    <p className="text-3xl font-bold text-purple-600">24/7</p>
                     <p className="text-sm text-gray-500">{t('stats.support')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Map */}
-            <div className="bg-white rounded-2xl shadow-2xl p-6 flex flex-col animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {/* Right Column - Map (No Border, Larger) */}
+            <div className="flex flex-col animate-fade-in-up lg:pr-4" style={{ animationDelay: '400ms' }}>
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   Choose Your District
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-base text-gray-600">
                   Select your district to find service providers near you
                 </p>
               </div>
               
-              <div className="max-w-md mx-auto">
+              <div className="w-full">
                 <SriLankaMap
                   onDistrictSelect={handleDistrictSelect}
                   selectedDistrictId={selectedDistrict?.id}
@@ -138,19 +138,20 @@ export default function HeroBanner() {
               </div>
 
               {selectedDistrict && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
+                <div className="mt-6 p-5 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-blue-800">Selected District</p>
-                      <p className="text-lg font-bold text-blue-900">{selectedDistrict.name}</p>
+                      <p className="text-xl font-bold text-blue-900">{selectedDistrict.name}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-blue-700">{selectedDistrict.services.length} Services</p>
+                    <div className="text-center sm:text-right">
+                      <p className="text-sm text-blue-700 mb-2">{selectedDistrict.services.length} Services</p>
                       <Link 
                         href={`/${locale}/browse-tasks?district=${selectedDistrict.id}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                       >
-                        Browse Tasks →
+                        Browse Tasks
+                        <ChevronRight className="ml-1 h-4 w-4" />
                       </Link>
                     </div>
                   </div>
