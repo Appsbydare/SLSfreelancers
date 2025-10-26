@@ -4,9 +4,14 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ChevronRight, Sparkles, Users, Clock, Shield } from 'lucide-react';
 import { animationClasses } from '@/lib/animations';
+import SriLankaMap from './SriLankaMap';
+import { useDistrict } from '@/contexts/DistrictContext';
+import { useRouter } from 'next/navigation';
 
 export default function HeroBanner() {
   const t = useTranslations('homepage.hero');
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
+  const router = useRouter();
 
   const features = [
     {
@@ -25,6 +30,16 @@ export default function HeroBanner() {
       delay: "600ms"
     }
   ];
+
+  const handleDistrictSelect = (district: any) => {
+    setSelectedDistrict(district);
+    // TODO: Implement district filtering for service providers
+    // For now, this will scroll to the district services section
+    const servicesSection = document.getElementById('district-services');
+    if (servicesSection) {
+      servicesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
@@ -91,79 +106,44 @@ export default function HeroBanner() {
             </div>
           </div>
 
-          {/* Right Column - Visual */}
-          <div className="relative">
-            {/* Main Card */}
-            <div className="relative bg-white rounded-2xl shadow-2xl p-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-              {/* Card Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">SL</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Sri Lanka Tasks</h3>
-                    <p className="text-sm text-gray-500">Online Now</p>
-                  </div>
-                </div>
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          {/* Right Column - Map */}
+          <div className="relative animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Choose Your District
+                </h3>
+                <p className="text-gray-600">
+                  Select your district to find service providers near you
+                </p>
               </div>
+              
+              <SriLankaMap
+                onDistrictSelect={handleDistrictSelect}
+                selectedDistrictId={selectedDistrict?.id}
+                showLabels={true}
+                className="mb-4"
+              />
 
-              {/* Task Examples */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                  <div className="text-2xl">🏠</div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Home Cleaning</p>
-                    <p className="text-sm text-gray-500">Colombo 03 • LKR 2,500</p>
-                  </div>
-                  <div className="text-green-600 text-sm font-medium">Active</div>
-                </div>
-
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                  <div className="text-2xl">💻</div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Website Design</p>
-                    <p className="text-sm text-gray-500">Kandy • LKR 15,000</p>
-                  </div>
-                  <div className="text-blue-600 text-sm font-medium">New</div>
-                </div>
-
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                  <div className="text-2xl">🚗</div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Car Wash</p>
-                    <p className="text-sm text-gray-500">Negombo • LKR 1,200</p>
-                  </div>
-                  <div className="text-orange-600 text-sm font-medium">Pending</div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">500+</p>
-                    <p className="text-sm text-gray-500">Tasks</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">98%</p>
-                    <p className="text-sm text-gray-500">Success</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-purple-600">24/7</p>
-                    <p className="text-sm text-gray-500">Support</p>
+              {selectedDistrict && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Selected District</p>
+                      <p className="text-lg font-bold text-blue-900">{selectedDistrict.name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-blue-700">{selectedDistrict.services.length} Services</p>
+                      <Link 
+                        href={`/browse-tasks?district=${selectedDistrict.id}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Browse Tasks →
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center text-2xl animate-bounce" style={{ animationDelay: '1s' }}>
-              ⭐
-            </div>
-            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-green-400 rounded-full flex items-center justify-center text-xl animate-bounce" style={{ animationDelay: '1.5s' }}>
-              💚
+              )}
             </div>
           </div>
         </div>

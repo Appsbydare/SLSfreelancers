@@ -35,7 +35,7 @@ export default function DistrictServices() {
   );
 
   return (
-    <div className="py-12 bg-gray-50">
+    <div id="district-services" className="py-12 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">

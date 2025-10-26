@@ -74,17 +74,7 @@ export default function SriLankaMap({
   return (
     <div className={`relative ${className}`}>
       {/* Map Container */}
-      <div className="relative bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-8 shadow-lg">
-        {/* Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 animate-fade-in-up">
-            {t('title')}
-          </h2>
-          <p className="text-gray-600 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-            {t('subtitle')}
-          </p>
-        </div>
-
+      <div className="relative bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4">
         {/* Map SVG */}
         <div className="flex justify-center">
           <svg
@@ -189,60 +179,6 @@ export default function SriLankaMap({
           </svg>
         </div>
 
-        {/* Selected District Info */}
-        {selectedDistrictId && (
-          <div className="mt-6 p-4 bg-white rounded-lg shadow-md animate-fade-in-up">
-            {(() => {
-              const district = districts.find(d => d.id === selectedDistrictId);
-              if (!district) return null;
-              
-              return (
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {getDistrictName(district)}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">{t('info.population')}:</span>
-                      <br />
-                      {district.population.toLocaleString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">{t('info.area')}:</span>
-                      <br />
-                      {district.area.toLocaleString()} km²
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <span className="font-medium text-gray-700">{t('info.services')}:</span>
-                    <div className="flex flex-wrap gap-1 mt-1 justify-center">
-                      {district.services.slice(0, 5).map((service) => (
-                        <span
-                          key={service}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                        >
-                          {service.replace('-', ' ')}
-                        </span>
-                      ))}
-                      {district.services.length > 5 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                          +{district.services.length - 5} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* Instructions */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-            {t('instructions')}
-          </p>
-        </div>
       </div>
     </div>
   );
