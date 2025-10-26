@@ -14,24 +14,6 @@ export default function HeroBanner() {
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const router = useRouter();
 
-  const features = [
-    {
-      icon: <Users className="h-6 w-6" />,
-      text: "Trusted Professionals",
-      delay: "200ms"
-    },
-    {
-      icon: <Clock className="h-6 w-6" />,
-      text: "Quick & Reliable",
-      delay: "400ms"
-    },
-    {
-      icon: <Shield className="h-6 w-6" />,
-      text: "Secure Payments",
-      delay: "600ms"
-    }
-  ];
-
   const handleDistrictSelect = (district: any) => {
     setSelectedDistrict(district);
     // Scroll to the popular categories section
@@ -54,45 +36,49 @@ export default function HeroBanner() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         {/* Advertisement Space */}
-        <div className="mb-6 bg-gradient-to-r from-yellow-100 via-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-6 text-center animate-fade-in-up">
-          <div className="flex items-center justify-center h-16">
-            <h2 className="text-2xl font-bold text-gray-800">Space for Main Sponsor</h2>
-          </div>
+        <div className="mb-6 bg-black border-4 border-blue-600 rounded-xl overflow-hidden animate-fade-in-up">
+          <img 
+            src="/images/sponsor-ad.png" 
+            alt="Ranga Auto Centre - Exclusive Auto Parts"
+            className="w-full h-auto object-contain"
+          />
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
           {/* Left Column - Get Any Task Done Card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
               <Sparkles className="h-4 w-4 mr-2" />
-              Sri Lanka&apos;s #1 Task Platform
+              {t('badge')}
             </div>
 
             {/* Main Heading */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Get Any Task Done
-              <span className="block text-gradient">Quickly & Safely</span>
+              {t('mainTitle')}
+              <span className="block text-gradient">{t('subTitle')}</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg text-gray-600 mb-8">
-              Connect with skilled professionals in Sri Lanka. From home cleaning to business services, 
-              find the perfect person for any task.
+              {t('description')}
             </p>
 
             {/* Features */}
             <div className="flex flex-wrap gap-6 mb-8">
-              {features.map((feature, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center space-x-2 text-gray-700"
-                >
-                  <div className="text-blue-600">{feature.icon}</div>
-                  <span className="text-sm font-medium">{feature.text}</span>
-                </div>
-              ))}
+              <div className="flex items-center space-x-2 text-gray-700">
+                <div className="text-blue-600"><Users className="h-6 w-6" /></div>
+                <span className="text-sm font-medium">{t('feature1')}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-gray-700">
+                <div className="text-blue-600"><Clock className="h-6 w-6" /></div>
+                <span className="text-sm font-medium">{t('feature2')}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-gray-700">
+                <div className="text-blue-600"><Shield className="h-6 w-6" /></div>
+                <span className="text-sm font-medium">{t('feature3')}</span>
+              </div>
             </div>
 
             {/* CTA Buttons */}
@@ -101,14 +87,14 @@ export default function HeroBanner() {
                 href={`/${locale}/browse-tasks`}
                 className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
-                Browse Tasks
+                {t('browseTasksButton')}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 href={`/${locale}/post-task`}
                 className="inline-flex items-center justify-center px-8 py-4 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105"
               >
-                Post a Task
+                {t('postTaskButton')}
               </Link>
             </div>
 
@@ -117,22 +103,22 @@ export default function HeroBanner() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-2xl font-bold text-blue-600">500+</p>
-                  <p className="text-sm text-gray-500">Tasks</p>
+                  <p className="text-sm text-gray-500">{t('stats.tasks')}</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-green-600">98%</p>
-                  <p className="text-sm text-gray-500">Success</p>
+                  <p className="text-sm text-gray-500">{t('stats.success')}</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-purple-600">24/7</p>
-                  <p className="text-sm text-gray-500">Support</p>
+                  <p className="text-sm text-gray-500">{t('stats.support')}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Column - Map */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 flex flex-col animate-fade-in-up" style={{ animationDelay: '400ms' }}>
             <div className="text-center mb-4">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 Choose Your District

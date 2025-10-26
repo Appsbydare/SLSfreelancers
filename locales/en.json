@@ -10,10 +10,20 @@
   },
   "homepage": {
     "hero": {
-      "title": "Get Anything Done",
-      "subtitle": "Post any task. Pick the best person. Get it done.",
-      "postTaskButton": "Post your task for free",
-      "earnMoneyButton": "Earn money as a Tasker"
+      "badge": "Sri Lanka's #1 Task Platform",
+      "mainTitle": "Get Any Task Done",
+      "subTitle": "Quickly & Safely",
+      "description": "Connect with skilled professionals in Sri Lanka. From home cleaning to business services, find the perfect person for any task.",
+      "feature1": "Trusted Professionals",
+      "feature2": "Quick & Reliable",
+      "feature3": "Secure Payments",
+      "browseTasksButton": "Browse Tasks",
+      "postTaskButton": "Post a Task",
+      "stats": {
+        "tasks": "Tasks",
+        "success": "Success",
+        "support": "Support"
+      }
     },
     "stats": {
       "customers": "1M+ customers",
