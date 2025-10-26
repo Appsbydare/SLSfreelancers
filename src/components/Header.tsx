@@ -32,11 +32,10 @@ export default function Header() {
     { name: t('becomeTasker'), href: `/${locale}/become-tasker` },
   ];
 
-  // Add admin navigation
-  const adminNavigation = [
-    ...navigation,
-    { name: 'Project Status', href: '/project-status' },
-  ];
+  // Add Project Status for admin users
+  const displayNavigation = user?.userType === 'admin' 
+    ? [...navigation, { name: 'Project Status', href: '/project-status' }]
+    : navigation;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -60,7 +59,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {(user?.userType === 'admin' ? adminNavigation : navigation).map((item, index) => (
+            {displayNavigation.map((item, index) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -119,7 +118,7 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden animate-slide-in-down">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
-              {(user?.userType === 'admin' ? adminNavigation : navigation).map((item, index) => (
+              {displayNavigation.map((item, index) => (
                 <Link
                   key={item.name}
                   href={item.href}

@@ -16,7 +16,7 @@ interface ProjectTask {
 }
 
 export default function ProjectStatusPage() {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<ProjectTask[]>([]);
@@ -26,14 +26,12 @@ export default function ProjectStatusPage() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Redirect if not admin
   useEffect(() => {
-    if (!isLoggedIn || user?.userType !== 'admin') {
+    if (!authLoading && (!isLoggedIn || user?.userType !== 'admin')) {
       router.push('/login');
     }
-  }, [isLoggedIn, user, router]);
+  }, [isLoggedIn, user, authLoading, router]);
 
-  // Fetch project tasks
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -55,11 +53,9 @@ export default function ProjectStatusPage() {
     }
   }, [user]);
 
-  // Filter tasks
   useEffect(() => {
     let filtered = tasks;
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(task =>
         task.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,17 +63,14 @@ export default function ProjectStatusPage() {
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(task => task.status === statusFilter);
     }
 
-    // Priority filter
     if (priorityFilter !== 'all') {
       filtered = filtered.filter(task => task.priority === priorityFilter);
     }
 
-    // Category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(task => task.category === categoryFilter);
     }
@@ -160,19 +153,9 @@ export default function ProjectStatusPage() {
   const completedCount = tasks.filter(task => task.status === 'completed').length;
   const inProgressCount = tasks.filter(task => task.status === 'in_progress').length;
   const pendingCount = tasks.filter(task => task.status === 'pending').length;
+  const completionPercentage = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
-  if (!isLoggedIn || user?.userType !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You need admin privileges to access this page.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -180,20 +163,22 @@ export default function ProjectStatusPage() {
     );
   }
 
+  if (!isLoggedIn || user?.userType !== 'admin') {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Project Status Dashboard
           </h1>
           <p className="text-gray-600">
-            Track and manage project tasks and completion status
+            Track and manage project tasks - Admin Only Access
           </p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
@@ -234,17 +219,15 @@ export default function ProjectStatusPage() {
                 <Filter className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-                <p className="text-2xl font-bold text-purple-600">{tasks.length}</p>
+                <p className="text-sm font-medium text-gray-600">Progress</p>
+                <p className="text-2xl font-bold text-purple-600">{completionPercentage}%</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {/* Search */}
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -258,7 +241,6 @@ export default function ProjectStatusPage() {
               </div>
             </div>
 
-            {/* Status Filter */}
             <div>
               <select
                 value={statusFilter}
@@ -272,7 +254,6 @@ export default function ProjectStatusPage() {
               </select>
             </div>
 
-            {/* Priority Filter */}
             <div>
               <select
                 value={priorityFilter}
@@ -286,7 +267,6 @@ export default function ProjectStatusPage() {
               </select>
             </div>
 
-            {/* Category Filter */}
             <div>
               <select
                 value={categoryFilter}
@@ -304,11 +284,10 @@ export default function ProjectStatusPage() {
           </div>
         </div>
 
-        {/* Tasks List */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
-              Project Tasks ({filteredTasks.length})
+              Project Tasks ({filteredTasks.length} of {tasks.length})
             </h2>
           </div>
           <div className="divide-y divide-gray-200">
@@ -316,7 +295,6 @@ export default function ProjectStatusPage() {
               <div key={task.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
-                    {/* Status Checkbox */}
                     <button
                       onClick={() => {
                         const newStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -327,7 +305,6 @@ export default function ProjectStatusPage() {
                       {getStatusIcon(task.status)}
                     </button>
 
-                    {/* Task Content */}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -345,13 +322,12 @@ export default function ProjectStatusPage() {
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                         <span>Created: {new Date(task.createdAt).toLocaleDateString()}</span>
                         {task.completedAt && (
-                          <span>Completed: {new Date(task.completedAt).toLocaleDateString()}</span>
+                          <span className="text-green-600">✓ Completed: {new Date(task.completedAt).toLocaleDateString()}</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex items-center space-x-2 ml-4">
                     {task.status !== 'in_progress' && (
                       <button
