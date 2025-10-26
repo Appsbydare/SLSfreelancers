@@ -214,44 +214,58 @@ function calculateCentroid(points) {
 function createSVGPath(geometry, simplify = true) {
   const { type, coordinates } = geometry;
   
+  let allPolygons = [];
+  
   // Handle both Polygon and MultiPolygon
-  let polygonCoords;
   if (type === 'MultiPolygon') {
-    // Use the largest polygon from MultiPolygon
-    polygonCoords = coordinates.reduce((largest, current) => {
-      return current[0].length > (largest?.[0]?.length || 0) ? current : largest;
-    }, null);
+    // Include ALL polygons from MultiPolygon (important for islands like Jaffna)
+    allPolygons = coordinates;
   } else if (type === 'Polygon') {
-    polygonCoords = coordinates;
+    allPolygons = [coordinates];
   } else {
     console.warn(`Unsupported geometry type: ${type}`);
     return { path: '', center: { x: 400, y: 600 } };
   }
   
-  if (!polygonCoords || polygonCoords.length === 0) {
+  if (!allPolygons || allPolygons.length === 0) {
     console.warn('No coordinates found');
     return { path: '', center: { x: 400, y: 600 } };
   }
   
-  const svgCoords = convertToSVG(polygonCoords);
-  const mainRing = svgCoords[0];
+  // Process all polygons and combine into one path
+  const pathParts = [];
+  let allPoints = [];
   
-  // Simplify if requested
-  const points = simplify ? simplifyPolygon(mainRing, 1.5) : mainRing;
-  
-  if (points.length === 0) return { path: '', center: { x: 400, y: 600 } };
-  
-  // Create path
-  const pathParts = points.map((coord, i) => {
-    const [x, y] = coord;
-    const roundedX = Math.round(x * 10) / 10;
-    const roundedY = Math.round(y * 10) / 10;
-    return i === 0 ? `M ${roundedX},${roundedY}` : `L ${roundedX},${roundedY}`;
+  allPolygons.forEach(polygonCoords => {
+    const svgCoords = convertToSVG(polygonCoords);
+    const mainRing = svgCoords[0];
+    
+    // Simplify if requested
+    const points = simplify ? simplifyPolygon(mainRing, 1.5) : mainRing;
+    
+    if (points.length === 0) return;
+    
+    // Add points for centroid calculation
+    allPoints = allPoints.concat(points);
+    
+    // Create path for this polygon
+    const polygonPath = points.map((coord, i) => {
+      const [x, y] = coord;
+      const roundedX = Math.round(x * 10) / 10;
+      const roundedY = Math.round(y * 10) / 10;
+      return i === 0 ? `M ${roundedX},${roundedY}` : `L ${roundedX},${roundedY}`;
+    });
+    
+    polygonPath.push('Z'); // Close the path
+    pathParts.push(polygonPath.join(' '));
   });
   
-  pathParts.push('Z'); // Close the path
+  if (pathParts.length === 0 || allPoints.length === 0) {
+    return { path: '', center: { x: 400, y: 600 } };
+  }
   
-  const center = calculateCentroid(points);
+  // Calculate centroid from all points
+  const center = calculateCentroid(allPoints);
   
   return {
     path: pathParts.join(' '),
