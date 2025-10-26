@@ -158,17 +158,17 @@ export default function SriLankaMap({
             ))}
 
             {/* Legend */}
-            <g transform="translate(450, 1100)">
+            <g transform="translate(300, 1100)">
               <circle cx="10" cy="20" r="8" fill="#10b981" />
               <text x="25" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.popular')}
               </text>
-              <circle cx="10" cy="45" r="8" fill="#e5e7eb" />
-              <text x="25" y="53" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
+              <circle cx="120" cy="20" r="8" fill="#e5e7eb" />
+              <text x="135" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.regular')}
               </text>
-              <circle cx="10" cy="70" r="8" fill="#3b82f6" />
-              <text x="25" y="78" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
+              <circle cx="230" cy="20" r="8" fill="#3b82f6" />
+              <text x="245" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.selected')}
               </text>
             </g>
