@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight, Sparkles, Users, Clock, Shield } from 'lucide-react';
 import { animationClasses } from '@/lib/animations';
 import SriLankaMap from './SriLankaMap';
+import AdCarousel from './AdCarousel';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +14,13 @@ export default function HeroBanner() {
   const locale = useLocale();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const router = useRouter();
+
+  // Advertisement images - add more images here as needed
+  const adImages = [
+    '/images/sponsor-ad.png',
+    '/images/sponsor-ad-2.png',
+    // Add more ad images here
+  ];
 
   const handleDistrictSelect = (district: any) => {
     setSelectedDistrict(district);
@@ -35,13 +43,9 @@ export default function HeroBanner() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-        {/* Advertisement Space */}
-        <div className="mb-6 bg-black border-4 border-blue-600 rounded-xl overflow-hidden animate-fade-in-up">
-          <img 
-            src="/images/sponsor-ad.png" 
-            alt="Ranga Auto Centre - Exclusive Auto Parts"
-            className="w-full h-auto object-contain"
-          />
+        {/* Advertisement Carousel */}
+        <div className="mb-6 animate-fade-in-up">
+          <AdCarousel images={adImages} interval={10000} />
         </div>
 
         {/* Main Content Grid */}
