@@ -34,12 +34,13 @@ export default function HeroBanner() {
 
   const handleDistrictSelect = (district: any) => {
     setSelectedDistrict(district);
-    // TODO: Implement district filtering for service providers
-    // For now, this will scroll to the district services section
-    const servicesSection = document.getElementById('district-services');
-    if (servicesSection) {
-      servicesSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    // Scroll to the popular categories section
+    setTimeout(() => {
+      const categoriesSection = document.getElementById('popular-categories');
+      if (categoriesSection) {
+        categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   return (
@@ -51,16 +52,16 @@ export default function HeroBanner() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
         {/* Advertisement Space */}
-        <div className="mb-8 bg-gradient-to-r from-yellow-100 via-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-12 text-center animate-fade-in-up">
-          <div className="flex items-center justify-center h-32">
-            <h2 className="text-3xl font-bold text-gray-800">Space for Main Sponsor</h2>
+        <div className="mb-6 bg-gradient-to-r from-yellow-100 via-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-6 text-center animate-fade-in-up">
+          <div className="flex items-center justify-center h-16">
+            <h2 className="text-2xl font-bold text-gray-800">Space for Main Sponsor</h2>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mb-6">
           {/* Left Column - Get Any Task Done Card */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             {/* Badge */}
