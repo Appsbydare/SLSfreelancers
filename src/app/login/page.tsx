@@ -79,11 +79,11 @@ export default function LoginPage() {
         
         // Redirect based on user type
         if (data.user.userType === 'admin') {
+          // Admin users go to project status
           router.push('/project-status');
-        } else if (data.user.userType === 'tasker') {
-          router.push('/browse-tasks');
         } else {
-          router.push('/');
+          // All other users (customers and taskers) go to homepage
+          router.push('/en');
         }
       } else {
         const errorData = await response.json();

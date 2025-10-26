@@ -2,8 +2,8 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -13,9 +13,15 @@ export default function Header() {
   const t = useTranslations('navigation');
   const locale = useLocale();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, isLoggedIn, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/en');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,20 +89,35 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
             
-            <div className="hidden md:flex items-center space-x-4">
-              <Link
-                href="/login"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
-              >
-                {t('login')}
-              </Link>
-              <Link
-                href="/signup"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
-              >
-                {t('signUp')}
-              </Link>
-            </div>
+            {isLoggedIn ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <span className="text-gray-700 text-sm font-medium">
+                  Welcome, {user?.firstName}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center text-gray-700 hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center space-x-4">
+                <Link
+                  href="/login"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  {t('login')}
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
+                >
+                  {t('signUp')}
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -134,20 +155,40 @@ export default function Header() {
                 </Link>
               ))}
               <div className="pt-4 pb-3 border-t border-gray-200">
-                <Link
-                  href="/login"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 transition-all duration-300 hover:scale-105"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {t('login')}
-                </Link>
-                <Link
-                  href="/signup"
-                  className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 transition-all duration-300 hover:scale-105"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {t('signUp')}
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <div className="px-3 py-2 text-base font-medium text-gray-900">
+                      Welcome, {user?.firstName}
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 transition-all duration-300"
+                    >
+                      <LogOut className="h-4 w-4 inline mr-2" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 transition-all duration-300 hover:scale-105"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {t('login')}
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 transition-all duration-300 hover:scale-105"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {t('signUp')}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
