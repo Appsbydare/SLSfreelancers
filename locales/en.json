@@ -37,7 +37,35 @@
       "assembly": "Furniture Assembly",
       "removals": "Removals",
       "business": "Business & Admin",
-      "marketing": "Marketing & Design"
+      "marketing": "Marketing & Design",
+      "viewAll": "View All Categories"
+    },
+    "map": {
+      "title": "Choose Your District",
+      "subtitle": "Select your district to see available services in your area",
+      "legend": {
+        "title": "Legend",
+        "popular": "Popular",
+        "regular": "Regular",
+        "selected": "Selected"
+      },
+      "info": {
+        "population": "Population",
+        "area": "Area",
+        "services": "Available Services"
+      },
+      "instructions": "Click on any district to see available services in that area"
+    },
+    "districtServices": {
+      "title": "Services Available in {district}",
+      "subtitle": "We have {count} service categories available in {district}",
+      "availableServices": "Available Services",
+      "comingSoon": "Coming Soon to This District",
+      "districtInfo": "District Information",
+      "population": "Population",
+      "area": "Area (km²)",
+      "availableServices": "Available Services",
+      "browseTasks": "Browse Tasks in {district}"
     }
   },
   "common": {
