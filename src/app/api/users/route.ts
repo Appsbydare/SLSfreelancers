@@ -22,7 +22,7 @@ interface User {
   email: string;
   phone: string;
   location: string;
-  userType: 'customer' | 'tasker';
+  userType: 'customer' | 'tasker' | 'admin';
   password: string;
   createdAt: string;
   isVerified: boolean;

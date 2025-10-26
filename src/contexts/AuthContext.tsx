@@ -9,7 +9,7 @@ interface User {
   email: string;
   phone: string;
   location: string;
-  userType: 'customer' | 'tasker';
+  userType: 'customer' | 'tasker' | 'admin';
   createdAt: string;
   isVerified: boolean;
   profile: {

@@ -1,0 +1,193 @@
+[
+  {
+    "id": "market-research",
+    "content": "Conduct market research and competitive analysis for Sri Lankan task marketplace",
+    "status": "completed",
+    "priority": "high",
+    "category": "Foundation & Planning",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "business-plan",
+    "content": "Create comprehensive business plan with revenue model and financial projections",
+    "status": "completed",
+    "priority": "high",
+    "category": "Foundation & Planning",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "legal-setup",
+    "content": "Register business entity and obtain necessary licenses in Sri Lanka",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Foundation & Planning",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "mvp-features",
+    "content": "Define MVP feature set and prioritize core functionality",
+    "status": "completed",
+    "priority": "high",
+    "category": "Foundation & Planning",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "tech-architecture",
+    "content": "Finalize technology stack and system architecture decisions",
+    "status": "completed",
+    "priority": "high",
+    "category": "Foundation & Planning",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "database-design",
+    "content": "Design database schema for users, tasks, payments, and reviews",
+    "status": "in_progress",
+    "priority": "high",
+    "category": "Core Development",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "payment-integration",
+    "content": "Integrate payment gateway (local Sri Lankan payment methods)",
+    "status": "pending",
+    "priority": "high",
+    "category": "Core Development",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "user-authentication",
+    "content": "Complete user authentication system with verification features",
+    "status": "completed",
+    "priority": "high",
+    "category": "Core Development",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "task-management",
+    "content": "Build complete task posting and management system",
+    "status": "in_progress",
+    "priority": "high",
+    "category": "Core Development",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "messaging-system",
+    "content": "Implement real-time messaging between customers and taskers",
+    "status": "pending",
+    "priority": "high",
+    "category": "Core Development",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "review-rating",
+    "content": "Create review and rating system for completed tasks",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Core Development",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "admin-dashboard",
+    "content": "Build admin panel for platform management and moderation",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Platform Management",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "mobile-responsive",
+    "content": "Ensure full mobile responsiveness and PWA capabilities",
+    "status": "completed",
+    "priority": "high",
+    "category": "Platform Management",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "security-audit",
+    "content": "Conduct security audit and implement safety measures",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Platform Management",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "testing-qa",
+    "content": "Comprehensive testing including user acceptance testing",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Platform Management",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "content-creation",
+    "content": "Create all website content, terms, privacy policy, and help documentation",
+    "status": "pending",
+    "priority": "low",
+    "category": "Content & Optimization",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "seo-optimization",
+    "content": "Implement SEO optimization and meta tags",
+    "status": "pending",
+    "priority": "low",
+    "category": "Content & Optimization",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "performance-optimization",
+    "content": "Optimize website performance and loading speeds",
+    "status": "completed",
+    "priority": "medium",
+    "category": "Content & Optimization",
+    "completedAt": "2025-01-20T10:00:00Z",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "beta-testing",
+    "content": "Launch beta version with limited users for feedback",
+    "status": "pending",
+    "priority": "medium",
+    "category": "Launch Preparation",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "marketing-strategy",
+    "content": "Develop marketing strategy and launch campaign",
+    "status": "pending",
+    "priority": "low",
+    "category": "Launch Preparation",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "customer-support",
+    "content": "Set up customer support system and processes",
+    "status": "pending",
+    "priority": "low",
+    "category": "Launch Preparation",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "insurance-setup",
+    "content": "Obtain liability insurance for platform and taskers",
+    "status": "pending",
+    "priority": "low",
+    "category": "Launch Preparation",
+    "createdAt": "2025-01-15T09:00:00Z"
+  },
+  {
+    "id": "final-launch",
+    "content": "Execute full platform launch with marketing campaign",
+    "status": "pending",
+    "priority": "high",
+    "category": "Launch",
+    "createdAt": "2025-01-15T09:00:00Z"
+  }
+]

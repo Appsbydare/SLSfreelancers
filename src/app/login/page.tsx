@@ -78,7 +78,9 @@ export default function LoginPage() {
         localStorage.setItem('isLoggedIn', 'true');
         
         // Redirect based on user type
-        if (data.user.userType === 'tasker') {
+        if (data.user.userType === 'admin') {
+          router.push('/project-status');
+        } else if (data.user.userType === 'tasker') {
           router.push('/browse-tasks');
         } else {
           router.push('/');
