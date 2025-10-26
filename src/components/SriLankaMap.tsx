@@ -158,7 +158,7 @@ export default function SriLankaMap({
             ))}
 
             {/* Legend */}
-            <g transform="translate(300, 1100)">
+            <g transform="translate(300, 1150)">
               <circle cx="10" cy="20" r="8" fill="#10b981" />
               <text x="25" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.popular')}
