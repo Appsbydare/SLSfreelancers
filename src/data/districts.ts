@@ -2,6 +2,13 @@
 // Generated from GeoJSON data source: SimpleMaps
 // Coordinates are converted to SVG paths for optimal rendering
 
+export interface City {
+  id: string;
+  name: string;
+  nameSi: string;
+  nameTa: string;
+}
+
 export interface District {
   id: string;
   name: string;
@@ -14,6 +21,7 @@ export interface District {
   center: { x: number; y: number };
   popular: boolean;
   services: string[];
+  cities: City[];
 }
 
 export const districts: District[] = [
@@ -36,6 +44,13 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "ampara-city", name: "Ampara", nameSi: "අම්පාර", nameTa: "அம்பாறை" },
+      { id: "akaraipattu", name: "Akkaraipattu", nameSi: "අක්කරයිප්පට්ටු", nameTa: "அக்கரைப்பற்று" },
+      { id: "sammanthurai", name: "Samanthurai", nameSi: "සමන්තුරේ", nameTa: "சமந்துறை" },
+      { id: "kalmunai", name: "Kalmunai", nameSi: "කල්මුණේ", nameTa: "கல்முனை" },
+      { id: "dehiattakandiya", name: "Dehiattakandiya", nameSi: "දෙහියට්ටකන්දිය", nameTa: "தெஹியட்டகண்டியா" }
     ]
   },
   {
@@ -59,6 +74,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "anuradhapura-city", name: "Anuradhapura", nameSi: "අනුරාධපුරය", nameTa: "அனுராதபுரம்" },
+      { id: "kekirawa", name: "Kekirawa", nameSi: "කෙකිරාව", nameTa: "கெக்கிரவ" },
+      { id: "mihintale", name: "Mihintale", nameSi: "මිහින්තලේ", nameTa: "மிஹிந்தளை" }
     ]
   },
   {
@@ -80,6 +100,12 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "badulla-city", name: "Badulla", nameSi: "බදුල්ල", nameTa: "பதுளை" },
+      { id: "bandarawela", name: "Bandarawela", nameSi: "බණ්ඩාරවෙල", nameTa: "பண்டாரவெள" },
+      { id: "hali-ela", name: "Hali-Ela", nameSi: "හලි-එල", nameTa: "ஹலி-எல" },
+      { id: "mahiyanganaya", name: "Mahiyanganaya", nameSi: "මහියංගණය", nameTa: "மஹியங்கணய" }
     ]
   },
   {
@@ -103,6 +129,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "batticaloa-city", name: "Batticaloa", nameSi: "මඩකලපුව", nameTa: "மட்டக்களப்பு" },
+      { id: "valaichenai", name: "Valaichenai", nameSi: "වලචේනායි", nameTa: "வலையேனை" },
+      { id: "eravur", name: "Eravur", nameSi: "එරවුර්", nameTa: "எராவூர்" }
     ]
   },
   {
@@ -129,6 +160,14 @@ export const districts: District[] = [
       "automotive",
       "pet-care",
       "lessons-training"
+    ],
+    "cities": [
+      { id: "colombo-city", name: "Colombo", nameSi: "කොළඹ", nameTa: "கொழும்பு" },
+      { id: "dehiwala", name: "Dehiwala", nameSi: "දෙහිවල", nameTa: "தெஹிவால" },
+      { id: "mount-lavinia", name: "Mount Lavinia", nameSi: "මුන්ට් ලැවිනියා", nameTa: "மவுண்ட் லவினியா" },
+      { id: "maharagama", name: "Maharagama", nameSi: "මහරගම", nameTa: "மஹரகம" },
+      { id: "boralesgamuwa", name: "Boralesgamuwa", nameSi: "බොරලැස්ගමුව", nameTa: "பொரலெஸ்கமுவ" },
+      { id: "rattmalana", name: "Ratmalana", nameSi: "රත්මලාන", nameTa: "ரத்மலான" }
     ]
   },
   {
@@ -152,6 +191,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "galle-city", name: "Galle", nameSi: "ගාල්ල", nameTa: "காலி" },
+      { id: "hikkaduwa", name: "Hikkaduwa", nameSi: "හික්කඩුව", nameTa: "ஹிக்கடுவ" },
+      { id: "weligama-galle", name: "Weligama", nameSi: "වෙලිගම", nameTa: "வெலிகம" }
     ]
   },
   {
@@ -178,6 +222,13 @@ export const districts: District[] = [
       "automotive",
       "pet-care",
       "lessons-training"
+    ],
+    "cities": [
+      { id: "gampaha-city", name: "Gampaha", nameSi: "ගම්පහ", nameTa: "கம்பஹா" },
+      { id: "negombo", name: "Negombo", nameSi: "මීගමුව", nameTa: "நீர்கொழும்பு" },
+      { id: "wattala", name: "Wattala", nameSi: "වත්තල", nameTa: "வத்தால" },
+      { id: "ja-ela", name: "Ja-Ela", nameSi: "ජා-එල", nameTa: "ஜா-எல" },
+      { id: "minuwangoda", name: "Minuwangoda", nameSi: "මිනුවන්ගොඩ", nameTa: "மினுவங்கொட" }
     ]
   },
   {
@@ -199,6 +250,11 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "hambantota-city", name: "Hambantota", nameSi: "හම්බන්තොට", nameTa: "அம்பாந்தோட்டை" },
+      { id: "tangalle", name: "Tangalle", nameSi: "තංගල්ල", nameTa: "தங்கல்ல" },
+      { id: "tissamaharama", name: "Tissamaharama", nameSi: "තිස්සමහාරාම", nameTa: "திஸ்ஸமஹாரம" }
     ]
   },
   {
@@ -222,6 +278,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "jaffna-city", name: "Jaffna", nameSi: "යාපනය", nameTa: "யாழ்ப்பாணம்" },
+      { id: "nallur", name: "Nallur", nameSi: "නල්ලුර්", nameTa: "நல்லூர்" },
+      { id: "point-pedro", name: "Point Pedro", nameSi: "පොයින්ට් පෙඩ්රෝ", nameTa: "பாயிண்ட் பேட்ரோ" }
     ]
   },
   {
@@ -245,6 +306,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "kalutara-city", name: "Kalutara", nameSi: "කළුතර", nameTa: "களுத்துறை" },
+      { id: "panadura", name: "Panadura", nameSi: "පානදුර", nameTa: "பானதுர" },
+      { id: "beruwala", name: "Beruwala", nameSi: "බේරුවල", nameTa: "பெருவல" }
     ]
   },
   {
@@ -271,6 +337,12 @@ export const districts: District[] = [
       "automotive",
       "pet-care",
       "lessons-training"
+    ],
+    "cities": [
+      { id: "kandy-city", name: "Kandy", nameSi: "මහනුවර", nameTa: "கண்டி" },
+      { id: "peradeniya", name: "Peradeniya", nameSi: "පේරාදෙනියාව", nameTa: "பேராதெனியா" },
+      { id: "katugastota", name: "Katugastota", nameSi: "කටුගස්තෝට", nameTa: "கடுகஸ்தோட" },
+      { id: "gampola", name: "Gampola", nameSi: "ගම්පොළ", nameTa: "கம்போல" }
     ]
   },
   {
@@ -292,6 +364,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "kegalle-city", name: "Kegalle", nameSi: "කෑගල්ල", nameTa: "கேகாலை" },
+      { id: "warakapola", name: "Warakapola", nameSi: "වරකාපොළ", nameTa: "வரகபோல" }
     ]
   },
   {
@@ -313,6 +389,9 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "kilinochchi-city", name: "Kilinochchi", nameSi: "කිලිනොච්චිය", nameTa: "கிளிநொச்சி" }
     ]
   },
   {
@@ -336,6 +415,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "kurunegala-city", name: "Kurunegala", nameSi: "කුරුණෑගල", nameTa: "குருணாகல்" },
+      { id: "chilaw", name: "Chilaw", nameSi: "චිලාව්", nameTa: "சிலாவ்" },
+      { id: "kuliyapitiya", name: "Kuliyapitiya", nameSi: "කුලියාපිටිය", nameTa: "குலியாபிட்டிய" }
     ]
   },
   {
@@ -357,6 +441,9 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "mannar-city", name: "Mannar", nameSi: "මන්නාරම", nameTa: "மன்னார்" }
     ]
   },
   {
@@ -378,6 +465,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "matale-city", name: "Matale", nameSi: "මාතලේ", nameTa: "மாத்தளை" },
+      { id: "dambulla", name: "Dambulla", nameSi: "දඹුල්ල", nameTa: "தம்புள்ள" }
     ]
   },
   {
@@ -399,6 +490,11 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "matara-city", name: "Matara", nameSi: "මාතර", nameTa: "மாத்தறை" },
+      { id: "weligama-matara", name: "Weligama", nameSi: "වෙලිගම", nameTa: "வெலிகம" },
+      { id: "deniyaya", name: "Deniyaya", nameSi: "දෙණියාය", nameTa: "தெனியய" }
     ]
   },
   {
@@ -420,6 +516,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "monaragala-city", name: "Monaragala", nameSi: "මොණරාගල", nameTa: "மொனராகலை" },
+      { id: "wellawaya", name: "Wellawaya", nameSi: "වෙල්ලවාය", nameTa: "வெல்லவாய" }
     ]
   },
   {
@@ -441,6 +541,9 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "mullaitivu-city", name: "Mullaitivu", nameSi: "මුලතිව්", nameTa: "முல்லைத்தீவு" }
     ]
   },
   {
@@ -464,6 +567,11 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "nuwara-eliya-city", name: "Nuwara Eliya", nameSi: "නුවරඑළිය", nameTa: "நுவரெலியா" },
+      { id: "hatton", name: "Hatton", nameSi: "හැටන්", nameTa: "ஹட்டன்" },
+      { id: "maskeliya", name: "Maskeliya", nameSi: "මස්කෙලියා", nameTa: "மஸ்கெலிய" }
     ]
   },
   {
@@ -485,6 +593,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "polonnaruwa-city", name: "Polonnaruwa", nameSi: "පොළොන්නරුව", nameTa: "பொலன்னறுவை" },
+      { id: "medirigiriya", name: "Medirigiriya", nameSi: "මැදිරිගිරිය", nameTa: "மெதிரிகிரிய" }
     ]
   },
   {
@@ -506,6 +618,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "puttalam-city", name: "Puttalam", nameSi: "පුත්තලම", nameTa: "புத்தளம்" },
+      { id: "chilaw-puttalam", name: "Chilaw", nameSi: "චිලාව්", nameTa: "சிலாவ்" }
     ]
   },
   {
@@ -527,6 +643,10 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "ratnapura-city", name: "Ratnapura", nameSi: "රත්නපුර", nameTa: "இரத்தினபுரி" },
+      { id: "balangoda", name: "Balangoda", nameSi: "බලංගොඩ", nameTa: "பலங்கொட" }
     ]
   },
   {
@@ -550,6 +670,10 @@ export const districts: District[] = [
       "business-admin",
       "automotive",
       "pet-care"
+    ],
+    "cities": [
+      { id: "trincomalee-city", name: "Trincomalee", nameSi: "ත්‍රිකුණාමලය", nameTa: "திருகோணமலை" },
+      { id: "kinniya", name: "Kinniya", nameSi: "කින්නියා", nameTa: "கின்னிய" }
     ]
   },
   {
@@ -571,6 +695,9 @@ export const districts: District[] = [
       "moving-delivery",
       "home-improvements",
       "automotive"
+    ],
+    "cities": [
+      { id: "vavuniya-city", name: "Vavuniya", nameSi: "වවුනියාව", nameTa: "வவுனியா" }
     ]
   }
 ];

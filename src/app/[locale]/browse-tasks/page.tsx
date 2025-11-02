@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
 import { formatCurrency } from '@/lib/utils';
+import { districts, District, City } from '@/data/districts';
+import { useDistrict } from '@/contexts/DistrictContext';
+import { useLocale, useTranslations } from 'next-intl';
 
 // Mock data for tasks
 const mockTasks = [
@@ -76,14 +79,70 @@ const mockTasks = [
 ];
 
 export default function BrowseTasksPage() {
+  const locale = useLocale();
+  const t = useTranslations();
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
+  const [selectedCityId, setSelectedCityId] = useState<string>('');
   const [sortBy, setSortBy] = useState('newest');
+
+  // Sync with DistrictContext when district is selected from map
+  useEffect(() => {
+    if (selectedDistrict) {
+      setSelectedDistrictId(selectedDistrict.id);
+      setSelectedCityId(''); // Reset city when district changes
+    }
+  }, [selectedDistrict]);
+
+  // Get selected district object
+  const selectedDistrictObj = districts.find(d => d.id === selectedDistrictId);
+  
+  // Get cities for selected district
+  const availableCities = selectedDistrictObj?.cities || [];
+
+  // Get district name based on locale
+  const getDistrictName = (district: District) => {
+    switch (locale) {
+      case 'si':
+        return district.nameSi;
+      case 'ta':
+        return district.nameTa;
+      default:
+        return district.name;
+    }
+  };
+
+  // Get city name based on locale
+  const getCityName = (city: City) => {
+    switch (locale) {
+      case 'si':
+        return city.nameSi;
+      case 'ta':
+        return city.nameTa;
+      default:
+        return city.name;
+    }
+  };
+
+  // Handle district change
+  const handleDistrictChange = (districtId: string) => {
+    setSelectedDistrictId(districtId);
+    setSelectedCityId(''); // Reset city when district changes
+    const district = districts.find(d => d.id === districtId);
+    if (district) {
+      setSelectedDistrict(district);
+    } else {
+      setSelectedDistrict(null);
+    }
+  };
 
   const filteredTasks = mockTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || task.category === selectedCategory;
+    // TODO: Add district and city filtering when task data includes these fields
     return matchesSearch && matchesCategory;
   });
 
@@ -114,7 +173,7 @@ export default function BrowseTasksPage() {
 
         {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div className="md:col-span-2">
               <div className="relative">
@@ -155,6 +214,48 @@ export default function BrowseTasksPage() {
                 <option value="newest">Newest First</option>
                 <option value="budget-high">Budget: High to Low</option>
                 <option value="budget-low">Budget: Low to High</option>
+              </select>
+            </div>
+          </div>
+
+          {/* District and City Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+            {/* District Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                District
+              </label>
+              <select
+                value={selectedDistrictId}
+                onChange={(e) => handleDistrictChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Districts</option>
+                {districts.map((district) => (
+                  <option key={district.id} value={district.id}>
+                    {getDistrictName(district)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* City Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                City
+              </label>
+              <select
+                value={selectedCityId}
+                onChange={(e) => setSelectedCityId(e.target.value)}
+                disabled={!selectedDistrictId}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">All Cities</option>
+                {availableCities.map((city) => (
+                  <option key={city.id} value={city.id}>
+                    {getCityName(city)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
