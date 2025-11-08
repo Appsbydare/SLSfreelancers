@@ -20,7 +20,6 @@ export default function Footer() {
                 height={32}
                 className="h-8 w-auto transition-all duration-300 hover:scale-110"
               />
-              <span className="ml-2 text-xl font-bold">EasyFinder</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Connect with skilled professionals in Sri Lanka. Get any task done quickly and reliably.

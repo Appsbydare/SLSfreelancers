@@ -63,9 +63,6 @@ export default function Header() {
                 className="h-8 w-auto transition-all duration-300 group-hover:scale-110"
                 priority
               />
-              <span className="ml-2 text-xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-brand-green">
-                EasyFinder
-              </span>
             </Link>
           </div>
 
