@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 
 // Animated counter hook
-function useCountUp(end: number, duration: number = 2000, suffix: string = '') {
-  const [count, setCount] = useState(0);
+function useCountUp(end: number, duration: number = 2000, suffix: string = '', start: number = 0) {
+  const [count, setCount] = useState(start);
   const [hasStarted, setHasStarted] = useState(false);
   const countRef = useRef<HTMLDivElement>(null);
 
@@ -21,7 +21,7 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = '') {
         if (entries[0].isIntersecting && !hasStarted) {
           setHasStarted(true);
           let startTime: number | null = null;
-          const startValue = 0;
+          const startValue = start;
 
           const animate = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
@@ -55,9 +55,114 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = '') {
         observer.unobserve(countRef.current);
       }
     };
-  }, [end, duration, hasStarted]);
+  }, [end, duration, hasStarted, start]);
 
   return { count, countRef, suffix };
+}
+
+// Animated counter that oscillates between two values
+function useOscillatingCounter(min: number, max: number, duration: number = 2000) {
+  const [count, setCount] = useState(min);
+  const [hasStarted, setHasStarted] = useState(false);
+  const countRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasStarted) {
+          setHasStarted(true);
+          let startTime: number | null = null;
+          const range = max - min;
+          const center = (min + max) / 2;
+
+          const animate = (currentTime: number) => {
+            if (startTime === null) startTime = currentTime;
+            const elapsed = currentTime - startTime;
+            
+            // Oscillate between min and max using sine wave
+            // One full cycle every 3 seconds
+            const cycle = 3000;
+            const progress = (elapsed % cycle) / cycle;
+            const oscillation = Math.sin(progress * Math.PI * 2);
+            const current = Math.round(center + (oscillation * range / 2));
+            
+            setCount(current);
+            requestAnimationFrame(animate);
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => {
+      if (countRef.current) {
+        observer.unobserve(countRef.current);
+      }
+    };
+  }, [min, max, hasStarted]);
+
+  return { count, countRef };
+}
+
+// Dual counter for hours/days (e.g., 24/7)
+function useDualCounter(hoursEnd: number, daysEnd: number, hoursStart: number = 0, daysStart: number = 0, duration: number = 2000) {
+  const [hours, setHours] = useState(hoursStart);
+  const [days, setDays] = useState(daysStart);
+  const [hasStarted, setHasStarted] = useState(false);
+  const countRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasStarted) {
+          setHasStarted(true);
+          let startTime: number | null = null;
+
+          const animate = (currentTime: number) => {
+            if (startTime === null) startTime = currentTime;
+            const progress = Math.min((currentTime - startTime) / duration, 1);
+            
+            // Easing function for smooth animation
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            
+            const currentHours = Math.floor(hoursStart + (hoursEnd - hoursStart) * easeOutQuart);
+            const currentDays = Math.floor(daysStart + (daysEnd - daysStart) * easeOutQuart);
+            
+            setHours(currentHours);
+            setDays(currentDays);
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setHours(hoursEnd);
+              setDays(daysEnd);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => {
+      if (countRef.current) {
+        observer.unobserve(countRef.current);
+      }
+    };
+  }, [hoursEnd, daysEnd, hoursStart, daysStart, duration, hasStarted]);
+
+  return { hours, days, countRef };
 }
 
 export default function HeroBanner() {
@@ -68,8 +173,8 @@ export default function HeroBanner() {
   
   // Animated counters
   const tasksCounter = useCountUp(500, 2000, '+');
-  const successCounter = useCountUp(98, 2000, '%');
-  const supportCounter = useCountUp(24, 2000, '/7');
+  const successCounter = useOscillatingCounter(97, 99);
+  const supportCounter = useDualCounter(24, 7, 9, 5, 2000);
 
   // Advertisement images - add more images here as needed
   const adImages = [
@@ -180,7 +285,7 @@ export default function HeroBanner() {
                   >
                     <div className="text-center">
                       <p className="text-4xl font-bold text-brand-green mb-2">
-                        {successCounter.count}{successCounter.suffix}
+                        {successCounter.count}%
                       </p>
                       <p className="text-sm font-medium text-gray-600">{t('stats.success')}</p>
                     </div>
@@ -194,7 +299,7 @@ export default function HeroBanner() {
                   >
                     <div className="text-center">
                       <p className="text-4xl font-bold text-brand-green mb-2">
-                        {supportCounter.count}{supportCounter.suffix}
+                        {supportCounter.hours}/{supportCounter.days}
                       </p>
                       <p className="text-sm font-medium text-gray-600">{t('stats.support')}</p>
                     </div>
