@@ -7,12 +7,69 @@ import SriLankaMap from './SriLankaMap';
 import AdCarousel from './AdCarousel';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+
+// Animated counter hook
+function useCountUp(end: number, duration: number = 2000, suffix: string = '') {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const countRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasStarted) {
+          setHasStarted(true);
+          let startTime: number | null = null;
+          const startValue = 0;
+
+          const animate = (currentTime: number) => {
+            if (startTime === null) startTime = currentTime;
+            const progress = Math.min((currentTime - startTime) / duration, 1);
+            
+            // Easing function for smooth animation
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            const current = Math.floor(startValue + (end - startValue) * easeOutQuart);
+            
+            setCount(current);
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(end);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => {
+      if (countRef.current) {
+        observer.unobserve(countRef.current);
+      }
+    };
+  }, [end, duration, hasStarted]);
+
+  return { count, countRef, suffix };
+}
 
 export default function HeroBanner() {
   const t = useTranslations('homepage.hero');
   const locale = useLocale();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const router = useRouter();
+  
+  // Animated counters
+  const tasksCounter = useCountUp(500, 2000, '+');
+  const successCounter = useCountUp(98, 2000, '%');
+  const supportCounter = useCountUp(24, 2000, '/7');
 
   // Advertisement images - add more images here as needed
   const adImages = [
@@ -100,18 +157,47 @@ export default function HeroBanner() {
 
               {/* Stats */}
               <div className="mt-auto pt-8">
-                <div className="grid grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-3xl font-bold text-brand-green">500+</p>
-                    <p className="text-sm text-gray-500">{t('stats.tasks')}</p>
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Tasks Stat Box */}
+                  <div 
+                    ref={tasksCounter.countRef}
+                    className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
+                    style={{ animationDelay: '600ms' }}
+                  >
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-brand-green mb-2">
+                        {tasksCounter.count}{tasksCounter.suffix}
+                      </p>
+                      <p className="text-sm font-medium text-gray-600">{t('stats.tasks')}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold text-brand-green">98%</p>
-                    <p className="text-sm text-gray-500">{t('stats.success')}</p>
+                  
+                  {/* Success Stat Box */}
+                  <div 
+                    ref={successCounter.countRef}
+                    className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
+                    style={{ animationDelay: '700ms' }}
+                  >
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-brand-green mb-2">
+                        {successCounter.count}{successCounter.suffix}
+                      </p>
+                      <p className="text-sm font-medium text-gray-600">{t('stats.success')}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold text-brand-green/80">24/7</p>
-                    <p className="text-sm text-gray-500">{t('stats.support')}</p>
+                  
+                  {/* Support Stat Box */}
+                  <div 
+                    ref={supportCounter.countRef}
+                    className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
+                    style={{ animationDelay: '800ms' }}
+                  >
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-brand-green mb-2">
+                        {supportCounter.count}{supportCounter.suffix}
+                      </p>
+                      <p className="text-sm font-medium text-gray-600">{t('stats.support')}</p>
+                    </div>
                   </div>
                 </div>
               </div>
