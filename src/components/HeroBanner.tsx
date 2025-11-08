@@ -60,8 +60,8 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = '', s
   return { count, countRef, suffix };
 }
 
-// Animated counter that oscillates between two values
-function useOscillatingCounter(min: number, max: number, duration: number = 2000) {
+// Animated counter that counts from min to max and stops
+function useCountUpRange(min: number, max: number, duration: number = 2000) {
   const [count, setCount] = useState(min);
   const [hasStarted, setHasStarted] = useState(false);
   const countRef = useRef<HTMLDivElement>(null);
@@ -72,22 +72,23 @@ function useOscillatingCounter(min: number, max: number, duration: number = 2000
         if (entries[0].isIntersecting && !hasStarted) {
           setHasStarted(true);
           let startTime: number | null = null;
-          const range = max - min;
-          const center = (min + max) / 2;
+          const startValue = min;
 
           const animate = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
-            const elapsed = currentTime - startTime;
+            const progress = Math.min((currentTime - startTime) / duration, 1);
             
-            // Oscillate between min and max using sine wave
-            // One full cycle every 3 seconds
-            const cycle = 3000;
-            const progress = (elapsed % cycle) / cycle;
-            const oscillation = Math.sin(progress * Math.PI * 2);
-            const current = Math.round(center + (oscillation * range / 2));
+            // Easing function for smooth animation
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            const current = Math.floor(startValue + (max - startValue) * easeOutQuart);
             
             setCount(current);
-            requestAnimationFrame(animate);
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(max);
+            }
           };
           
           requestAnimationFrame(animate);
@@ -105,7 +106,7 @@ function useOscillatingCounter(min: number, max: number, duration: number = 2000
         observer.unobserve(countRef.current);
       }
     };
-  }, [min, max, hasStarted]);
+  }, [min, max, duration, hasStarted]);
 
   return { count, countRef };
 }
@@ -173,7 +174,7 @@ export default function HeroBanner() {
   
   // Animated counters
   const tasksCounter = useCountUp(500, 2000, '+');
-  const successCounter = useOscillatingCounter(97, 99);
+  const successCounter = useCountUpRange(97, 99, 2000);
   const supportCounter = useDualCounter(24, 7, 9, 5, 2000);
 
   // Advertisement images - add more images here as needed
