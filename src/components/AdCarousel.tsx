@@ -64,7 +64,7 @@ export default function AdCarousel({ images, interval = 10000 }: AdCarouselProps
               }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? 'bg-blue-600 w-8'
+                  ? 'bg-brand-green w-8'
                   : 'bg-gray-400 hover:bg-gray-300'
               }`}
               aria-label={`Go to slide ${index + 1}`}

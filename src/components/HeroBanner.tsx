@@ -33,11 +33,11 @@ export default function HeroBanner() {
 
   return (
     <>
-      <section className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-brand-green/10 via-white to-green-50 overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-brand-green/20 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow"></div>
+          <div className="absolute top-40 right-10 w-72 h-72 bg-brand-green/30 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
         </div>
 
@@ -47,7 +47,7 @@ export default function HeroBanner() {
             {/* Left Column - Get Any Task Done Content */}
             <div className="flex flex-col animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6 self-start">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-brand-green/10 text-brand-green text-sm font-medium mb-6 self-start">
                 <Sparkles className="h-4 w-4 mr-2" />
                 {t('badge')}
               </div>
@@ -55,7 +55,7 @@ export default function HeroBanner() {
               {/* Main Heading - Made Bigger */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 mb-8 leading-tight">
                 {t('mainTitle')}
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-2">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-brand-green/70 mt-2">
                   {t('subTitle')}
                 </span>
               </h1>
@@ -68,15 +68,15 @@ export default function HeroBanner() {
               {/* Features */}
               <div className="flex flex-wrap gap-8 mb-10">
                 <div className="flex items-center space-x-3 text-gray-700">
-                  <div className="text-blue-600"><Users className="h-7 w-7" /></div>
+                  <div className="text-brand-green"><Users className="h-7 w-7" /></div>
                   <span className="text-base font-medium">{t('feature1')}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-gray-700">
-                  <div className="text-blue-600"><Clock className="h-7 w-7" /></div>
+                  <div className="text-brand-green"><Clock className="h-7 w-7" /></div>
                   <span className="text-base font-medium">{t('feature2')}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-gray-700">
-                  <div className="text-blue-600"><Shield className="h-7 w-7" /></div>
+                  <div className="text-brand-green"><Shield className="h-7 w-7" /></div>
                   <span className="text-base font-medium">{t('feature3')}</span>
                 </div>
               </div>
@@ -85,14 +85,14 @@ export default function HeroBanner() {
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
                 <Link
                   href={`/${locale}/browse-tasks`}
-                  className="inline-flex items-center justify-center px-10 py-5 bg-blue-600 text-white text-xl font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-10 py-5 bg-brand-green text-white text-xl font-semibold rounded-xl hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
                   {t('browseTasksButton')}
                   <ChevronRight className="ml-2 h-6 w-6" />
                 </Link>
                 <Link
                   href={`/${locale}/post-task`}
-                  className="inline-flex items-center justify-center px-10 py-5 border-2 border-blue-600 text-blue-600 text-xl font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105"
+                  className="inline-flex items-center justify-center px-10 py-5 border-2 border-brand-green text-brand-green text-xl font-semibold rounded-xl hover:bg-brand-green hover:text-white transition-all duration-300 hover:scale-105"
                 >
                   {t('postTaskButton')}
                 </Link>
@@ -102,15 +102,15 @@ export default function HeroBanner() {
               <div className="mt-auto pt-8">
                 <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <p className="text-3xl font-bold text-blue-600">500+</p>
+                    <p className="text-3xl font-bold text-brand-green">500+</p>
                     <p className="text-sm text-gray-500">{t('stats.tasks')}</p>
                   </div>
                   <div>
-                    <p className="text-3xl font-bold text-green-600">98%</p>
+                    <p className="text-3xl font-bold text-brand-green">98%</p>
                     <p className="text-sm text-gray-500">{t('stats.success')}</p>
                   </div>
                   <div>
-                    <p className="text-3xl font-bold text-purple-600">24/7</p>
+                    <p className="text-3xl font-bold text-brand-green/80">24/7</p>
                     <p className="text-sm text-gray-500">{t('stats.support')}</p>
                   </div>
                 </div>
@@ -138,17 +138,17 @@ export default function HeroBanner() {
               </div>
 
               {selectedDistrict && (
-                <div className="mt-6 p-5 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="mt-6 p-5 bg-brand-green/10 rounded-xl border border-brand-green/20">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-blue-800">Selected District</p>
-                      <p className="text-xl font-bold text-blue-900">{selectedDistrict.name}</p>
+                      <p className="text-sm font-medium text-brand-green">Selected District</p>
+                      <p className="text-xl font-bold text-brand-green">{selectedDistrict.name}</p>
                     </div>
                     <div className="text-center sm:text-right">
-                      <p className="text-sm text-blue-700 mb-2">{selectedDistrict.services.length} Services</p>
+                      <p className="text-sm text-brand-green/80 mb-2">{selectedDistrict.services.length} Services</p>
                       <Link 
                         href={`/${locale}/browse-tasks?district=${selectedDistrict.id}`}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors"
                       >
                         Browse Tasks
                         <ChevronRight className="ml-1 h-4 w-4" />

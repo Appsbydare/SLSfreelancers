@@ -66,7 +66,7 @@ export default function PostTaskPage() {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="e.g., Clean my house, Assemble furniture, Paint room"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               />
             </div>
@@ -83,7 +83,7 @@ export default function PostTaskPage() {
                 onChange={handleInputChange}
                 rows={4}
                 placeholder="Provide as much detail as possible. Include size, materials, special requirements, etc."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               />
             </div>
@@ -98,7 +98,7 @@ export default function PostTaskPage() {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               >
                 <option value="">Select a category</option>
@@ -125,7 +125,7 @@ export default function PostTaskPage() {
                   onChange={handleInputChange}
                   placeholder="0"
                   min="0"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -148,7 +148,7 @@ export default function PostTaskPage() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="e.g., Colombo 7, Kandy, Galle"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -167,7 +167,7 @@ export default function PostTaskPage() {
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function PostTaskPage() {
                 />
                 <label
                   htmlFor="images"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 cursor-pointer"
                 >
                   Choose Files
                 </label>
@@ -210,7 +210,7 @@ export default function PostTaskPage() {
             <div className="pt-6">
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
               >
                 Post Task for Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -223,11 +223,11 @@ export default function PostTaskPage() {
         </div>
 
         {/* Tips */}
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+        <div className="mt-8 bg-brand-green/10 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-brand-green mb-3">
             Tips for getting the best results:
           </h3>
-          <ul className="space-y-2 text-blue-800">
+          <ul className="space-y-2 text-brand-green">
             <li>• Be specific about what you need done</li>
             <li>• Include measurements, materials, or special requirements</li>
             <li>• Set a realistic budget to attract quality taskers</li>

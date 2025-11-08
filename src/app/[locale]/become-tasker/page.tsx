@@ -63,8 +63,8 @@ export default function BecomeTaskerPage() {
               </div>
 
               <div className="flex items-start">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <Clock className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                  <Clock className="h-6 w-6 text-brand-green" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Flexible Schedule</h3>
@@ -75,8 +75,8 @@ export default function BecomeTaskerPage() {
               </div>
 
               <div className="flex items-start">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <Users className="h-6 w-6 text-purple-600" />
+                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                  <Users className="h-6 w-6 text-brand-green" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Build Your Business</h3>
@@ -142,7 +142,7 @@ export default function BecomeTaskerPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -157,7 +157,7 @@ export default function BecomeTaskerPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -172,7 +172,7 @@ export default function BecomeTaskerPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -188,7 +188,7 @@ export default function BecomeTaskerPage() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="e.g., Colombo, Kandy, Galle"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -204,7 +204,7 @@ export default function BecomeTaskerPage() {
                   value={formData.skills}
                   onChange={handleInputChange}
                   placeholder="e.g., Cleaning, Handyman, Delivery, Tutoring"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -218,7 +218,7 @@ export default function BecomeTaskerPage() {
                   name="experience"
                   value={formData.experience}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 >
                   <option value="">Select experience level</option>
@@ -240,7 +240,7 @@ export default function BecomeTaskerPage() {
                   onChange={handleInputChange}
                   rows={4}
                   placeholder="Describe your experience, qualifications, and what makes you a great tasker..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
@@ -257,7 +257,7 @@ export default function BecomeTaskerPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link href="/login" className="text-brand-green hover:text-brand-green/80 font-medium">
                   Sign in here
                 </Link>
               </p>
@@ -272,8 +272,8 @@ export default function BecomeTaskerPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="h-6 w-6 text-brand-green" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">18+ Years Old</h3>
               <p className="text-sm text-gray-600">Must be at least 18 years of age</p>
@@ -286,8 +286,8 @@ export default function BecomeTaskerPage() {
               <p className="text-sm text-gray-600">National ID or passport required</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
+              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="h-6 w-6 text-brand-green" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Bank Account</h3>
               <p className="text-sm text-gray-600">For secure payments</p>

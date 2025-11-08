@@ -47,8 +47,8 @@ export default function Header() {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' 
-        : 'bg-white shadow-sm border-b'
+        ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
+        : 'bg-black shadow-sm border-b border-gray-800'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -56,11 +56,11 @@ export default function Header() {
           <div className="flex-shrink-0">
             <Link href={`/${locale}`} className="flex items-center group">
               <Image
-                src="/logo.svg"
+                src="/logo-white.svg"
                 alt="EasyFinder"
-                width={94}
-                height={32}
-                className="h-8 w-auto transition-all duration-300 group-hover:scale-110"
+                width={188}
+                height={64}
+                className="h-16 w-auto transition-all duration-300 group-hover:scale-110"
                 priority
               />
             </Link>
@@ -75,7 +75,7 @@ export default function Header() {
                 className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
                   pathname === item.href
                     ? 'text-brand-green'
-                    : 'text-gray-700 hover:text-brand-green'
+                    : 'text-white hover:text-brand-green'
                 }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -94,12 +94,12 @@ export default function Header() {
             
             {isLoggedIn ? (
               <div className="hidden md:flex items-center space-x-4">
-                <span className="text-gray-700 text-sm font-medium">
+                <span className="text-white text-sm font-medium">
                   Welcome, {user?.firstName}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center text-gray-700 hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                  className="inline-flex items-center text-white hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                 >
                   <LogOut className="h-4 w-4 mr-1" />
                   Logout
@@ -109,7 +109,7 @@ export default function Header() {
               <div className="hidden md:flex items-center space-x-4">
                 <Link
                   href="/login"
-                  className="text-gray-700 hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                  className="text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                 >
                   {t('login')}
                 </Link>
@@ -125,7 +125,7 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-700 hover:text-brand-green hover:bg-gray-100 transition-all duration-300 hover:scale-110"
+              className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300 hover:scale-110"
             >
               <div className="relative">
                 {isMobileMenuOpen ? (
@@ -141,7 +141,7 @@ export default function Header() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden animate-slide-in-down">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-800">
               {displayNavigation.map((item, index) => (
                 <Link
                   key={item.name}
@@ -149,7 +149,7 @@ export default function Header() {
                   className={`block px-3 py-2 text-base font-medium transition-all duration-300 hover:scale-105 ${
                     pathname === item.href
                       ? 'text-brand-green bg-brand-green/10'
-                      : 'text-gray-700 hover:text-brand-green hover:bg-gray-50'
+                      : 'text-white hover:text-brand-green hover:bg-gray-800'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -157,10 +157,10 @@ export default function Header() {
                   {item.name}
                 </Link>
               ))}
-              <div className="pt-4 pb-3 border-t border-gray-200">
+              <div className="pt-4 pb-3 border-t border-gray-800">
                 {isLoggedIn ? (
                   <>
-                    <div className="px-3 py-2 text-base font-medium text-gray-900">
+                    <div className="px-3 py-2 text-base font-medium text-white">
                       Welcome, {user?.firstName}
                     </div>
                     <button
@@ -178,7 +178,7 @@ export default function Header() {
                   <>
                     <Link
                       href="/login"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-brand-green transition-all duration-300 hover:scale-105"
+                      className="block px-3 py-2 text-base font-medium text-white hover:text-brand-green transition-all duration-300 hover:scale-105"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {t('login')}

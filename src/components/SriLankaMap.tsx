@@ -42,10 +42,10 @@ export default function SriLankaMap({
 
   const getDistrictColor = (district: District) => {
     if (selectedDistrictId === district.id) {
-      return '#3b82f6'; // Blue for selected
+      return '#0fcc17'; // Brand green for selected
     }
     if (hoveredDistrict === district.id) {
-      return '#60a5fa'; // Light blue for hover
+      return '#0fcc17'; // Brand green for hover
     }
     if (district.popular) {
       return '#10b981'; // Green for popular districts
@@ -74,7 +74,7 @@ export default function SriLankaMap({
   return (
     <div className={`relative ${className}`}>
       {/* Map Container */}
-      <div className="relative bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4">
+      <div className="relative bg-gradient-to-br from-brand-green/10 to-green-50 rounded-xl p-4">
         {/* Map SVG */}
         <div className="flex justify-center">
           <svg
@@ -167,7 +167,7 @@ export default function SriLankaMap({
               <text x="135" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.regular')}
               </text>
-              <circle cx="230" cy="20" r="8" fill="#3b82f6" />
+              <circle cx="230" cy="20" r="8" fill="#0fcc17" />
               <text x="245" y="28" className="text-sm fill-gray-600" style={{ fontSize: '16px' }}>
                 {t('legend.selected')}
               </text>

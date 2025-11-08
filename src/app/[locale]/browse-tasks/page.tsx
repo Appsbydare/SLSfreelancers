@@ -183,7 +183,7 @@ export default function BrowseTasksPage() {
                   placeholder="Search tasks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 />
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function BrowseTasksPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -209,7 +209,7 @@ export default function BrowseTasksPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
               >
                 <option value="newest">Newest First</option>
                 <option value="budget-high">Budget: High to Low</option>
@@ -228,7 +228,7 @@ export default function BrowseTasksPage() {
               <select
                 value={selectedDistrictId}
                 onChange={(e) => handleDistrictChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
               >
                 <option value="">All Districts</option>
                 {districts.map((district) => (
@@ -248,7 +248,7 @@ export default function BrowseTasksPage() {
                 value={selectedCityId}
                 onChange={(e) => setSelectedCityId(e.target.value)}
                 disabled={!selectedDistrictId}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">All Cities</option>
                 {availableCities.map((city) => (
@@ -277,7 +277,7 @@ export default function BrowseTasksPage() {
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
                     {task.title}
                   </h3>
-                  <span className="text-lg font-bold text-blue-600">
+                  <span className="text-lg font-bold text-brand-green">
                     {formatCurrency(task.budget)}
                   </span>
                 </div>
@@ -315,7 +315,7 @@ export default function BrowseTasksPage() {
 
                   <div className="text-right">
                     <p className="text-sm text-gray-600">{task.offersCount} offers</p>
-                    <button className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
                       Make Offer
                     </button>
                   </div>

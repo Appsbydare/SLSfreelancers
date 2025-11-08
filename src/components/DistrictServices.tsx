@@ -126,19 +126,19 @@ export default function DistrictServices() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-brand-green">
                 {selectedDistrict.population.toLocaleString()}
               </div>
               <div className="text-sm text-gray-600">{t('population')}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-brand-green">
                 {selectedDistrict.area.toLocaleString()} km²
               </div>
               <div className="text-sm text-gray-600">{t('area')}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-brand-green/80">
                 {availableCategories.length}
               </div>
               <div className="text-sm text-gray-600">{t('availableServices')}</div>
@@ -150,7 +150,7 @@ export default function DistrictServices() {
         <div className="text-center mt-8 animate-fade-in-up" style={{ animationDelay: '1200ms' }}>
           <Link
             href={`/browse-tasks?district=${selectedDistrict.id}`}
-            className="inline-flex items-center px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+            className="inline-flex items-center px-8 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-xl"
           >
             {t('browseTasks')}
           </Link>

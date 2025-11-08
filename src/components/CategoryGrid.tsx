@@ -50,7 +50,7 @@ export default function CategoryGrid() {
                 placeholder="Search for services..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all duration-300"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 outline-none transition-all duration-300"
               />
             </div>
           </div>
@@ -63,14 +63,14 @@ export default function CategoryGrid() {
                 <Link
                   key={category.id}
                   href={`/${locale}/browse-tasks?category=${category.id}`}
-                  className="group bg-white rounded-lg border border-gray-200 p-6 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 animate-fade-in-up"
+                  className="group bg-white rounded-lg border border-gray-200 p-6 hover:border-brand-green hover:shadow-lg transition-all duration-300 hover:-translate-y-2 animate-fade-in-up"
                   style={{ animationDelay: `${(index * 100) + 400}ms` }}
                 >
                   <div className="text-center">
                     <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">
                       {category.icon}
                     </div>
-                    <h3 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="text-sm font-medium text-gray-900 group-hover:text-brand-green transition-colors duration-300">
                       {getCategoryName(category)}
                     </h3>
                     <p className="text-xs text-gray-500 mt-1 line-clamp-2 group-hover:text-gray-700 transition-colors duration-300">
@@ -84,7 +84,7 @@ export default function CategoryGrid() {
             <div className="text-center mt-8">
               <Link
                 href={`/${locale}/browse-tasks`}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-fade-in-up"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-brand-green bg-brand-green/10 hover:bg-brand-green/20 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-fade-in-up"
                 style={{ animationDelay: '800ms' }}
               >
                 {t('viewAll')}
