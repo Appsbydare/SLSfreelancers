@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
 import { useAuth } from '@/contexts/AuthContext';
+import VerifiedBadge from './VerifiedBadge';
 import Image from 'next/image';
 
 export default function Header() {
@@ -94,9 +95,14 @@ export default function Header() {
             
             {isLoggedIn ? (
               <div className="hidden md:flex items-center space-x-4">
-                <span className="text-white text-sm font-medium">
-                  Welcome, {user?.firstName}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm font-medium">
+                    Welcome, {user?.callingName || user?.firstName}
+                  </span>
+                  {user?.userType === 'tasker' && user?.isVerified && (
+                    <VerifiedBadge size="sm" showText={false} />
+                  )}
+                </div>
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center text-white hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
@@ -160,8 +166,11 @@ export default function Header() {
               <div className="pt-4 pb-3 border-t border-gray-800">
                 {isLoggedIn ? (
                   <>
-                    <div className="px-3 py-2 text-base font-medium text-white">
-                      Welcome, {user?.firstName}
+                    <div className="px-3 py-2 text-base font-medium text-white flex items-center gap-2">
+                      Welcome, {user?.callingName || user?.firstName}
+                      {user?.userType === 'tasker' && user?.isVerified && (
+                        <VerifiedBadge size="sm" showText={false} />
+                      )}
                     </div>
                     <button
                       onClick={() => {
