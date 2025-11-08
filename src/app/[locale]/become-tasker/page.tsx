@@ -273,7 +273,7 @@ export default function BecomeTaskerPage() {
 
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
               >
                 Sign Up
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -282,7 +282,7 @@ export default function BecomeTaskerPage() {
 
             {/* Verify Account Button */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <div className="bg-brand-green/10 rounded-lg p-4 mb-4 border border-brand-green/20">
                 <p className="text-sm text-gray-700 mb-3">
                   <strong>Get more chances to apply for Jobs/Tasks</strong>
                 </p>
@@ -292,7 +292,7 @@ export default function BecomeTaskerPage() {
                 <button
                   type="button"
                   onClick={() => setShowVerificationModal(true)}
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
                 >
                   <CheckCircle2 className="h-5 w-5 mr-2" />
                   Verify Your Account
@@ -364,8 +364,8 @@ export default function BecomeTaskerPage() {
             </div>
 
             <form onSubmit={handleVerificationSubmit} className="p-6 space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-800">
                   <strong>Why verify?</strong> Verified taskers appear at the top of customer searches and get priority access to tasks.
                 </p>
               </div>
@@ -638,7 +638,7 @@ export default function BecomeTaskerPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex-1 px-6 py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
                 >
                   Submit Verification
                 </button>

@@ -21,9 +21,9 @@ export default function VerifiedBadge({ size = 'md', showText = true, className 
 
   return (
     <div className={`inline-flex items-center gap-1.5 ${className}`}>
-      <CheckCircle2 className={`${sizeClasses[size]} text-blue-600`} />
+      <CheckCircle2 className={`${sizeClasses[size]} text-brand-green`} />
       {showText && (
-        <span className={`${textSizeClasses[size]} font-medium text-blue-600`}>
+        <span className={`${textSizeClasses[size]} font-medium text-brand-green`}>
           Verified
         </span>
       )}
