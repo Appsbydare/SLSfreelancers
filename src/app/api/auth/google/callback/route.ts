@@ -91,10 +91,10 @@ export async function GET(request: NextRequest) {
     const googleUser = await userInfoResponse.json();
 
     // Create or update user in your database
-    // For now, we'll redirect to signup with pre-filled data
+    // For now, we'll redirect with pre-filled data
     // In production, you should create the user here and log them in
     
-    const signupParams = new URLSearchParams({
+    const params = new URLSearchParams({
       google: 'true',
       email: googleUser.email || '',
       firstName: googleUser.given_name || '',
@@ -103,11 +103,18 @@ export async function GET(request: NextRequest) {
       userType: userType,
     });
 
-    // Redirect to signup page with Google data
-    // In production, you should create the user and redirect to dashboard
-    return NextResponse.redirect(
-      new URL(`/signup?${signupParams.toString()}`, request.url)
-    );
+    // Redirect based on userType
+    if (userType === 'tasker') {
+      // Redirect to become-tasker page with Google data
+      return NextResponse.redirect(
+        new URL(`/en/become-tasker?${params.toString()}`, request.url)
+      );
+    } else {
+      // Redirect to signup page with Google data
+      return NextResponse.redirect(
+        new URL(`/signup?${params.toString()}`, request.url)
+      );
+    }
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
