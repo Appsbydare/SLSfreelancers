@@ -103,9 +103,9 @@ export default function LoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="EasyFinder"
-            width={48}
+            width={141}
             height={48}
             className="h-12 w-auto"
             priority

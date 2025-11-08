@@ -14,9 +14,9 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 animate-fade-in-up">
             <div className="flex items-center mb-4">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="EasyFinder"
-                width={32}
+                width={94}
                 height={32}
                 className="h-8 w-auto transition-all duration-300 hover:scale-110"
               />

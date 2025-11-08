@@ -56,9 +56,9 @@ export default function Header() {
           <div className="flex-shrink-0">
             <Link href={`/${locale}`} className="flex items-center group">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="EasyFinder"
-                width={32}
+                width={94}
                 height={32}
                 className="h-8 w-auto transition-all duration-300 group-hover:scale-110"
                 priority
