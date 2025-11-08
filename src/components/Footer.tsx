@@ -14,11 +14,11 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 animate-fade-in-up">
             <div className="flex items-center mb-4">
               <Image
-                src="/logo.svg"
+                src="/logo-white.svg"
                 alt="EasyFinder"
-                width={94}
-                height={32}
-                className="h-8 w-auto transition-all duration-300 hover:scale-110"
+                width={188}
+                height={64}
+                className="h-16 w-auto transition-all duration-300 hover:scale-110"
               />
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
