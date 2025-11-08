@@ -18,30 +18,33 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state');
   const error = searchParams.get('error');
 
+  // Parse state to get userType first (needed for error redirects)
+  let userType = 'customer';
+  if (state) {
+    try {
+      const stateData = JSON.parse(state);
+      userType = stateData.userType || 'customer';
+    } catch (e) {
+      // If state parsing fails, use default
+    }
+  }
+
   // Handle OAuth errors
   if (error) {
-    return NextResponse.redirect(
-      new URL(`/signup?error=oauth_cancelled`, request.url)
-    );
+    const redirectUrl = userType === 'tasker' 
+      ? `/en/become-tasker?error=oauth_cancelled`
+      : `/signup?error=oauth_cancelled`;
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      new URL(`/signup?error=oauth_failed`, request.url)
-    );
+    const redirectUrl = userType === 'tasker'
+      ? `/en/become-tasker?error=oauth_failed`
+      : `/signup?error=oauth_failed`;
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   try {
-    // Parse state to get userType
-    let userType = 'customer';
-    if (state) {
-      try {
-        const stateData = JSON.parse(state);
-        userType = stateData.userType || 'customer';
-      } catch (e) {
-        // If state parsing fails, use default
-      }
-    }
 
     // Exchange code for tokens (simplified - in production use proper OAuth flow)
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -50,9 +53,10 @@ export async function GET(request: NextRequest) {
 
     if (!clientId || !clientSecret) {
       // If not configured, show a message that Google Sign In needs to be set up
-      return NextResponse.redirect(
-        new URL(`/signup?error=google_not_configured&userType=${userType}`, request.url)
-      );
+      const redirectUrl = userType === 'tasker'
+        ? `/en/become-tasker?error=google_not_configured`
+        : `/signup?error=google_not_configured`;
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
     // Exchange authorization code for access token
@@ -118,9 +122,20 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    return NextResponse.redirect(
-      new URL(`/signup?error=oauth_failed`, request.url)
-    );
+    // Try to get userType from state for error redirect
+    let userType = 'customer';
+    if (state) {
+      try {
+        const stateData = JSON.parse(state);
+        userType = stateData.userType || 'customer';
+      } catch (e) {
+        // If state parsing fails, use default
+      }
+    }
+    const redirectUrl = userType === 'tasker'
+      ? `/en/become-tasker?error=oauth_failed`
+      : `/signup?error=oauth_failed`;
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 }
 
