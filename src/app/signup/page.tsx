@@ -276,256 +276,256 @@ export default function SignupPage() {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Info Message */}
-            <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700">
-                <strong>Want to become a Tasker?</strong>{' '}
-                <Link href="/become-tasker" className="text-brand-green hover:text-brand-green/80 font-medium underline">
-                  Sign up as a Tasker here
-                </Link>
-                {' '}to start earning money by completing tasks.
-              </p>
-            </div>
-
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  First Name
-                </label>
-                <div className="mt-1 relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.firstName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="John"
-                  />
-                </div>
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-                )}
+              <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Want to become a Tasker?</strong>{' '}
+                  <Link href="/become-tasker" className="text-brand-green hover:text-brand-green/80 font-medium underline">
+                    Sign up as a Tasker here
+                  </Link>
+                  {' '}to start earning money by completing tasks.
+                </p>
               </div>
 
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  Last Name
-                </label>
-                <div className="mt-1 relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.lastName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Doe"
-                  />
-                </div>
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <div className="mt-1 relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="john@example.com"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <div className="mt-1 relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="+94 77 123 4567"
-                />
-              </div>
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-              )}
-            </div>
-
-            {/* Location */}
-            <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                Location
-              </label>
-              <div className="mt-1 relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="location"
-                  name="location"
-                  type="text"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Colombo, Sri Lanka"
-                />
-              </div>
-              {errors.location && (
-                <p className="mt-1 text-sm text-red-600">{errors.location}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* Terms Agreement */}
-            <div>
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="agreeToTerms"
-                    name="agreeToTerms"
-                    type="checkbox"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    className={`focus:ring-brand-green h-4 w-4 text-brand-green border-gray-300 rounded ${
-                      errors.agreeToTerms ? 'border-red-300' : ''
-                    }`}
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="agreeToTerms" className="text-gray-700">
-                    I agree to the{' '}
-                    <Link href="/terms" className="text-brand-green hover:text-brand-green/80">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link href="/privacy" className="text-brand-green hover:text-brand-green/80">
-                      Privacy Policy
-                    </Link>
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                    First Name
                   </label>
+                  <div className="mt-1 relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                        errors.firstName ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="John"
+                    />
+                  </div>
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <div className="mt-1 relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                        errors.lastName ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="Doe"
+                    />
+                  </div>
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                  )}
                 </div>
               </div>
-              {errors.agreeToTerms && (
-                <p className="mt-1 text-sm text-red-600">{errors.agreeToTerms}</p>
-              )}
-            </div>
 
-            {/* Submit Error */}
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-sm text-red-600">{errors.submit}</p>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating Account...
-                  </div>
-                ) : (
-                  'Create Account'
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email Address
+                </label>
+                <div className="mt-1 relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                      errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="john@example.com"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
-              </button>
-            </div>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <div className="mt-1 relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                      errors.phone ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="+94 77 123 4567"
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                )}
+              </div>
+
+              {/* Location */}
+              <div>
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <div className="mt-1 relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    id="location"
+                    name="location"
+                    type="text"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                      errors.location ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Colombo, Sri Lanka"
+                  />
+                </div>
+                {errors.location && (
+                  <p className="mt-1 text-sm text-red-600">{errors.location}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="mt-1 relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                      errors.password ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <div className="mt-1 relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
+                      errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              {/* Terms Agreement */}
+              <div>
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="agreeToTerms"
+                      name="agreeToTerms"
+                      type="checkbox"
+                      checked={formData.agreeToTerms}
+                      onChange={handleInputChange}
+                      className={`focus:ring-brand-green h-4 w-4 text-brand-green border-gray-300 rounded ${
+                        errors.agreeToTerms ? 'border-red-300' : ''
+                      }`}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="agreeToTerms" className="text-gray-700">
+                      I agree to the{' '}
+                      <Link href="/terms" className="text-brand-green hover:text-brand-green/80">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="/privacy" className="text-brand-green hover:text-brand-green/80">
+                        Privacy Policy
+                      </Link>
+                    </label>
+                  </div>
+                </div>
+                {errors.agreeToTerms && (
+                  <p className="mt-1 text-sm text-red-600">{errors.agreeToTerms}</p>
+                )}
+              </div>
+
+              {/* Submit Error */}
+              {errors.submit && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-sm text-red-600">{errors.submit}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Creating Account...
+                    </div>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
+              </div>
             </form>
 
             <div className="mt-6">
