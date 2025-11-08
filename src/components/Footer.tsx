@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { animationClasses } from '@/lib/animations';
+import Image from 'next/image';
 
 export default function Footer() {
   const t = useTranslations('navigation');
@@ -12,10 +13,14 @@ export default function Footer() {
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2 animate-fade-in-up">
             <div className="flex items-center mb-4">
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg">
-                <span className="text-white font-bold text-lg">SL</span>
-              </div>
-              <span className="ml-2 text-xl font-bold">Sri Lanka Tasks</span>
+              <Image
+                src="/logo.png"
+                alt="EasyFinder"
+                width={32}
+                height={32}
+                className="h-8 w-auto transition-all duration-300 hover:scale-110"
+              />
+              <span className="ml-2 text-xl font-bold">EasyFinder</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Connect with skilled professionals in Sri Lanka. Get any task done quickly and reliably.
@@ -94,7 +99,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 Sri Lanka Tasks. All rights reserved.
+              © 2024 EasyFinder. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors duration-300 hover:translate-x-1 inline-block">

@@ -5,7 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import '../app/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sri Lanka Tasks - Get Any Task Done',
+  title: 'EasyFinder - Get Any Task Done',
   description: 'Connect with skilled professionals in Sri Lanka. Get any task done quickly and reliably.',
 };
 

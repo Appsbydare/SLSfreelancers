@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -160,15 +161,20 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">SL</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="EasyFinder"
+            width={48}
+            height={48}
+            className="h-12 w-auto"
+            priority
+          />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Create your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Join Sri Lanka Tasks and start getting things done
+          Join EasyFinder and start getting things done
         </p>
       </div>
 
@@ -183,7 +189,7 @@ export default function SignupPage() {
               <div className="grid grid-cols-2 gap-3">
                 <label className={`relative flex cursor-pointer rounded-lg p-4 focus:outline-none ${
                   formData.userType === 'customer' 
-                    ? 'ring-2 ring-blue-500 bg-blue-50' 
+                    ? 'ring-2 ring-brand-green bg-brand-green/10' 
                     : 'ring-1 ring-gray-300 bg-white'
                 }`}>
                   <input
@@ -201,7 +207,7 @@ export default function SignupPage() {
                 </label>
                 <label className={`relative flex cursor-pointer rounded-lg p-4 focus:outline-none ${
                   formData.userType === 'tasker' 
-                    ? 'ring-2 ring-blue-500 bg-blue-50' 
+                    ? 'ring-2 ring-brand-green bg-brand-green/10' 
                     : 'ring-1 ring-gray-300 bg-white'
                 }`}>
                   <input
@@ -234,7 +240,7 @@ export default function SignupPage() {
                     type="text"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                       errors.firstName ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="John"
@@ -257,7 +263,7 @@ export default function SignupPage() {
                     type="text"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                       errors.lastName ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="Doe"
@@ -282,7 +288,7 @@ export default function SignupPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="john@example.com"
@@ -306,7 +312,7 @@ export default function SignupPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                     errors.phone ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="+94 77 123 4567"
@@ -330,7 +336,7 @@ export default function SignupPage() {
                   type="text"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                     errors.location ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Colombo, Sri Lanka"
@@ -354,7 +360,7 @@ export default function SignupPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="••••••••"
@@ -385,7 +391,7 @@ export default function SignupPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="••••••••"
@@ -413,7 +419,7 @@ export default function SignupPage() {
                     type="checkbox"
                     checked={formData.agreeToTerms}
                     onChange={handleInputChange}
-                    className={`focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded ${
+                    className={`focus:ring-brand-green h-4 w-4 text-brand-green border-gray-300 rounded ${
                       errors.agreeToTerms ? 'border-red-300' : ''
                     }`}
                   />
@@ -421,11 +427,11 @@ export default function SignupPage() {
                 <div className="ml-3 text-sm">
                   <label htmlFor="agreeToTerms" className="text-gray-700">
                     I agree to the{' '}
-                    <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+                    <Link href="/terms" className="text-brand-green hover:text-brand-green/80">
                       Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+                    <Link href="/privacy" className="text-brand-green hover:text-brand-green/80">
                       Privacy Policy
                     </Link>
                   </label>
@@ -448,7 +454,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center">
@@ -475,7 +481,7 @@ export default function SignupPage() {
             <div className="mt-6">
               <Link
                 href="/login"
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
               >
                 Sign in to your account
               </Link>

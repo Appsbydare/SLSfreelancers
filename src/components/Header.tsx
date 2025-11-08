@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
 import { useAuth } from '@/contexts/AuthContext';
+import Image from 'next/image';
 
 export default function Header() {
   const t = useTranslations('navigation');
@@ -54,11 +55,16 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href={`/${locale}`} className="flex items-center group">
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
-                <span className="text-white font-bold text-lg">SL</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-blue-600">
-                Sri Lanka Tasks
+              <Image
+                src="/logo.png"
+                alt="EasyFinder"
+                width={32}
+                height={32}
+                className="h-8 w-auto transition-all duration-300 group-hover:scale-110"
+                priority
+              />
+              <span className="ml-2 text-xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-brand-green">
+                EasyFinder
               </span>
             </Link>
           </div>
@@ -71,16 +77,16 @@ export default function Header() {
                 href={item.href}
                 className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
                   pathname === item.href
-                    ? 'text-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
+                    ? 'text-brand-green'
+                    : 'text-gray-700 hover:text-brand-green'
                 }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <span className="relative z-10">{item.name}</span>
                 {pathname === item.href && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 animate-fade-in-up"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
               </Link>
             ))}
           </nav>
@@ -106,13 +112,13 @@ export default function Header() {
               <div className="hidden md:flex items-center space-x-4">
                 <Link
                   href="/login"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                  className="text-gray-700 hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                 >
                   {t('login')}
                 </Link>
                 <Link
                   href="/signup"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
+                  className="bg-brand-green text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
                 >
                   {t('signUp')}
                 </Link>
@@ -122,7 +128,7 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-all duration-300 hover:scale-110"
+              className="md:hidden p-2 rounded-md text-gray-700 hover:text-brand-green hover:bg-gray-100 transition-all duration-300 hover:scale-110"
             >
               <div className="relative">
                 {isMobileMenuOpen ? (
@@ -145,8 +151,8 @@ export default function Header() {
                   href={item.href}
                   className={`block px-3 py-2 text-base font-medium transition-all duration-300 hover:scale-105 ${
                     pathname === item.href
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                      ? 'text-brand-green bg-brand-green/10'
+                      : 'text-gray-700 hover:text-brand-green hover:bg-gray-50'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -175,14 +181,14 @@ export default function Header() {
                   <>
                     <Link
                       href="/login"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 transition-all duration-300 hover:scale-105"
+                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-brand-green transition-all duration-300 hover:scale-105"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {t('login')}
                     </Link>
                     <Link
                       href="/signup"
-                      className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 transition-all duration-300 hover:scale-105"
+                      className="block px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 hover:scale-105"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {t('signUp')}

@@ -7,6 +7,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        brand: {
+          black: '#000000',
+          green: '#0fcc17',
+        },
+      },
       animation: {
         'fade-in': 'fade-in 0.6s ease-out',
         'fade-in-up': 'fade-in-up 0.6s ease-out',
