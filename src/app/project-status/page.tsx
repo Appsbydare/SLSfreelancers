@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Circle, Clock, AlertCircle, Filter, Search } from 'lucide-react';
+import Layout from '@/components/Layout';
 
 interface ProjectTask {
   id: string;
@@ -157,9 +158,11 @@ export default function ProjectStatusPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green"></div>
-      </div>
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green"></div>
+        </div>
+      </Layout>
     );
   }
 
@@ -168,7 +171,8 @@ export default function ProjectStatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -372,6 +376,6 @@ export default function ProjectStatusPage() {
           )}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
