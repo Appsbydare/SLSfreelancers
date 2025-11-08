@@ -231,7 +231,7 @@ export default function SignupPage() {
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             {/* Google Sign In Button */}
             <div className="mb-6">
-            <button
+              <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading}
@@ -262,20 +262,20 @@ export default function SignupPage() {
                   Continue with Google
                 </>
               )}
-            </button>
+              </button>
             </div>
 
             <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+              </div>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Info Message */}
+              {/* Info Message */}
             <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-700">
                 <strong>Want to become a Tasker?</strong>{' '}
@@ -529,25 +529,26 @@ export default function SignupPage() {
             </form>
 
             <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Already have an account?</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
-              </div>
-            </div>
 
-            <div className="mt-6">
-              <Link
-                href="/login"
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
-              >
-                Sign in to your account
-              </Link>
+              <div className="mt-6">
+                <Link
+                  href="/login"
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
+                >
+                  Sign in to your account
+                </Link>
+              </div>
             </div>
           </div>
-          </div>
+        </div>
         </div>
       </div>
     </Layout>
