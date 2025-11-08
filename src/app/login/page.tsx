@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Image from 'next/image';
+import Layout from '@/components/Layout';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -99,7 +100,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <Layout>
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image
@@ -245,6 +247,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

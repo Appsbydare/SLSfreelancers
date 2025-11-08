@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import Layout from '@/components/Layout';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     location: '',
-    userType: 'customer', // 'customer' or 'tasker'
+    userType: 'customer' as const, // Signup is for customers only - taskers use "Become a Tasker" page
     agreeToTerms: false,
   });
 
@@ -53,7 +54,7 @@ export default function SignupPage() {
           email: googleEmail,
           firstName: googleFirstName || '',
           lastName: googleLastName || '',
-          userType: (googleUserType as 'customer' | 'tasker') || 'customer',
+          userType: 'customer', // Always customer for signup page
           password: 'google-oauth-user', // Placeholder, will be handled differently
           confirmPassword: 'google-oauth-user',
         }));
@@ -177,12 +178,8 @@ export default function SignupPage() {
       });
 
       if (response.ok) {
-        // Success - redirect to appropriate page
-        if (formData.userType === 'tasker') {
-          router.push('/become-tasker?success=true');
-        } else {
-          router.push('/?signup=success');
-        }
+        // Success - redirect to homepage
+        router.push('/?signup=success');
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Registration failed. Please try again.' });
@@ -198,9 +195,8 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      // For now, we'll use a simple approach with Google OAuth
-      // In production, you should use next-auth or implement proper OAuth flow
-      const googleAuthUrl = `/api/auth/google?userType=${formData.userType}`;
+      // Signup page is for customers only - taskers use "Become a Tasker" page
+      const googleAuthUrl = `/api/auth/google?userType=customer`;
       window.location.href = googleAuthUrl;
     } catch (error) {
       console.error('Google sign in error:', error);
@@ -210,7 +206,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <Layout>
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image
@@ -278,49 +275,15 @@ export default function SignupPage() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* User Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                I want to:
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className={`relative flex cursor-pointer rounded-lg p-4 focus:outline-none ${
-                  formData.userType === 'customer' 
-                    ? 'ring-2 ring-brand-green bg-brand-green/10' 
-                    : 'ring-1 ring-gray-300 bg-white'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="customer"
-                    checked={formData.userType === 'customer'}
-                    onChange={handleInputChange}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    <div className="text-lg font-medium text-gray-900">Post Tasks</div>
-                    <div className="text-sm text-gray-500">Hire people</div>
-                  </div>
-                </label>
-                <label className={`relative flex cursor-pointer rounded-lg p-4 focus:outline-none ${
-                  formData.userType === 'tasker' 
-                    ? 'ring-2 ring-brand-green bg-brand-green/10' 
-                    : 'ring-1 ring-gray-300 bg-white'
-                }`}>
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="tasker"
-                    checked={formData.userType === 'tasker'}
-                    onChange={handleInputChange}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    <div className="text-lg font-medium text-gray-900">Do Tasks</div>
-                    <div className="text-sm text-gray-500">Earn money</div>
-                  </div>
-                </label>
-              </div>
+            {/* Info Message */}
+            <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-700">
+                <strong>Want to become a Tasker?</strong>{' '}
+                <Link href="/become-tasker" className="text-brand-green hover:text-brand-green/80 font-medium underline">
+                  Sign up as a Tasker here
+                </Link>
+                {' '}to start earning money by completing tasks.
+              </p>
             </div>
 
             {/* Name Fields */}
@@ -586,6 +549,6 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
