@@ -208,7 +208,7 @@ export default function SignupPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image
             src="/logo.svg"
@@ -225,9 +225,9 @@ export default function SignupPage() {
         <p className="mt-2 text-center text-sm text-gray-600">
           Join EasyFinder and start getting things done
         </p>
-      </div>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {/* Google Sign In Button */}
           <div className="mb-6">
@@ -547,6 +547,7 @@ export default function SignupPage() {
               </Link>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </Layout>
