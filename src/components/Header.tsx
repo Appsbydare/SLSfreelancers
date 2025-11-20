@@ -263,7 +263,7 @@ export default function Header() {
                   }}
                   aria-label="Open quick menu"
                 >
-                  <Grid3X3 className="h-8 w-8" />
+                  <Grid3X3 className="h-4 w-4" />
                 </button>
               </div>
             ) : (
@@ -305,7 +305,7 @@ export default function Header() {
                   }}
                   aria-label="Open quick menu"
                 >
-                  <Grid3X3 className="h-8 w-8" />
+                  <Grid3X3 className="h-4 w-4" />
                 </button>
               </div>
             )}
@@ -320,7 +320,7 @@ export default function Header() {
               }}
               aria-label="Open quick menu"
             >
-              <Grid3X3 className="h-10 w-10" />
+              <Grid3X3 className="h-5 w-5" />
             </button>
 
             {/* Mobile menu button */}
