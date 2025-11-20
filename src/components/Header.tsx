@@ -180,7 +180,10 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href={`/${locale}`} className="flex items-center group">
+            <Link
+              href={`/${locale}`}
+              className="flex items-center group outline-none focus:outline-none focus:ring-0 ring-0"
+            >
               <Image
                 src="/logo-white.svg"
                 alt="EasyFinder"
