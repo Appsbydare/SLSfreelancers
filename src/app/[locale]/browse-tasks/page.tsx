@@ -170,25 +170,16 @@ export default function BrowseTasksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Browse Tasks
-          </h1>
-          <p className="text-gray-600">
-            Find tasks that match your skills and start earning today.
-          </p>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-6">
 
         {/* Top Filters (Categories, Sort, Tasker Type, District, City) */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-2 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {/* Category */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
@@ -201,7 +192,7 @@ export default function BrowseTasksPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
             >
               <option value="newest">Newest First</option>
               <option value="budget-high">Budget: High to Low</option>
@@ -211,7 +202,7 @@ export default function BrowseTasksPage() {
             <select
               value={taskerType}
               onChange={(e) => setTaskerType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
             >
               <option value="all">Tasker Type</option>
               <option value="individual">Individual</option>
@@ -222,7 +213,7 @@ export default function BrowseTasksPage() {
             <select
               value={selectedDistrictId}
               onChange={(e) => handleDistrictChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
             >
               <option value="">All Districts</option>
               {districts.map((district) => (
@@ -236,7 +227,7 @@ export default function BrowseTasksPage() {
               value={selectedCityId}
               onChange={(e) => setSelectedCityId(e.target.value)}
               disabled={!selectedDistrictId}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">All Cities</option>
               {availableCities.map((city) => (
