@@ -119,7 +119,7 @@ export default function Header() {
         ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
         : 'bg-black shadow-sm border-b border-gray-800'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
