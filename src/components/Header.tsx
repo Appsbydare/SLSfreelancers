@@ -61,8 +61,6 @@ export default function Header() {
   const navigation = [
     { name: t('browseTasks'), href: `/${locale}/browse-tasks` },
     { name: t('postTask'), href: `/${locale}/post-task` },
-    { name: t('howItWorks'), href: `/${locale}/how-it-works` },
-    { name: t('becomeTasker'), href: `/${locale}/become-tasker` },
   ];
 
   // Add Project Status for admin users
