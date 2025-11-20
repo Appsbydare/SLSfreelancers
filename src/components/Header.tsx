@@ -103,10 +103,37 @@ export default function Header() {
       'Vertical Video Editing',
       'Shopify Migration'
     ];
-    const withIcons = (serviceGroups as any).map((g: any) => ({
-      ...g,
-      icon: iconsById[g.id] || ''
-    }));
+    const withIcons = (serviceGroups as any).map((g: any) => {
+      // Normalize section items to support optional badges
+      const normalizedSections = g.sections
+        ? g.sections.map((s: any) => ({
+            title: s.title,
+            items: (s.items || []).map((it: any) =>
+              typeof it === 'string' ? { label: it } : it
+            ),
+          }))
+        : undefined;
+
+      // Randomly mark one item as NEW per group (if sections exist)
+      if (normalizedSections && normalizedSections.length > 0) {
+        const flat: any[] = [];
+        normalizedSections.forEach((s: any) => {
+          s.items.forEach((it: any) => flat.push(it));
+        });
+        if (flat.length > 0) {
+          const idx = Math.floor(Math.random() * flat.length);
+          if (!flat[idx].badge) {
+            flat[idx].badge = 'new';
+          }
+        }
+      }
+
+      return {
+        ...g,
+        icon: iconsById[g.id] || '',
+        sections: normalizedSections ?? undefined,
+      };
+    });
     return [
       {
         id: 'trending',
@@ -561,20 +588,29 @@ export default function Header() {
                       {section.title}
                     </p>
                     <ul className="space-y-2">
-                      {section.items.map((item: string) => (
-                        <li key={item}>
-                          <button
-                            type="button"
-                            className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
-                            onClick={() => {
-                              setIsCategoryMenuOpen(false);
-                              router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(item)}`);
-                            }}
-                          >
-                            {item}
-                          </button>
-                        </li>
-                      ))}
+                      {section.items.map((item: any) => {
+                        const label = typeof item === 'string' ? item : item.label;
+                        const badge = typeof item === 'string' ? undefined : item.badge;
+                        return (
+                          <li key={label} className="flex items-center justify-between gap-3">
+                            <button
+                              type="button"
+                              className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                              onClick={() => {
+                                setIsCategoryMenuOpen(false);
+                                router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(label)}`);
+                              }}
+                            >
+                              {label}
+                            </button>
+                            {badge === 'new' && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-green/20 text-brand-green">
+                                NEW
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ))}
