@@ -3,8 +3,8 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, Search } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,12 +25,13 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [activeCategoryGroup, setActiveCategoryGroup] = useState(
-    (serviceGroups as any)[0]?.id ?? ''
+    'trending'
   );
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
   const [isMapMenuClosing, setIsMapMenuClosing] = useState(false);
   const [headerSearch, setHeaderSearch] = useState('');
+  const groupScrollRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -73,9 +74,54 @@ export default function Header() {
     ? [...navigation, { name: 'Project Status', href: '/project-status' }]
     : navigation;
 
+  const iconsById: Record<string, string> = {
+    'home-property': '🏠',
+    'automotive': '🚗',
+    'health-wellness': '💊',
+    'education-training': '🎓',
+    'legal-financial': '⚖️',
+    'events-entertainment': '🎉',
+    'business-marketing': '📣',
+    'transport-travel': '✈️',
+    'personal-services': '🧍‍♂️',
+    'construction-engineering': '🏗️',
+    'pet-services': '🐾',
+    'government-utility': '🏛️',
+    'freelance-remote': '💻'
+  };
+
+  const combinedGroups = useMemo(() => {
+    const trendingServices = [
+      'Logo Design',
+      'UX Research',
+      '2D Animation',
+      'WordPress Speed Optimization',
+      'Meta Ads Strategy',
+      'AI Prompt Engineering',
+      'Notion Consulting',
+      'AR Filters',
+      'Vertical Video Editing',
+      'Shopify Migration'
+    ];
+    const withIcons = (serviceGroups as any).map((g: any) => ({
+      ...g,
+      icon: iconsById[g.id] || ''
+    }));
+    return [
+      {
+        id: 'trending',
+        name: 'Trending',
+        icon: '🔥',
+        description: 'Popular and rising services',
+        services: trendingServices
+      },
+      ...withIcons
+    ];
+  }, []);
+
   const activeGroup =
-    (serviceGroups as any).find((group: any) => group.id === activeCategoryGroup) ??
-    (serviceGroups as any)[0];
+    combinedGroups.find((group: any) => group.id === activeCategoryGroup) ??
+    combinedGroups[0];
 
   const quickMenuItems = [
     {
@@ -433,9 +479,19 @@ export default function Header() {
         onMouseLeave={() => setIsCategoryMenuOpen(false)}
       >
         <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex items-center gap-2 min-w-max">
-              {(serviceGroups as any).map((group: any) => {
+          <div className="relative flex-1">
+            {/* Horizontal scroll container with hidden scrollbar */}
+            <div
+              ref={groupScrollRef}
+              onWheel={(e) => {
+                if (!groupScrollRef.current) return;
+                e.preventDefault();
+                groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
+              }}
+              className="overflow-x-hidden no-scrollbar"
+            >
+              <div className="flex items-center gap-2 min-w-max">
+                {combinedGroups.map((group: any) => {
                 const isActive = group.id === activeCategoryGroup;
                 return (
                   <button
@@ -450,11 +506,30 @@ export default function Header() {
                         : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
+                    <span className="mr-2">{group.icon || ''}</span>
                     {group.name}
                   </button>
                 );
-              })}
+                })}
+              </div>
             </div>
+            {/* Left/Right scroll buttons */}
+            <button
+              type="button"
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
+              onClick={() => groupScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
+              onClick={() => groupScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
           <button
             type="button"
