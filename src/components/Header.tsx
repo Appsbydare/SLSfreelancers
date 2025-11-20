@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -25,6 +25,7 @@ export default function Header() {
     categoryGroups[0]?.id ?? ''
   );
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState('');
 
   const handleLogout = () => {
     logout();
@@ -133,51 +134,89 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {displayNavigation.map((item, index) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
-                  pathname === item.href
-                    ? 'text-brand-green'
-                    : 'text-white hover:text-brand-green'
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <span className="relative z-10">{item.name}</span>
-                {pathname === item.href && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-              </Link>
-            ))}
-            {categoryGroups.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCategoryMenuOpen((prev) => !prev);
-                  setIsQuickMenuOpen(false);
-                }}
-                aria-expanded={isCategoryMenuOpen}
-                aria-controls="category-mega-menu"
-                className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
-                  isCategoryMenuOpen
-                    ? 'text-brand-green'
-                    : 'text-white hover:text-brand-green'
-                }`}
-              >
-                <span className="relative z-10">{t('findServices')}</span>
-                {isCategoryMenuOpen && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-              </button>
-            )}
+          <nav className="hidden md:flex items-center space-x-8">
+            {displayNavigation.map((item, index) => {
+              const isBrowseTasks = item.href.includes('/browse-tasks');
+              if (isBrowseTasks) {
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onMouseEnter={() => {
+                      setIsCategoryMenuOpen(true);
+                      setIsQuickMenuOpen(false);
+                    }}
+                    onFocus={() => setIsCategoryMenuOpen(true)}
+                    className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
+                      isCategoryMenuOpen
+                        ? 'text-brand-green'
+                        : 'text-white hover:text-brand-green'
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    aria-haspopup="true"
+                    aria-expanded={isCategoryMenuOpen}
+                    aria-controls="category-mega-menu"
+                  >
+                    <span className="relative z-10">{t('browseTasks')}</span>
+                    {isCategoryMenuOpen && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  </button>
+                );
+              }
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
+                    pathname === item.href
+                      ? 'text-brand-green'
+                      : 'text-white hover:text-brand-green'
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <span className="relative z-10">{item.name}</span>
+                  {pathname === item.href && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Right side - Language switcher and auth buttons */}
+          {/* Right side - Search, Language switcher, and auth buttons */}
           <div className="flex items-center space-x-4">
+            {/* Search (desktop) */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsCategoryMenuOpen(false);
+                setIsQuickMenuOpen(false);
+                router.push(`/${locale}/browse-tasks`);
+              }}
+              className="hidden md:block"
+            >
+              <div className="relative w-[420px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="What service are you looking for today?"
+                  className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
+                  aria-label="Search"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+
             <LanguageSwitcher />
             <button
               type="button"
@@ -283,7 +322,7 @@ export default function Header() {
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  {t('findServices')}
+                  {t('browseTasks')}
                 </button>
               )}
               <div className="pt-4 pb-3 border-t border-gray-800">
@@ -334,6 +373,8 @@ export default function Header() {
       <div
         id="category-mega-menu"
         className="fixed top-16 left-0 right-0 z-[55] bg-black/95 backdrop-blur-lg border-t border-b border-gray-800 shadow-2xl"
+        onMouseEnter={() => setIsCategoryMenuOpen(true)}
+        onMouseLeave={() => setIsCategoryMenuOpen(false)}
       >
         <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex-1 overflow-x-auto">
