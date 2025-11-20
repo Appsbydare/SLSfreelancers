@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import VerifiedBadge from './VerifiedBadge';
 import Image from 'next/image';
 import { categoryGroups } from '@/data/categoryGroups';
+import { useDistrict } from '@/contexts/DistrictContext';
+import SriLankaMap from './SriLankaMap';
 
 export default function Header() {
   const t = useTranslations('navigation');
@@ -18,6 +20,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoggedIn, logout } = useAuth();
+  const { setSelectedDistrict } = useDistrict();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
@@ -25,6 +28,7 @@ export default function Header() {
     categoryGroups[0]?.id ?? ''
   );
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
   const [headerSearch, setHeaderSearch] = useState('');
 
   const handleLogout = () => {
@@ -216,17 +220,6 @@ export default function Header() {
             </form>
 
             <LanguageSwitcher />
-            <button
-              type="button"
-              className="hidden md:inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
-              onClick={() => {
-                setIsQuickMenuOpen(true);
-                setIsCategoryMenuOpen(false);
-              }}
-              aria-label="Open quick menu"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </button>
             
             {isLoggedIn ? (
               <div className="hidden md:flex items-center space-x-4">
@@ -245,6 +238,33 @@ export default function Header() {
                   <LogOut className="h-4 w-4 mr-1" />
                   Logout
                 </button>
+                {/* District (Sri Lanka) map trigger */}
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                  onClick={() => {
+                    setIsMapMenuOpen(true);
+                    setIsCategoryMenuOpen(false);
+                    setIsQuickMenuOpen(false);
+                  }}
+                  aria-label="Choose district"
+                  title="Choose District"
+                >
+                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={18} height={18} className="rounded-sm" />
+                </button>
+                {/* Quick menu trigger (rightmost) */}
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                  onClick={() => {
+                    setIsQuickMenuOpen(true);
+                    setIsCategoryMenuOpen(false);
+                    setIsMapMenuOpen(false);
+                  }}
+                  aria-label="Open quick menu"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </button>
               </div>
             ) : (
               <div className="hidden md:flex items-center space-x-4">
@@ -260,6 +280,33 @@ export default function Header() {
                 >
                   {t('signUp')}
                 </Link>
+                {/* District (Sri Lanka) map trigger */}
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                  onClick={() => {
+                    setIsMapMenuOpen(true);
+                    setIsCategoryMenuOpen(false);
+                    setIsQuickMenuOpen(false);
+                  }}
+                  aria-label="Choose district"
+                  title="Choose District"
+                >
+                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={18} height={18} className="rounded-sm" />
+                </button>
+                {/* Quick menu trigger (rightmost) */}
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                  onClick={() => {
+                    setIsQuickMenuOpen(true);
+                    setIsCategoryMenuOpen(false);
+                    setIsMapMenuOpen(false);
+                  }}
+                  aria-label="Open quick menu"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </button>
               </div>
             )}
 
@@ -509,6 +556,48 @@ export default function Header() {
                 </Link>
               )
             )}
+          </div>
+        </aside>
+      </>
+    )}
+    {isMapMenuOpen && (
+      <>
+        <div
+          className="fixed inset-0 bg-black/70 z-[70]"
+          onClick={() => setIsMapMenuOpen(false)}
+          aria-hidden="true"
+        ></div>
+        <aside
+          className="fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 text-white z-[75] shadow-2xl animate-fade-in-right"
+          role="dialog"
+          aria-modal="true"
+          aria-label="District selector"
+        >
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
+            <div>
+              <p className="text-lg font-semibold">Select Your District</p>
+              <p className="text-sm text-white/60">
+                Pick a district to filter services instantly.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMapMenuOpen(false)}
+              className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
+            >
+              <span className="sr-only">Close district selector</span>
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="p-4">
+            <SriLankaMap
+              showLabels={true}
+              onDistrictSelect={(district) => {
+                setSelectedDistrict(district);
+                setIsMapMenuOpen(false);
+                router.push(`/${locale}/browse-tasks`);
+              }}
+            />
           </div>
         </aside>
       </>

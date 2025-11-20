@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import { districts, District, City } from '@/data/districts';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 
 // Mock data for tasks
 const mockTasks = [
@@ -87,6 +88,8 @@ export default function BrowseTasksPage() {
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
   const [selectedCityId, setSelectedCityId] = useState<string>('');
   const [sortBy, setSortBy] = useState('newest');
+  const [taskerType, setTaskerType] = useState<string>('all');
+  const searchParams = useSearchParams();
 
   // Sync with DistrictContext when district is selected from map
   useEffect(() => {
@@ -96,6 +99,13 @@ export default function BrowseTasksPage() {
     }
   }, [selectedDistrict]);
 
+  // Prefill category from query params if present
+  useEffect(() => {
+    const cat = searchParams?.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+    }
+  }, [searchParams]);
   // Get selected district object
   const selectedDistrictObj = districts.find(d => d.id === selectedDistrictId);
   
@@ -171,93 +181,70 @@ export default function BrowseTasksPage() {
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-              >
-                <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        {/* Top Filters (Categories, Sort, Tasker Type, District, City) */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Category */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
             {/* Sort */}
-            <div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-              >
-                <option value="newest">Newest First</option>
-                <option value="budget-high">Budget: High to Low</option>
-                <option value="budget-low">Budget: Low to High</option>
-              </select>
-            </div>
-          </div>
-
-          {/* District and City Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-            {/* District Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                District
-              </label>
-              <select
-                value={selectedDistrictId}
-                onChange={(e) => handleDistrictChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-              >
-                <option value="">All Districts</option>
-                {districts.map((district) => (
-                  <option key={district.id} value={district.id}>
-                    {getDistrictName(district)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* City Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                City
-              </label>
-              <select
-                value={selectedCityId}
-                onChange={(e) => setSelectedCityId(e.target.value)}
-                disabled={!selectedDistrictId}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                <option value="">All Cities</option>
-                {availableCities.map((city) => (
-                  <option key={city.id} value={city.id}>
-                    {getCityName(city)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+            >
+              <option value="newest">Newest First</option>
+              <option value="budget-high">Budget: High to Low</option>
+              <option value="budget-low">Budget: Low to High</option>
+            </select>
+            {/* Tasker Type (UI only for now) */}
+            <select
+              value={taskerType}
+              onChange={(e) => setTaskerType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+            >
+              <option value="all">Tasker Type</option>
+              <option value="individual">Individual</option>
+              <option value="company">Company</option>
+              <option value="agency">Agency</option>
+            </select>
+            {/* District */}
+            <select
+              value={selectedDistrictId}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+            >
+              <option value="">All Districts</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {getDistrictName(district)}
+                </option>
+              ))}
+            </select>
+            {/* City */}
+            <select
+              value={selectedCityId}
+              onChange={(e) => setSelectedCityId(e.target.value)}
+              disabled={!selectedDistrictId}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">All Cities</option>
+              {availableCities.map((city) => (
+                <option key={city.id} value={city.id}>
+                  {getCityName(city)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
