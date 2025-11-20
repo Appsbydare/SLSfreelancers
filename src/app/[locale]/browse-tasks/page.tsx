@@ -105,6 +105,10 @@ export default function BrowseTasksPage() {
     if (cat) {
       setSelectedCategory(cat);
     }
+    const svc = searchParams?.get('service');
+    if (svc) {
+      setSearchTerm(svc);
+    }
   }, [searchParams]);
   // Get selected district object
   const selectedDistrictObj = districts.find(d => d.id === selectedDistrictId);

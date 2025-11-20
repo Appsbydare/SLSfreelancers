@@ -10,7 +10,7 @@ import { animationClasses } from '@/lib/animations';
 import { useAuth } from '@/contexts/AuthContext';
 import VerifiedBadge from './VerifiedBadge';
 import Image from 'next/image';
-import { categoryGroups } from '@/data/categoryGroups';
+import serviceGroups from '@/data/service-groups.json';
 import { useDistrict } from '@/contexts/DistrictContext';
 import SriLankaMap from './SriLankaMap';
 
@@ -25,7 +25,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [activeCategoryGroup, setActiveCategoryGroup] = useState(
-    categoryGroups[0]?.id ?? ''
+    (serviceGroups as any)[0]?.id ?? ''
   );
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
@@ -74,8 +74,8 @@ export default function Header() {
     : navigation;
 
   const activeGroup =
-    categoryGroups.find((group) => group.id === activeCategoryGroup) ??
-    categoryGroups[0];
+    (serviceGroups as any).find((group: any) => group.id === activeCategoryGroup) ??
+    (serviceGroups as any)[0];
 
   const quickMenuItems = [
     {
@@ -369,7 +369,7 @@ export default function Header() {
                   {item.name}
                 </Link>
               ))}
-              {categoryGroups.length > 0 && (
+              {(serviceGroups as any).length > 0 && (
                 <button
                   type="button"
                   className="block w-full text-left px-3 py-2 text-base font-medium text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
@@ -435,7 +435,7 @@ export default function Header() {
         <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex-1 overflow-x-auto">
             <div className="flex items-center gap-2 min-w-max">
-              {categoryGroups.map((group) => {
+              {(serviceGroups as any).map((group: any) => {
                 const isActive = group.id === activeCategoryGroup;
                 return (
                   <button
@@ -450,8 +450,7 @@ export default function Header() {
                         : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    {group.icon && <span className="mr-2">{group.icon}</span>}
-                    {group.label}
+                    {group.name}
                   </button>
                 );
               })}
@@ -468,38 +467,23 @@ export default function Header() {
         </div>
         <div className="border-t border-gray-800 bg-[#060606] max-h-[70vh] overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {activeGroup.sections.map((section) => (
-                <div key={section.title}>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-brand-green">
-                    {section.title}
-                  </p>
-                  <ul className="mt-3 space-y-2">
-                    {section.items.map((item) => (
-                      <li key={`${section.title}-${item.label}`}>
-                        <button
-                          type="button"
-                          className="w-full text-left text-sm text-white/90 hover:text-brand-green flex items-center justify-between gap-3 transition-colors"
-                        >
-                          <span>{item.label}</span>
-                          {item.badge && (
-                            <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                item.badge === 'new'
-                                  ? 'bg-brand-green/20 text-brand-green'
-                                  : 'bg-orange-500/20 text-orange-400'
-                              }`}
-                            >
-                              {item.badge === 'new' ? 'NEW' : 'HOT'}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            <p className="text-white/70 mb-4">{activeGroup.description}</p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {activeGroup.services.map((svc: string) => (
+                <li key={svc}>
+                  <button
+                    type="button"
+                    className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                    onClick={() => {
+                      setIsCategoryMenuOpen(false);
+                      router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
+                    }}
+                  >
+                    {svc}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
