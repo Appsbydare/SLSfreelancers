@@ -25,6 +25,24 @@ export interface Category {
   popular: boolean;
 }
 
+export interface CategoryMenuItem {
+  label: string;
+  badge?: 'new' | 'hot';
+}
+
+export interface CategoryMenuSection {
+  title: string;
+  items: CategoryMenuItem[];
+}
+
+export interface CategoryGroup {
+  id: string;
+  label: string;
+  icon?: string;
+  description?: string;
+  sections: CategoryMenuSection[];
+}
+
 export interface Tasker {
   id: string;
   name: string;
