@@ -1,0 +1,156 @@
+[
+  {
+    "id": "home-property",
+    "name": "Home & Property Services",
+    "description": "Plumbing, electrical, cleaning, pest control, landscaping, renovations",
+    "services": [
+      "Plumbing",
+      "Electrical",
+      "House Cleaning",
+      "Pest Control",
+      "Landscaping & Gardening",
+      "Home Renovations"
+    ]
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive Services",
+    "description": "Car repair, detailing, towing, bike services, battery replacement",
+    "services": [
+      "Car Repair",
+      "Auto Detailing",
+      "Towing",
+      "Motorbike Services",
+      "Battery Replacement"
+    ]
+  },
+  {
+    "id": "health-wellness",
+    "name": "Health & Wellness",
+    "description": "Doctors, dentists, physiotherapists, fitness trainers, spas, salons",
+    "services": [
+      "General Practitioners",
+      "Dentists",
+      "Physiotherapists",
+      "Fitness Trainers",
+      "Spas & Salons"
+    ]
+  },
+  {
+    "id": "education-training",
+    "name": "Education & Training",
+    "description": "Tutors, language classes, IT training, vocational courses",
+    "services": [
+      "School Tutors",
+      "Language Classes",
+      "IT Training",
+      "Vocational Courses"
+    ]
+  },
+  {
+    "id": "legal-financial",
+    "name": "Legal & Financial",
+    "description": "Lawyers, notaries, accountants, tax consultants, insurance agents",
+    "services": [
+      "Lawyers",
+      "Notaries",
+      "Accountants",
+      "Tax Consultants",
+      "Insurance Agents"
+    ]
+  },
+  {
+    "id": "events-entertainment",
+    "name": "Events & Entertainment",
+    "description": "Photographers, DJs, decorators, venues, catering, party planners",
+    "services": [
+      "Photographers",
+      "DJs",
+      "Event Decorators",
+      "Venues",
+      "Catering",
+      "Party Planners"
+    ]
+  },
+  {
+    "id": "business-marketing",
+    "name": "Business & Marketing",
+    "description": "Graphic design, printing, branding, digital marketing, consulting",
+    "services": [
+      "Graphic Design",
+      "Printing",
+      "Branding",
+      "Digital Marketing",
+      "Consulting"
+    ]
+  },
+  {
+    "id": "transport-travel",
+    "name": "Transport & Travel",
+    "description": "Taxi, courier, logistics, tour guides, travel agents",
+    "services": [
+      "Taxi",
+      "Courier",
+      "Logistics",
+      "Tour Guides",
+      "Travel Agents"
+    ]
+  },
+  {
+    "id": "personal-services",
+    "name": "Personal Services",
+    "description": "Tailors, astrologers, makeup artists, babysitters, elder care",
+    "services": [
+      "Tailors",
+      "Astrologers",
+      "Makeup Artists",
+      "Babysitters",
+      "Elder Care"
+    ]
+  },
+  {
+    "id": "construction-engineering",
+    "name": "Construction & Engineering",
+    "description": "Civil engineers, architects, masons, surveyors, contractors",
+    "services": [
+      "Civil Engineers",
+      "Architects",
+      "Masons",
+      "Surveyors",
+      "Contractors"
+    ]
+  },
+  {
+    "id": "pet-services",
+    "name": "Pet Services",
+    "description": "Grooming, veterinary care, pet boarding, training",
+    "services": [
+      "Pet Grooming",
+      "Veterinary Care",
+      "Pet Boarding",
+      "Pet Training"
+    ]
+  },
+  {
+    "id": "government-utility",
+    "name": "Government & Utility Services",
+    "description": "Document assistance, registration, utility support",
+    "services": [
+      "Document Assistance",
+      "Registration Services",
+      "Utility Support"
+    ]
+  },
+  {
+    "id": "freelance-remote",
+    "name": "Freelance & Remote Work",
+    "description": "Content writing, translation, virtual assistants, data entry",
+    "services": [
+      "Content Writing",
+      "Translation",
+      "Virtual Assistants",
+      "Data Entry"
+    ]
+  }
+]
+
