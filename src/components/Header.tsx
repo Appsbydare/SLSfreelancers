@@ -250,7 +250,7 @@ export default function Header() {
                   aria-label="Choose district"
                   title="Choose District"
                 >
-                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={18} height={18} className="rounded-sm" />
+                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
                 </button>
                 {/* Quick menu trigger (rightmost) */}
                 <button
@@ -263,7 +263,7 @@ export default function Header() {
                   }}
                   aria-label="Open quick menu"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-8 w-8" />
                 </button>
               </div>
             ) : (
@@ -292,7 +292,7 @@ export default function Header() {
                   aria-label="Choose district"
                   title="Choose District"
                 >
-                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={18} height={18} className="rounded-sm" />
+                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
                 </button>
                 {/* Quick menu trigger (rightmost) */}
                 <button
@@ -305,7 +305,7 @@ export default function Header() {
                   }}
                   aria-label="Open quick menu"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-8 w-8" />
                 </button>
               </div>
             )}
@@ -320,7 +320,7 @@ export default function Header() {
               }}
               aria-label="Open quick menu"
             >
-              <Grid3X3 className="h-5 w-5" />
+              <Grid3X3 className="h-10 w-10" />
             </button>
 
             {/* Mobile menu button */}
