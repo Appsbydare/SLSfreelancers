@@ -483,12 +483,19 @@ export default function Header() {
             {/* Horizontal scroll container with hidden scrollbar */}
             <div
               ref={groupScrollRef}
+              onWheelCapture={(e) => {
+                if (!groupScrollRef.current) return;
+                e.preventDefault();
+                e.stopPropagation();
+                groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
+              }}
               onWheel={(e) => {
                 if (!groupScrollRef.current) return;
                 e.preventDefault();
+                e.stopPropagation();
                 groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
               }}
-              className="overflow-x-hidden no-scrollbar"
+              className="overflow-x-hidden overflow-y-hidden no-scrollbar"
             >
               <div className="flex items-center gap-2 min-w-max">
                 {combinedGroups.map((group: any) => {
@@ -543,22 +550,50 @@ export default function Header() {
         <div className="border-t border-gray-800 bg-[#060606] max-h-[70vh] overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <p className="text-white/70 mb-4">{activeGroup.description}</p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {activeGroup.services.map((svc: string) => (
-                <li key={svc}>
-                  <button
-                    type="button"
-                    className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
-                    onClick={() => {
-                      setIsCategoryMenuOpen(false);
-                      router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
-                    }}
-                  >
-                    {svc}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {activeGroup.sections && activeGroup.sections.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {activeGroup.sections.map((section: any) => (
+                  <div key={section.title}>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-brand-green mb-3">
+                      {section.title}
+                    </p>
+                    <ul className="space-y-2">
+                      {section.items.map((item: string) => (
+                        <li key={item}>
+                          <button
+                            type="button"
+                            className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                            onClick={() => {
+                              setIsCategoryMenuOpen(false);
+                              router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(item)}`);
+                            }}
+                          >
+                            {item}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {activeGroup.services?.map((svc: string) => (
+                  <li key={svc}>
+                    <button
+                      type="button"
+                      className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                      onClick={() => {
+                        setIsCategoryMenuOpen(false);
+                        router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
+                      }}
+                    >
+                      {svc}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
