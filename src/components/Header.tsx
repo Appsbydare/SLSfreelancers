@@ -29,6 +29,7 @@ export default function Header() {
   );
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
+  const [isMapMenuClosing, setIsMapMenuClosing] = useState(false);
   const [headerSearch, setHeaderSearch] = useState('');
 
   const handleLogout = () => {
@@ -111,6 +112,16 @@ export default function Header() {
       disabled: true,
     },
   ];
+
+  // Smoothly close the map drawer with a slow slide-out
+  const closeMapMenu = () => {
+    setIsMapMenuClosing(true);
+    // match CSS duration in animations.css (0.6s)
+    setTimeout(() => {
+      setIsMapMenuOpen(false);
+      setIsMapMenuClosing(false);
+    }, 600);
+  };
 
   return (
     <>
@@ -560,15 +571,15 @@ export default function Header() {
         </aside>
       </>
     )}
-    {isMapMenuOpen && (
+    {(isMapMenuOpen || isMapMenuClosing) && (
       <>
         <div
-          className="fixed inset-0 bg-black/70 z-[70]"
-          onClick={() => setIsMapMenuOpen(false)}
+          className={`fixed inset-0 bg-black/70 z-[70] ${isMapMenuClosing ? 'animate-fade-out-slow' : 'animate-fade-in'}`}
+          onClick={closeMapMenu}
           aria-hidden="true"
         ></div>
         <aside
-          className="fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 text-white z-[75] shadow-2xl animate-fade-in-right"
+          className={`fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 text-white z-[75] shadow-2xl ${isMapMenuClosing ? 'animate-slide-out-right-slow' : 'animate-slide-in-right-slow'}`}
           role="dialog"
           aria-modal="true"
           aria-label="District selector"
@@ -582,7 +593,7 @@ export default function Header() {
             </div>
             <button
               type="button"
-              onClick={() => setIsMapMenuOpen(false)}
+              onClick={closeMapMenu}
               className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
             >
               <span className="sr-only">Close district selector</span>
@@ -594,7 +605,7 @@ export default function Header() {
               showLabels={true}
               onDistrictSelect={(district) => {
                 setSelectedDistrict(district);
-                setIsMapMenuOpen(false);
+                closeMapMenu();
                 router.push(`/${locale}/browse-tasks`);
               }}
             />
