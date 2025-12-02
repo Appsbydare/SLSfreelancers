@@ -3,10 +3,10 @@ import { supabaseServer } from '@/lib/supabase-server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = params.id;
+    const { id: taskId } = await params;
 
     // Fetch task with all related data
     const { data: taskData, error: taskError } = await supabaseServer
@@ -54,4 +54,3 @@ export async function GET(
     );
   }
 }
-
