@@ -147,34 +147,21 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      // Create user object
-      const userData = {
-        id: Date.now().toString(),
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
-        location: formData.location.trim(),
-        userType: formData.userType,
-        password: formData.password, // In production, this should be hashed
-        createdAt: new Date().toISOString(),
-        isVerified: false,
-        profile: {
-          bio: '',
-          skills: [],
-          rating: 0,
-          completedTasks: 0,
-          profileImage: null,
-        }
-      };
-
-      // Save to JSON database (simulated)
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          location: formData.location.trim(),
+          userType: formData.userType,
+          password: formData.password,
+          preferredLanguage: 'en',
+        }),
       });
 
       if (response.ok) {

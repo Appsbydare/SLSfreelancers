@@ -1,58 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import bcrypt from 'bcryptjs';
+import { supabaseServer } from '@/lib/supabase-server';
+import {
+  USER_BASE_SELECT,
+  buildClientUser,
+  fetchTaskerProfile,
+  DbUserRow,
+} from '@/lib/user-service';
 
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  callingName?: string;
-  email: string;
-  phone: string;
-  location: string;
-  city?: string;
-  district?: string;
-  roadNameNumber?: string;
-  addressLine2?: string;
-  nicNumber?: string;
-  userType: 'customer' | 'tasker' | 'admin';
-  password: string;
-  createdAt: string;
-  isVerified: boolean;
-  verificationStatus?: {
-    submitted: boolean;
-    approved: boolean;
-    submittedAt?: string;
-    approvedAt?: string;
-    policeReportUrl?: string;
-    idDocumentUrl?: string;
-  };
-  profile: {
-    bio: string;
-    skills: string[];
-    rating: number;
-    completedTasks: number;
-    profileImage: string | null;
-  };
-}
-
-function readUsers(): User[] {
-  try {
-    const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading users file:', error);
-    return [];
-  }
-}
+type DbUserWithPassword = DbUserRow & { password_hash: string };
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    // Validate required fields
     if (!email || !password) {
       return NextResponse.json(
         { message: 'Email and password are required' },
@@ -60,35 +21,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read users from file
-    const users = readUsers();
+    const sanitizedEmail = email.trim().toLowerCase();
 
-    // Find user by email
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    
-    if (!user) {
+    const { data: userRow, error } = await supabaseServer
+      .from('users')
+      .select(`${USER_BASE_SELECT}, password_hash`)
+      .ilike('email', sanitizedEmail)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!userRow) {
       return NextResponse.json(
         { message: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Check password (in production, this should use proper password hashing)
-    if (user.password !== password) {
+    const userWithPassword = userRow as DbUserWithPassword;
+    const isPasswordValid = await bcrypt.compare(password, userWithPassword.password_hash);
+
+    if (!isPasswordValid) {
       return NextResponse.json(
         { message: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Return user data without password
-    const { password: _, ...userWithoutPassword } = user;
-    
+    const taskerProfile =
+      userWithPassword.user_type === 'tasker'
+        ? await fetchTaskerProfile(userWithPassword.id)
+        : null;
+
+    const clientUser = buildClientUser(userWithPassword, taskerProfile);
+
     return NextResponse.json({
       message: 'Login successful',
-      user: userWithoutPassword
+      user: clientUser,
     });
-
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

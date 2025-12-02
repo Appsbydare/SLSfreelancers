@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield } from 'lucide-react';
+import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield, Lock } from 'lucide-react';
 
 export default function BecomeTaskerPage() {
   const [formData, setFormData] = useState({
@@ -13,7 +13,11 @@ export default function BecomeTaskerPage() {
     location: '',
     experience: '',
     bio: '',
+    password: '',
+    confirmPassword: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -25,8 +29,68 @@ export default function BecomeTaskerPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Application submitted successfully! (This is a demo)');
+    setStatusMessage(null);
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.location.trim()) {
+      setStatusMessage({ type: 'error', text: 'Please complete all required fields.' });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setStatusMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setStatusMessage({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    const [firstName, ...rest] = formData.name.trim().split(' ');
+    const lastName = rest.length > 0 ? rest.join(' ') : 'Tasker';
+
+    setIsSubmitting(true);
+
+    fetch('/api/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName: firstName || formData.name.trim(),
+        lastName,
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        location: formData.location.trim(),
+        userType: 'tasker',
+        password: formData.password,
+        bio: formData.bio,
+        skills: formData.skills,
+      }),
+    })
+      .then(async response => {
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to submit application. Please try again.');
+        }
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          skills: '',
+          location: '',
+          experience: '',
+          bio: '',
+          password: '',
+          confirmPassword: '',
+        });
+        setStatusMessage({ type: 'success', text: 'Application submitted successfully! We will review your profile shortly.' });
+      })
+      .catch(error => {
+        console.error('Tasker application error:', error);
+        setStatusMessage({ type: 'error', text: error.message || 'Something went wrong. Please try again.' });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
@@ -132,6 +196,18 @@ export default function BecomeTaskerPage() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {statusMessage && (
+                <div
+                  className={`rounded-lg p-4 text-sm ${
+                    statusMessage.type === 'success'
+                      ? 'bg-green-50 text-green-800 border border-green-200'
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}
+                >
+                  {statusMessage.text}
+                </div>
+              )}
+
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name
@@ -145,6 +221,46 @@ export default function BecomeTaskerPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -247,10 +363,11 @@ export default function BecomeTaskerPage() {
 
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                disabled={isSubmitting}
+                className="w-full inline-flex items-center justify-center px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
               >
-                Submit Application
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                {!isSubmitting && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
             </form>
 
