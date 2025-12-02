@@ -1,19 +1,27 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Upload, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
+import { uploadFile } from '@/lib/supabase-storage';
 
 export default function PostTaskPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: '',
-    budget: '',
+    budgetMin: '',
+    budgetMax: '',
     location: '',
+    city: '',
+    district: '',
     deadline: '',
     images: [] as File[],
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -31,11 +39,65 @@ export default function PostTaskPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    alert('Task posted successfully! (This is a demo)');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // Get customer ID from session/auth (for now, using a demo user)
+      // TODO: Replace with actual authenticated user ID
+      const customerId = sessionStorage.getItem('userId') || 'demo-customer-id';
+
+      // Upload images if any
+      const imageUrls: string[] = [];
+      for (const file of formData.images) {
+        const result = await uploadFile(file, 'tasks', customerId);
+        if (result.success && result.url) {
+          imageUrls.push(result.url);
+        }
+      }
+
+      // Parse location to extract city and district
+      const locationParts = formData.location.split(',').map(s => s.trim());
+      const city = locationParts[0] || formData.location;
+      const district = locationParts[1] || locationParts[0] || formData.location;
+
+      // Create task via API
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId,
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          location: formData.location,
+          city,
+          district,
+          budgetMin: parseFloat(formData.budgetMin) || 0,
+          budgetMax: parseFloat(formData.budgetMax) || parseFloat(formData.budgetMin) || 0,
+          scheduledDate: formData.deadline || null,
+          images: imageUrls,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Task posted successfully! Task ID: ' + data.task.id);
+        router.push('/browse-tasks');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to post task');
+      }
+    } catch (err) {
+      console.error('Error posting task:', err);
+      setError('Failed to post task. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,6 +115,12 @@ export default function PostTaskPage() {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Task Title */}
             <div>
@@ -110,24 +178,37 @@ export default function PostTaskPage() {
               </select>
             </div>
 
-            {/* Budget */}
+            {/* Budget Range */}
             <div>
-              <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
-                Budget (LKR)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Budget Range (LKR)
               </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="number"
-                  id="budget"
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  min="0"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="number"
+                    name="budgetMin"
+                    value={formData.budgetMin}
+                    onChange={handleInputChange}
+                    placeholder="Min"
+                    min="0"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="number"
+                    name="budgetMax"
+                    value={formData.budgetMax}
+                    onChange={handleInputChange}
+                    placeholder="Max"
+                    min="0"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                  />
+                </div>
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 This helps taskers understand your budget range
@@ -210,10 +291,11 @@ export default function PostTaskPage() {
             <div className="pt-6">
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
+                disabled={isLoading}
+                className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Post Task for Free
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {isLoading ? 'Posting Task...' : 'Post Task for Free'}
+                {!isLoading && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
               <p className="text-sm text-gray-500 text-center mt-2">
                 It's free to post a task. You only pay when you hire someone.
