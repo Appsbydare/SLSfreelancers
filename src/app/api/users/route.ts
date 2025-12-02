@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabaseServer
       .from('users')
-      .select(`${USER_SELECT}, tasker:taskers!taskers_user_id_fkey(bio, skills, rating, completed_tasks, profile_image_url)`);
+      .select(`${USER_BASE_SELECT}, tasker:taskers!taskers_user_id_fkey(bio, skills, rating, completed_tasks, profile_image_url)`);
 
     if (error) {
       throw new Error(error.message);
