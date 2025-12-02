@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield, Lock } from 'lucide-react';
+import { showToast } from '@/lib/toast';
 
 export default function BecomeTaskerPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,6 +21,11 @@ export default function BecomeTaskerPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Show notice to use new onboarding flow
+  useEffect(() => {
+    showToast.info('We recommend using our new step-by-step onboarding process for a better experience!');
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -85,10 +93,17 @@ export default function BecomeTaskerPage() {
           confirmPassword: '',
         });
         setStatusMessage({ type: 'success', text: 'Application submitted successfully! We will review your profile shortly.' });
+        showToast.success('Application submitted successfully! Redirecting to login...');
+        
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
       })
       .catch(error => {
         console.error('Tasker application error:', error);
         setStatusMessage({ type: 'error', text: error.message || 'Something went wrong. Please try again.' });
+        showToast.error(error.message || 'Something went wrong. Please try again.');
       })
       .finally(() => setIsSubmitting(false));
   };
@@ -194,6 +209,29 @@ export default function BecomeTaskerPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Apply to Become a Tasker
             </h2>
+
+            {/* Notice about new onboarding flow */}
+            <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+              <div className="flex items-start">
+                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    ✨ New! Enhanced Step-by-Step Onboarding
+                  </p>
+                  <p className="text-sm text-blue-800 mb-3">
+                    We've created a better onboarding experience with guided steps, document verification, 
+                    and profile building. We highly recommend using the new process!
+                  </p>
+                  <Link
+                    href="/tasker/onboarding/stage-1"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Use New Onboarding Process
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {statusMessage && (

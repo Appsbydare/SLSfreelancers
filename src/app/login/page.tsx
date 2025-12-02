@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
+import { showToast } from '@/lib/toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -79,21 +80,28 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('isLoggedIn', 'true');
         
-        // Redirect based on user type
-        if (data.user.userType === 'admin') {
-          // Admin users go to project status
-          router.push('/project-status');
-        } else {
-          // All other users (customers and taskers) go to homepage
-          router.push('/en');
-        }
+        // Show success message
+        showToast.success(`Welcome back, ${data.user.firstName}!`);
+        
+        // Redirect based on user type after a short delay
+        setTimeout(() => {
+          if (data.user.userType === 'admin') {
+            // Admin users go to project status
+            router.push('/project-status');
+          } else {
+            // All other users (customers and taskers) go to homepage
+            router.push('/en');
+          }
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Login failed. Please try again.' });
+        showToast.error(errorData.message || 'Login failed. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
       setErrors({ submit: 'Login failed. Please try again.' });
+      showToast.error('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

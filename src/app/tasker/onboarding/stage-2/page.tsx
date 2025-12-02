@@ -7,6 +7,7 @@ import { Shield, ArrowLeft, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import FileUpload from '@/components/FileUpload';
 import { uploadFile, validateDocumentFile } from '@/lib/supabase-storage';
+import { showToast } from '@/lib/toast';
 
 export default function TaskerStage2Page() {
   const router = useRouter();
@@ -176,20 +177,26 @@ export default function TaskerStage2Page() {
       });
 
       if (response.ok) {
+        // Show success message
+        showToast.success('Documents uploaded successfully! Moving to next step...');
+        
         // Store completion status
         sessionStorage.setItem('stage2Complete', 'true');
         
-        // Redirect to Stage 3
-        router.push('/tasker/onboarding/stage-3');
+        // Redirect to Stage 3 after short delay
+        setTimeout(() => {
+          router.push('/tasker/onboarding/stage-3');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Failed to save verification data' });
+        showToast.error(errorData.message || 'Failed to save verification data');
       }
     } catch (error) {
       console.error('Verification error:', error);
-      setErrors({ 
-        submit: error instanceof Error ? error.message : 'Verification failed. Please try again.' 
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Verification failed. Please try again.';
+      setErrors({ submit: errorMessage });
+      showToast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

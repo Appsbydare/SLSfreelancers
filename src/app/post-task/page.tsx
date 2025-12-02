@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Upload, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
 import { uploadFile } from '@/lib/supabase-storage';
+import { showToast } from '@/lib/toast';
 
 export default function PostTaskPage() {
   const router = useRouter();
@@ -22,6 +23,29 @@ export default function PostTaskPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const user = localStorage.getItem('user');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
+    if (user && isLoggedIn === 'true') {
+      try {
+        const userData = JSON.parse(user);
+        setUserId(userData.id);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        router.push('/login?redirect=/post-task');
+      }
+    } else {
+      // Not authenticated, redirect to login
+      showToast.error('Please log in to post a task');
+      router.push('/login?redirect=/post-task');
+    }
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -44,10 +68,15 @@ export default function PostTaskPage() {
     setIsLoading(true);
     setError('');
 
+    // Double check authentication
+    if (!isAuthenticated || !userId) {
+      showToast.error('Please log in to post a task');
+      router.push('/login?redirect=/post-task');
+      return;
+    }
+
     try {
-      // Get customer ID from session/auth (for now, using a demo user)
-      // TODO: Replace with actual authenticated user ID
-      const customerId = sessionStorage.getItem('userId') || 'demo-customer-id';
+      const customerId = userId;
 
       // Upload images if any
       const imageUrls: string[] = [];
@@ -86,19 +115,37 @@ export default function PostTaskPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert('Task posted successfully! Task ID: ' + data.task.id);
-        router.push('/browse-tasks');
+        showToast.success('Task posted successfully! Redirecting...');
+        
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          router.push('/browse-tasks');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to post task');
+        showToast.error(errorData.message || 'Failed to post task');
       }
     } catch (err) {
       console.error('Error posting task:', err);
       setError('Failed to post task. Please try again.');
+      showToast.error('Failed to post task. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

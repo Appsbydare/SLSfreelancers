@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Phone, Lock, Eye, EyeOff, CreditCard, Globe } from 'lucide-react';
 import Image from 'next/image';
+import { showToast } from '@/lib/toast';
 
 export default function TaskerStage1Page() {
   const router = useRouter();
@@ -138,19 +139,27 @@ export default function TaskerStage1Page() {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Show success message
+        showToast.success('Account created successfully! Please verify your email.');
+        
         // Store user data temporarily for email verification
         sessionStorage.setItem('pendingTaskerEmail', formData.email);
         sessionStorage.setItem('pendingTaskerId', data.user.id);
         
-        // Redirect to email verification
-        router.push('/tasker/onboarding/email-verify');
+        // Redirect to email verification after short delay
+        setTimeout(() => {
+          router.push('/tasker/onboarding/email-verify');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Registration failed. Please try again.' });
+        showToast.error(errorData.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ submit: 'Registration failed. Please try again.' });
+      showToast.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, CheckCircle } from 'lucid
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
+import { showToast } from '@/lib/toast';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -165,15 +166,21 @@ export default function SignupPage() {
       });
 
       if (response.ok) {
-        // Success - redirect to homepage
-        router.push('/?signup=success');
+        // Success - show message and redirect to homepage
+        showToast.success('Account created successfully! Welcome to EasyFinder!');
+        
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Registration failed. Please try again.' });
+        showToast.error(errorData.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ submit: 'Registration failed. Please try again.' });
+      showToast.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/contexts/AuthContext';
 import '../app/globals.css';
 
@@ -21,6 +22,7 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
+            <Toaster />
             {children}
           </AuthProvider>
         </NextIntlClientProvider>

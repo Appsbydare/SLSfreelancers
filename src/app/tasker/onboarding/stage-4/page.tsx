@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
+import { showToast } from '@/lib/toast';
 
 export default function TaskerStage4Page() {
   const router = useRouter();
@@ -131,6 +132,9 @@ export default function TaskerStage4Page() {
       });
 
       if (response.ok) {
+        // Show success message
+        showToast.success('Registration complete! Welcome to EasyFinder!');
+        
         // Clear all session storage
         sessionStorage.removeItem('verifiedTaskerId');
         sessionStorage.removeItem('stage2Complete');
@@ -139,17 +143,20 @@ export default function TaskerStage4Page() {
         // Mark onboarding as complete
         sessionStorage.setItem('onboardingComplete', 'true');
         
-        // Redirect to completion page
-        router.push('/tasker/onboarding/complete');
+        // Redirect to completion page after short delay
+        setTimeout(() => {
+          router.push('/tasker/onboarding/complete');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Failed to save information' });
+        showToast.error(errorData.message || 'Failed to save information');
       }
     } catch (error) {
       console.error('Save error:', error);
-      setErrors({ 
-        submit: error instanceof Error ? error.message : 'Failed to save information. Please try again.' 
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save information. Please try again.';
+      setErrors({ submit: errorMessage });
+      showToast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

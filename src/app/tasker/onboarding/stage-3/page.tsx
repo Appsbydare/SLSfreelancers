@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Plus, X, MapPin, DollarSign } from 'lucide-react
 import Image from 'next/image';
 import FileUpload from '@/components/FileUpload';
 import { uploadFile, validateImageFile } from '@/lib/supabase-storage';
+import { showToast } from '@/lib/toast';
 
 const CATEGORIES = [
   'Cleaning',
@@ -226,17 +227,25 @@ export default function TaskerStage3Page() {
       });
 
       if (response.ok) {
+        // Show success message
+        showToast.success('Professional profile created! One more step to go...');
+        
         sessionStorage.setItem('stage3Complete', 'true');
-        router.push('/tasker/onboarding/stage-4');
+        
+        // Redirect after short delay
+        setTimeout(() => {
+          router.push('/tasker/onboarding/stage-4');
+        }, 1500);
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Failed to save profile' });
+        showToast.error(errorData.message || 'Failed to save profile');
       }
     } catch (error) {
       console.error('Profile save error:', error);
-      setErrors({ 
-        submit: error instanceof Error ? error.message : 'Failed to save profile. Please try again.' 
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save profile. Please try again.';
+      setErrors({ submit: errorMessage });
+      showToast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
