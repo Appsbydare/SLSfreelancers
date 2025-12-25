@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import GigCard from '@/components/GigCard';
 import { Gig } from '@/types';
