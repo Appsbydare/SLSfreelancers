@@ -20,7 +20,7 @@ export default function PostRequestSection() {
                 </h2>
               </div>
               <p className="text-lg text-gray-600 mb-6">
-                Need something custom that doesn't fit our ready-made services? 
+                Need something custom that doesn&apos;t fit our ready-made services? 
                 Post your request and receive personalized proposals from skilled taskers 
                 who can bring your vision to life.
               </p>

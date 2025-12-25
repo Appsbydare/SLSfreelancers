@@ -171,7 +171,7 @@ export default function BecomeTaskerPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Earn Extra Income</h3>
                   <p className="text-gray-600">
-                    Set your own rates and work on your schedule. Earn money doing what you're good at.
+                    Set your own rates and work on your schedule. Earn money doing what you&apos;re good at.
                   </p>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function BecomeTaskerPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Sarah J.</p>
-                    <p className="text-sm text-gray-600">"I've earned over LKR 50,000 in my first month!"</p>
+                    <p className="text-sm text-gray-600">&quot;I&apos;ve earned over LKR 50,000 in my first month!&quot;</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -232,7 +232,7 @@ export default function BecomeTaskerPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Michael R.</p>
-                    <p className="text-sm text-gray-600">"Perfect for my part-time schedule. Great platform!"</p>
+                    <p className="text-sm text-gray-600">&quot;Perfect for my part-time schedule. Great platform!&quot;</p>
                   </div>
                 </div>
               </div>

@@ -22,7 +22,7 @@ export default function HowItWorksPage() {
               For Task Posters
             </h2>
             <p className="text-lg text-gray-600">
-              Need something done? Here's how to get started:
+              Need something done? Here&apos;s how to get started:
             </p>
           </div>
 
@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
               For Taskers
             </h2>
             <p className="text-lg text-gray-600">
-              Want to earn money? Here's how to get started:
+              Want to earn money? Here&apos;s how to get started:
             </p>
           </div>
 

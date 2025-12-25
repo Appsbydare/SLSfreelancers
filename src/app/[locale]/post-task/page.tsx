@@ -216,7 +216,7 @@ export default function PostTaskPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </button>
               <p className="text-sm text-gray-500 text-center mt-2">
-                It's free to post a task. You only pay when you hire someone.
+                It&apos;s free to post a task. You only pay when you hire someone.
               </p>
             </div>
           </form>

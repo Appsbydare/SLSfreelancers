@@ -95,7 +95,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ slug: stri
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Gig not found</h1>
-          <p className="text-gray-600 mb-4">The gig you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-4">The gig you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <button
             onClick={() => router.push('/browse-gigs')}
             className="text-brand-green hover:underline font-semibold"

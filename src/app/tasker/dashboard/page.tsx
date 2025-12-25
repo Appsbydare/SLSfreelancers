@@ -76,7 +76,7 @@ export default function TaskerDashboardPage() {
               <div>
                 <h3 className="text-sm font-medium text-yellow-800">Verification Pending</h3>
                 <p className="mt-1 text-sm text-yellow-700">
-                  Your documents are being reviewed. You'll receive an email once verification is complete.
+                  Your documents are being reviewed. You&apos;ll receive an email once verification is complete.
                   This typically takes 1-2 business days.
                 </p>
               </div>

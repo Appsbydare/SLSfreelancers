@@ -251,7 +251,7 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
                   </h3>
                   <p className="text-sm text-blue-800">
                     Your payment is held securely until the work is delivered and approved. 
-                    If you're not satisfied, you can request revisions or get a refund according 
+                    If you&apos;re not satisfied, you can request revisions or get a refund according 
                     to our terms and conditions.
                   </p>
                 </div>

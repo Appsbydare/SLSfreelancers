@@ -60,7 +60,7 @@ export default function OnboardingCompletePage() {
                 <h3 className="text-lg font-medium text-gray-900">Document Verification</h3>
                 <p className="mt-1 text-gray-600">
                   Our team will review your submitted documents within 1-2 business days. 
-                  You'll receive an email notification once the verification is complete.
+                  You&apos;ll receive an email notification once the verification is complete.
                 </p>
               </div>
             </div>

@@ -13,7 +13,7 @@ export default function DualModeExplainer() {
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Whether you know exactly what you need or prefer custom offers, 
-            we've got you covered.
+            we&apos;ve got you covered.
           </p>
         </div>
 
