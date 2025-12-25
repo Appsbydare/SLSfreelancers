@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Clock } from 'lucide-react';
+import { Gig } from '@/types';
 
 interface ScrollingGigsPanelProps {
   autoScroll?: boolean;
