@@ -3,14 +3,25 @@
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { categories } from '@/data/categories';
-import { animationClasses } from '@/lib/animations';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function CategoryGrid() {
+interface CategoryGridProps {
+  autoScroll?: boolean;
+  scrollSpeed?: number; // pixels per second
+}
+
+export default function CategoryGrid({ 
+  autoScroll = true, 
+  scrollSpeed = 25 
+}: CategoryGridProps = {}) {
   const t = useTranslations('homepage.popularCategories');
   const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollAnimationRef = useRef<number | null>(null);
+  const lastScrollTimeRef = useRef<number>(Date.now());
 
   const getCategoryName = (category: typeof categories[0]) => {
     switch (locale) {
@@ -30,8 +41,60 @@ export default function CategoryGrid() {
     return name.includes(query) || description.includes(query);
   });
 
+  // Auto-scroll effect
+  useEffect(() => {
+    if (autoScroll && filteredCategories.length > 0 && !isPaused) {
+      startAutoScroll();
+    } else {
+      stopAutoScroll();
+    }
+
+    return () => {
+      stopAutoScroll();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoScroll, filteredCategories.length, isPaused]);
+
+  const startAutoScroll = () => {
+    if (!scrollContainerRef.current) return;
+
+    const scroll = () => {
+      if (!scrollContainerRef.current || isPaused) return;
+
+      const now = Date.now();
+      const deltaTime = (now - lastScrollTimeRef.current) / 1000; // Convert to seconds
+      lastScrollTimeRef.current = now;
+
+      const scrollAmount = scrollSpeed * deltaTime;
+      scrollContainerRef.current.scrollLeft += scrollAmount;
+
+      // Reset scroll position when reaching the end (seamless loop)
+      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+      if (scrollContainerRef.current.scrollLeft >= maxScroll) {
+        // Reset to start for seamless loop
+        scrollContainerRef.current.scrollLeft = 0;
+      }
+
+      scrollAnimationRef.current = requestAnimationFrame(scroll);
+    };
+
+    scrollAnimationRef.current = requestAnimationFrame(scroll);
+  };
+
+  const stopAutoScroll = () => {
+    if (scrollAnimationRef.current) {
+      cancelAnimationFrame(scrollAnimationRef.current);
+      scrollAnimationRef.current = null;
+    }
+  };
+
   return (
-    <div id="popular-categories" className="py-12 scroll-mt-20">
+    <div 
+      id="popular-categories" 
+      className="py-12 scroll-mt-20 bg-gradient-to-b from-white to-gray-50"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up">
@@ -58,27 +121,38 @@ export default function CategoryGrid() {
 
         {filteredCategories.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {filteredCategories.map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={`/browse-gigs?category=${category.id}`}
-                  className="group bg-white rounded-lg border border-gray-200 p-6 hover:border-brand-green hover:shadow-lg transition-all duration-300 hover:-translate-y-2 animate-fade-in-up"
-                  style={{ animationDelay: `${(index * 100) + 400}ms` }}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">
-                      {category.icon}
+            <div className="relative overflow-hidden">
+              <div
+                ref={scrollContainerRef}
+                className="flex gap-6 overflow-x-auto scrollbar-hide"
+                style={{
+                  scrollBehavior: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+              >
+                {/* Duplicate categories multiple times for seamless infinite loop */}
+                {[...filteredCategories, ...filteredCategories, ...filteredCategories].map((category, index) => (
+                  <Link
+                    key={`${category.id}-${index}`}
+                    href={`/browse-gigs?category=${category.id}`}
+                    className="flex-shrink-0 w-48 bg-white rounded-lg border border-gray-200 p-6 hover:border-brand-green hover:shadow-lg transition-all duration-300 hover:-translate-y-2 group"
+                  >
+                    <div className="text-center">
+                      <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">
+                        {category.icon}
+                      </div>
+                      <h3 className="text-sm font-semibold text-gray-900 group-hover:text-brand-green transition-colors duration-300 mb-1">
+                        {getCategoryName(category)}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 group-hover:text-gray-700 transition-colors duration-300">
+                        {category.description}
+                      </p>
                     </div>
-                    <h3 className="text-sm font-medium text-gray-900 group-hover:text-brand-green transition-colors duration-300">
-                      {getCategoryName(category)}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 group-hover:text-gray-700 transition-colors duration-300">
-                      {category.description}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
 
             <div className="text-center mt-8">
@@ -90,6 +164,16 @@ export default function CategoryGrid() {
                 {t('viewAll')}
               </Link>
             </div>
+
+            <style jsx>{`
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
           </>
         ) : (
           <div className="text-center py-12">
