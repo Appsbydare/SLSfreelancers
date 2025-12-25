@@ -275,10 +275,57 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Random names for sellers (individual and company names)
+const randomSellerNames = [
+  // Individual names
+  'Kamal Perera', 'Nimal Fernando', 'Priya Silva', 'Samantha Jayasuriya', 'Dilshan Wickramasinghe',
+  'Anjali Mendis', 'Rohan De Silva', 'Tharushi Gunawardena', 'Chaminda Bandara', 'Ishara Karunaratne',
+  'Sanduni Perera', 'Dinesh Fernando', 'Kavindu Rajapaksa', 'Nadeesha Jayawardena', 'Tharindu Weerasinghe',
+  // Company names
+  'ProClean Services', 'Expert Solutions Ltd', 'QuickFix Professionals', 'Elite Home Services', 'Premium Care Co',
+  'Master Craftsmen', 'Ace Handyman Services', 'Top Tier Solutions', 'Prime Service Group', 'Quality First Services',
+  'Reliable Repairs Co', 'Professional Touch', 'Best Value Services', 'Trusted Experts Ltd', 'Superior Solutions'
+];
+
+// Helper function to get random seller name
+function getRandomSellerName(index: number): string {
+  return randomSellerNames[index % randomSellerNames.length];
+}
+
+// Helper function to determine if seller should be verified (randomly)
+function shouldBeVerified(index: number): boolean {
+  // 60% chance of being verified
+  return (index % 5) < 3;
+}
+
+// Helper function to determine if seller should have EasyFinders Choice badge
+function shouldHaveEasyFindersChoice(index: number): boolean {
+  // 30% chance (every 3rd or 4th seller)
+  return index % 3 === 0 || index % 4 === 0;
+}
+
+// Helper function to get seller level based on rating and featured status
+function getSellerLevel(rating: number, isFeatured: boolean, index: number): 'starter_pro' | 'trusted_specialist' | 'secure_elite' | 'top_performer' {
+  if (isFeatured || rating >= 4.8) {
+    return 'top_performer';
+  } else if (rating >= 4.6) {
+    return 'secure_elite';
+  } else if (rating >= 4.3) {
+    return 'trusted_specialist';
+  } else {
+    return 'starter_pro';
+  }
+}
+
 // Helper function to generate sample gigs from JSON data
 function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
   return sampleData.slice(0, limit).map((gigData, index) => {
     const minPrice = Math.min(...gigData.packages.map((p: any) => p.price));
+    const sellerName = getRandomSellerName(index);
+    const sellerLevel = getSellerLevel(gigData.rating || 4.5, gigData.isFeatured || false, index);
+    const isVerified = shouldBeVerified(index);
+    const hasEasyFindersChoice = shouldHaveEasyFindersChoice(index);
+    
     return {
       id: `sample-gig-${index + 1}`,
       seller_id: `sample-seller-${index + 1}`,
@@ -299,13 +346,14 @@ function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
       updated_at: new Date().toISOString(),
       seller: {
         id: `sample-seller-${index + 1}`,
-        level_code: gigData.isFeatured ? 'top_performer' : 'trusted_specialist',
+        level_code: sellerLevel,
         rating: gigData.rating || 4.5,
         completed_tasks: gigData.ordersCount || 0,
+        is_verified: isVerified,
         user: {
           id: `sample-user-${index + 1}`,
-          first_name: 'Sample',
-          last_name: `Seller ${index + 1}`,
+          first_name: sellerName.split(' ')[0] || 'Seller',
+          last_name: sellerName.split(' ').slice(1).join(' ') || '',
           profile_image_url: null,
         },
       },
@@ -316,10 +364,12 @@ function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
         delivery_days: pkg.deliveryDays,
       })),
       startingPrice: minPrice,
-      sellerName: `Sample Seller ${index + 1}`,
+      sellerName: sellerName,
       sellerAvatar: null,
-      sellerLevel: gigData.isFeatured ? 'top_performer' : 'trusted_specialist',
+      sellerLevel: sellerLevel,
       sellerRating: gigData.rating || 4.5,
+      isVerified: isVerified,
+      hasEasyFindersChoice: hasEasyFindersChoice,
     };
   });
 }
