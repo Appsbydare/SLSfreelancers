@@ -219,7 +219,7 @@ export default function BecomeTaskerPage() {
                     ✨ New! Enhanced Step-by-Step Onboarding
                   </p>
                   <p className="text-sm text-blue-800 mb-3">
-                    We've created a better onboarding experience with guided steps, document verification, 
+                    We&apos;ve created a better onboarding experience with guided steps, document verification, 
                     and profile building. We highly recommend using the new process!
                   </p>
                   <Link
