@@ -235,10 +235,10 @@ export default function ScrollingTasksPanel({
           </p>
         </div>
 
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-visible">
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide"
+            className="flex gap-6 overflow-x-auto scrollbar-hide py-4"
             style={{
               scrollBehavior: 'auto',
               WebkitOverflowScrolling: 'touch',
