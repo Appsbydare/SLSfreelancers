@@ -1,0 +1,782 @@
+[
+  {
+    "title": "Professional Home Cleaning Service",
+    "description": "Complete deep cleaning service for your home. Includes kitchen, bathrooms, bedrooms, and living areas. Eco-friendly products used. Perfect for busy professionals or special occasions.",
+    "category": "cleaning",
+    "tags": ["deep cleaning", "house cleaning", "eco-friendly", "professional"],
+    "images": ["/images/cleaning-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Standard Clean",
+        "description": "Basic cleaning for 2-3 bedroom home",
+        "price": 3000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["All rooms cleaned", "Bathroom sanitization", "Kitchen deep clean", "Dusting and vacuuming"]
+      },
+      {
+        "tier": "standard",
+        "name": "Deep Clean",
+        "description": "Comprehensive cleaning with extra attention to detail",
+        "price": 5000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Basic", "Window cleaning", "Appliance cleaning", "Baseboard cleaning"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Deep Clean",
+        "description": "Ultimate cleaning experience with premium products",
+        "price": 8000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Standard", "Carpet shampooing", "Oven deep clean", "Refrigerator cleaning", "Premium eco products"]
+      }
+    ],
+    "rating": 4.8,
+    "reviewsCount": 45,
+    "ordersCount": 120
+  },
+  {
+    "title": "Expert Furniture Assembly Service",
+    "description": "Professional furniture assembly for IKEA, Amazon, and other brands. Fast, reliable, and careful handling. Tools provided. Same-day service available.",
+    "category": "assembly",
+    "tags": ["furniture", "ikea", "assembly", "handyman"],
+    "images": ["/images/assembly-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Single Item",
+        "description": "Assembly of one furniture item",
+        "price": 2000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Professional assembly", "Tools provided", "Waste disposal"]
+      },
+      {
+        "tier": "standard",
+        "name": "Multiple Items",
+        "description": "Assembly of 2-3 furniture items",
+        "price": 4000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Basic", "Bulk discount", "Furniture placement"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full Room Setup",
+        "description": "Complete room furniture assembly and setup",
+        "price": 7000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Standard", "Room layout consultation", "Cable management", "Final inspection"]
+      }
+    ],
+    "rating": 4.9,
+    "reviewsCount": 78,
+    "ordersCount": 200
+  },
+  {
+    "title": "Garden Landscaping & Design",
+    "description": "Transform your garden with professional landscaping services. From design to implementation, we create beautiful outdoor spaces. Includes plant selection, hardscaping, and maintenance plans.",
+    "category": "gardening",
+    "tags": ["landscaping", "garden design", "outdoor", "plants"],
+    "images": ["/images/gardening-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Garden Maintenance",
+        "description": "Regular garden upkeep and care",
+        "price": 5000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Lawn mowing", "Weeding", "Pruning", "Fertilizing"]
+      },
+      {
+        "tier": "standard",
+        "name": "Garden Redesign",
+        "description": "Complete garden makeover with new plants",
+        "price": 25000,
+        "deliveryDays": 3,
+        "revisions": 2,
+        "features": ["Design consultation", "Plant selection", "Installation", "1 month maintenance"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Landscaping",
+        "description": "Full landscaping with hardscaping features",
+        "price": 50000,
+        "deliveryDays": 7,
+        "revisions": 3,
+        "features": ["Everything in Standard", "Hardscaping", "Irrigation system", "3 months maintenance", "Design revisions"]
+      }
+    ],
+    "rating": 4.7,
+    "reviewsCount": 32,
+    "ordersCount": 85
+  },
+  {
+    "title": "Fast & Reliable Delivery Service",
+    "description": "Same-day delivery service across Colombo and suburbs. Safe handling of packages, documents, and goods. Real-time tracking available. Professional and punctual service.",
+    "category": "delivery",
+    "tags": ["delivery", "courier", "same-day", "colombo"],
+    "images": ["/images/delivery-1.jpg"],
+    "deliveryType": "physical",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Standard Delivery",
+        "description": "Delivery within 24 hours",
+        "price": 500,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Package pickup", "Standard delivery", "SMS notification"]
+      },
+      {
+        "tier": "standard",
+        "name": "Express Delivery",
+        "description": "Same-day delivery (within 6 hours)",
+        "price": 1500,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Priority handling", "Real-time tracking", "Proof of delivery"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Express",
+        "description": "Urgent delivery within 2 hours",
+        "price": 3000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Standard", "Dedicated courier", "Insurance coverage", "Live GPS tracking"]
+      }
+    ],
+    "rating": 4.6,
+    "reviewsCount": 156,
+    "ordersCount": 450
+  },
+  {
+    "title": "Expert Handyman Services",
+    "description": "Professional handyman for all your home repair needs. Electrical, plumbing, carpentry, and general maintenance. Licensed and insured. Available for emergencies.",
+    "category": "handyman",
+    "tags": ["repairs", "handyman", "home maintenance", "plumbing"],
+    "images": ["/images/handyman-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Single Repair",
+        "description": "Fix one specific issue",
+        "price": 2000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Diagnosis", "Repair", "Basic materials"]
+      },
+      {
+        "tier": "standard",
+        "name": "Multiple Repairs",
+        "description": "Fix 2-3 issues in one visit",
+        "price": 5000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Basic", "Bulk discount", "Quality guarantee"]
+      },
+      {
+        "tier": "premium",
+        "name": "Home Maintenance Package",
+        "description": "Complete home inspection and repairs",
+        "price": 12000,
+        "deliveryDays": 2,
+        "revisions": null,
+        "features": ["Full inspection", "All repairs included", "Preventive maintenance", "6-month warranty"]
+      }
+    ],
+    "rating": 4.9,
+    "reviewsCount": 89,
+    "ordersCount": 220
+  },
+  {
+    "title": "Interior & Exterior Painting",
+    "description": "Professional painting services for homes and offices. High-quality paints, careful preparation, and clean finish. Free color consultation included. Licensed painters with years of experience.",
+    "category": "painting",
+    "tags": ["painting", "interior", "exterior", "home improvement"],
+    "images": ["/images/painting-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Single Room",
+        "description": "Paint one room (walls only)",
+        "price": 8000,
+        "deliveryDays": 2,
+        "revisions": null,
+        "features": ["Wall preparation", "2 coats paint", "Clean up"]
+      },
+      {
+        "tier": "standard",
+        "name": "Multiple Rooms",
+        "description": "Paint 2-3 rooms",
+        "price": 20000,
+        "deliveryDays": 3,
+        "revisions": null,
+        "features": ["Everything in Basic", "Color consultation", "Ceiling included"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full House Painting",
+        "description": "Complete interior/exterior painting",
+        "price": 50000,
+        "deliveryDays": 7,
+        "revisions": null,
+        "features": ["Everything in Standard", "Premium paint", "Trim work", "Touch-ups included"]
+      }
+    ],
+    "rating": 4.8,
+    "reviewsCount": 67,
+    "ordersCount": 150
+  },
+  {
+    "title": "Math & Science Tutoring",
+    "description": "Experienced tutor for Grade 6-12 students. Specializing in Mathematics, Physics, and Chemistry. Personalized learning plans. Online and in-person sessions available.",
+    "category": "tuition",
+    "tags": ["tutoring", "math", "science", "education"],
+    "images": ["/images/tutoring-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Single Session",
+        "description": "One 1-hour tutoring session",
+        "price": 1500,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["1-hour session", "Homework help", "Progress notes"]
+      },
+      {
+        "tier": "standard",
+        "name": "Weekly Package",
+        "description": "4 sessions per month",
+        "price": 5000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["4 sessions", "Study materials", "Monthly progress report"]
+      },
+      {
+        "tier": "premium",
+        "name": "Intensive Package",
+        "description": "8 sessions per month with exam prep",
+        "price": 10000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["8 sessions", "Exam preparation", "Mock tests", "Parent consultation"]
+      }
+    ],
+    "rating": 4.9,
+    "reviewsCount": 45,
+    "ordersCount": 95
+  },
+  {
+    "title": "Professional Moving Service",
+    "description": "Complete moving and relocation services. Careful packing, safe transport, and unpacking. Trucks and professional movers. Insurance available. Serving all of Sri Lanka.",
+    "category": "removals",
+    "tags": ["moving", "relocation", "packing", "transport"],
+    "images": ["/images/moving-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Local Move",
+        "description": "Moving within same city",
+        "price": 10000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Truck & 2 movers", "Loading & unloading", "Basic packing"]
+      },
+      {
+        "tier": "standard",
+        "name": "Inter-City Move",
+        "description": "Moving between cities",
+        "price": 25000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Basic", "Professional packing", "Insurance coverage"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Relocation",
+        "description": "Full-service relocation with unpacking",
+        "price": 50000,
+        "deliveryDays": 2,
+        "revisions": null,
+        "features": ["Everything in Standard", "Unpacking service", "Furniture assembly", "Cleaning service"]
+      }
+    ],
+    "rating": 4.7,
+    "reviewsCount": 34,
+    "ordersCount": 78
+  },
+  {
+    "title": "Business Card & Logo Design",
+    "description": "Professional graphic design services. Business cards, logos, letterheads, and branding materials. Modern and creative designs. Multiple revisions included.",
+    "category": "marketing",
+    "tags": ["design", "logo", "branding", "graphic design"],
+    "images": ["/images/design-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Basic Logo",
+        "description": "Simple logo design",
+        "price": 5000,
+        "deliveryDays": 3,
+        "revisions": 2,
+        "features": ["1 logo concept", "2 revisions", "PNG & JPG files"]
+      },
+      {
+        "tier": "standard",
+        "name": "Professional Branding",
+        "description": "Logo + business card design",
+        "price": 15000,
+        "deliveryDays": 5,
+        "revisions": 3,
+        "features": ["Logo design", "Business card", "3 revisions", "Source files"]
+      },
+      {
+        "tier": "premium",
+        "name": "Complete Brand Package",
+        "description": "Full branding with multiple assets",
+        "price": 35000,
+        "deliveryDays": 7,
+        "revisions": 5,
+        "features": ["Everything in Standard", "Letterhead", "Social media kit", "Brand guidelines", "Unlimited revisions"]
+      }
+    ],
+    "rating": 4.8,
+    "reviewsCount": 92,
+    "ordersCount": 180
+  },
+  {
+    "title": "Mobile Phone Screen Repair",
+    "description": "Fast and reliable phone repair service. Screen replacement, battery replacement, and general repairs. Original and compatible parts available. Same-day service for most models.",
+    "category": "mobile-repair",
+    "tags": ["phone repair", "screen replacement", "mobile", "electronics"],
+    "images": ["/images/phone-repair-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Screen Replacement",
+        "description": "Replace cracked screen",
+        "price": 5000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Screen replacement", "Quality parts", "1 month warranty"]
+      },
+      {
+        "tier": "standard",
+        "name": "Screen + Battery",
+        "description": "Screen and battery replacement",
+        "price": 8000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Screen replacement", "Battery replacement", "3 months warranty"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full Service",
+        "description": "Complete phone service and repair",
+        "price": 12000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Everything in Standard", "Phone cleaning", "Software update", "6 months warranty"]
+      }
+    ],
+    "rating": 4.6,
+    "reviewsCount": 123,
+    "ordersCount": 320
+  },
+  {
+    "title": "Wedding Photography & Videography",
+    "description": "Professional wedding photography and videography services. Capture your special day with beautiful photos and cinematic videos. Full-day coverage, edited photos, and highlight reel included.",
+    "category": "wedding",
+    "tags": ["wedding", "photography", "videography", "events"],
+    "images": ["/images/wedding-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Photo Package",
+        "description": "Photography only",
+        "price": 30000,
+        "deliveryDays": 14,
+        "revisions": null,
+        "features": ["Full day coverage", "300+ edited photos", "Online gallery"]
+      },
+      {
+        "tier": "standard",
+        "name": "Photo + Video",
+        "description": "Photography and videography",
+        "price": 60000,
+        "deliveryDays": 21,
+        "revisions": 2,
+        "features": ["Everything in Basic", "Highlight video", "Full ceremony video", "Drone footage"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Package",
+        "description": "Complete wedding coverage with extras",
+        "price": 100000,
+        "deliveryDays": 30,
+        "revisions": 3,
+        "features": ["Everything in Standard", "Pre-wedding shoot", "Album design", "Raw files", "Unlimited revisions"]
+      }
+    ],
+    "rating": 4.9,
+    "reviewsCount": 56,
+    "ordersCount": 120
+  },
+  {
+    "title": "Tailoring & Clothing Alterations",
+    "description": "Professional tailoring services for all your clothing needs. Alterations, repairs, and custom tailoring. Quick turnaround. Perfect fit guaranteed.",
+    "category": "tailoring",
+    "tags": ["tailoring", "alterations", "clothing", "sewing"],
+    "images": ["/images/tailoring-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Simple Alteration",
+        "description": "Hemming or basic adjustments",
+        "price": 500,
+        "deliveryDays": 2,
+        "revisions": 1,
+        "features": ["Basic alterations", "1 revision", "Quick service"]
+      },
+      {
+        "tier": "standard",
+        "name": "Multiple Alterations",
+        "description": "2-3 items alterations",
+        "price": 1500,
+        "deliveryDays": 3,
+        "revisions": 2,
+        "features": ["Multiple items", "2 revisions", "Quality guarantee"]
+      },
+      {
+        "tier": "premium",
+        "name": "Custom Tailoring",
+        "description": "Custom-made clothing",
+        "price": 8000,
+        "deliveryDays": 7,
+        "revisions": 3,
+        "features": ["Custom design", "Fabric consultation", "Fittings included", "Premium finish"]
+      }
+    ],
+    "rating": 4.7,
+    "reviewsCount": 78,
+    "ordersCount": 190
+  },
+  {
+    "title": "Three-Wheeler Transport Service",
+    "description": "Reliable three-wheeler transport service for short distances. Available 24/7. Safe and affordable rides. Perfect for quick trips, shopping, and local errands.",
+    "category": "three-wheeler",
+    "tags": ["transport", "three-wheeler", "tuk-tuk", "taxi"],
+    "images": ["/images/three-wheeler-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Short Distance",
+        "description": "Up to 5km ride",
+        "price": 200,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["Up to 5km", "Air-conditioned", "Safe driver"]
+      },
+      {
+        "tier": "standard",
+        "name": "Medium Distance",
+        "description": "5-15km ride",
+        "price": 500,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["5-15km", "Everything in Basic", "Multiple stops"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full Day Service",
+        "description": "Hire for full day (8 hours)",
+        "price": 3000,
+        "deliveryDays": 1,
+        "revisions": null,
+        "features": ["8 hours service", "Unlimited stops", "Dedicated driver", "Fuel included"]
+      }
+    ],
+    "rating": 4.5,
+    "reviewsCount": 234,
+    "ordersCount": 650
+  },
+  {
+    "title": "Business Plan Writing Service",
+    "description": "Professional business plan writing for startups and entrepreneurs. Comprehensive market analysis, financial projections, and strategic planning. Investor-ready documents.",
+    "category": "business",
+    "tags": ["business", "writing", "consulting", "startup"],
+    "images": ["/images/business-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Basic Plan",
+        "description": "Simple business plan",
+        "price": 15000,
+        "deliveryDays": 7,
+        "revisions": 2,
+        "features": ["20-page plan", "Market analysis", "2 revisions"]
+      },
+      {
+        "tier": "standard",
+        "name": "Professional Plan",
+        "description": "Comprehensive business plan",
+        "price": 35000,
+        "deliveryDays": 14,
+        "revisions": 3,
+        "features": ["40-page plan", "Financial projections", "3 revisions", "Presentation deck"]
+      },
+      {
+        "tier": "premium",
+        "name": "Investor-Ready Plan",
+        "description": "Complete investor pitch package",
+        "price": 60000,
+        "deliveryDays": 21,
+        "revisions": 5,
+        "features": ["Everything in Standard", "Pitch deck", "Financial model", "Consultation calls", "Unlimited revisions"]
+      }
+    ],
+    "rating": 4.8,
+    "reviewsCount": 28,
+    "ordersCount": 65
+  },
+  {
+    "title": "Social Media Management",
+    "description": "Professional social media management for your business. Content creation, posting, engagement, and analytics. Grow your online presence across Facebook, Instagram, and LinkedIn.",
+    "category": "marketing",
+    "tags": ["social media", "marketing", "content", "digital"],
+    "images": ["/images/social-media-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Starter Package",
+        "description": "Basic social media management",
+        "price": 10000,
+        "deliveryDays": 30,
+        "revisions": null,
+        "features": ["15 posts/month", "2 platforms", "Basic analytics"]
+      },
+      {
+        "tier": "standard",
+        "name": "Growth Package",
+        "description": "Comprehensive social media management",
+        "price": 25000,
+        "deliveryDays": 30,
+        "revisions": null,
+        "features": ["30 posts/month", "3 platforms", "Engagement management", "Monthly report"]
+      },
+      {
+        "tier": "premium",
+        "name": "Premium Package",
+        "description": "Full-service social media management",
+        "price": 50000,
+        "deliveryDays": 30,
+        "revisions": null,
+        "features": ["Everything in Standard", "Unlimited posts", "All platforms", "Video content", "Ad management"]
+      }
+    ],
+    "rating": 4.7,
+    "reviewsCount": 41,
+    "ordersCount": 95
+  },
+  {
+    "title": "Website Development Service",
+    "description": "Professional website development for businesses. Responsive design, SEO optimized, and modern features. From simple landing pages to complex e-commerce sites.",
+    "category": "marketing",
+    "tags": ["web development", "website", "design", "coding"],
+    "images": ["/images/webdev-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": true,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Landing Page",
+        "description": "Simple one-page website",
+        "price": 25000,
+        "deliveryDays": 7,
+        "revisions": 2,
+        "features": ["Responsive design", "Contact form", "SEO basics", "2 revisions"]
+      },
+      {
+        "tier": "standard",
+        "name": "Business Website",
+        "description": "Multi-page business website",
+        "price": 60000,
+        "deliveryDays": 14,
+        "revisions": 3,
+        "features": ["5-10 pages", "CMS included", "SEO optimized", "3 revisions", "1 month support"]
+      },
+      {
+        "tier": "premium",
+        "name": "E-Commerce Website",
+        "description": "Full e-commerce solution",
+        "price": 150000,
+        "deliveryDays": 30,
+        "revisions": 5,
+        "features": ["Everything in Standard", "Payment integration", "Inventory management", "Admin panel", "6 months support"]
+      }
+    ],
+    "rating": 4.9,
+    "reviewsCount": 35,
+    "ordersCount": 78
+  },
+  {
+    "title": "Event Photography Service",
+    "description": "Professional event photography for corporate events, parties, and celebrations. High-quality photos with quick delivery. Experienced photographers with professional equipment.",
+    "category": "wedding",
+    "tags": ["photography", "events", "corporate", "parties"],
+    "images": ["/images/event-photo-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "2-Hour Coverage",
+        "description": "Basic event photography",
+        "price": 15000,
+        "deliveryDays": 7,
+        "revisions": null,
+        "features": ["2 hours coverage", "100+ edited photos", "Online gallery"]
+      },
+      {
+        "tier": "standard",
+        "name": "4-Hour Coverage",
+        "description": "Extended event coverage",
+        "price": 30000,
+        "deliveryDays": 10,
+        "revisions": null,
+        "features": ["4 hours coverage", "200+ edited photos", "2 photographers", "Highlight reel"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full Day Coverage",
+        "description": "Complete event documentation",
+        "price": 60000,
+        "deliveryDays": 14,
+        "revisions": null,
+        "features": ["Full day coverage", "500+ photos", "Video highlights", "Photo booth", "Same-day preview"]
+      }
+    ],
+    "rating": 4.8,
+    "reviewsCount": 52,
+    "ordersCount": 110
+  },
+  {
+    "title": "Construction & Masonry Work",
+    "description": "Professional construction and masonry services. Building walls, foundations, repairs, and renovations. Licensed contractors with years of experience. Quality materials and workmanship.",
+    "category": "construction",
+    "tags": ["construction", "masonry", "building", "renovation"],
+    "images": ["/images/construction-1.jpg"],
+    "deliveryType": "service",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Small Project",
+        "description": "Minor construction work",
+        "price": 20000,
+        "deliveryDays": 3,
+        "revisions": null,
+        "features": ["Small repairs", "Basic materials", "Quality work"]
+      },
+      {
+        "tier": "standard",
+        "name": "Medium Project",
+        "description": "Moderate construction work",
+        "price": 50000,
+        "deliveryDays": 7,
+        "revisions": null,
+        "features": ["Medium projects", "Quality materials", "Permits assistance"]
+      },
+      {
+        "tier": "premium",
+        "name": "Large Project",
+        "description": "Major construction or renovation",
+        "price": 150000,
+        "deliveryDays": 14,
+        "revisions": null,
+        "features": ["Large projects", "Premium materials", "Full project management", "Warranty included"]
+      }
+    ],
+    "rating": 4.6,
+    "reviewsCount": 19,
+    "ordersCount": 42
+  },
+  {
+    "title": "Data Entry & Admin Support",
+    "description": "Professional data entry and administrative support services. Accurate and efficient data processing. Excel, database management, and document organization. Confidential and reliable.",
+    "category": "business",
+    "tags": ["data entry", "admin", "office", "virtual assistant"],
+    "images": ["/images/admin-1.jpg"],
+    "deliveryType": "digital",
+    "isFeatured": false,
+    "packages": [
+      {
+        "tier": "basic",
+        "name": "Basic Data Entry",
+        "description": "Simple data entry tasks",
+        "price": 3000,
+        "deliveryDays": 2,
+        "revisions": 1,
+        "features": ["Up to 500 entries", "Excel format", "1 revision"]
+      },
+      {
+        "tier": "standard",
+        "name": "Advanced Data Entry",
+        "description": "Complex data processing",
+        "price": 8000,
+        "deliveryDays": 3,
+        "revisions": 2,
+        "features": ["Up to 2000 entries", "Database setup", "Data validation", "2 revisions"]
+      },
+      {
+        "tier": "premium",
+        "name": "Full Admin Support",
+        "description": "Complete administrative support",
+        "price": 20000,
+        "deliveryDays": 5,
+        "revisions": 3,
+        "features": ["Everything in Standard", "Document organization", "Report generation", "Ongoing support"]
+      }
+    ],
+    "rating": 4.7,
+    "reviewsCount": 67,
+    "ordersCount": 145
+  }
+]
+

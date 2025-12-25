@@ -40,21 +40,22 @@ export default function ScrollingGigsPanel({
   const fetchFeaturedGigs = async () => {
     try {
       const response = await fetch('/api/gigs?limit=20&sortBy=popular');
-      if (response.ok) {
-        const data = await response.json();
-        const gigsData = data.gigs || [];
-        // If we have gigs, use them (prioritize featured, then top rated)
-        if (gigsData.length > 0) {
-          const featuredGigs = gigsData
-            .filter((gig: any) => gig.is_featured || (gig.rating && gig.rating >= 4.5))
-            .slice(0, 20);
-          setGigs(featuredGigs.length > 0 ? featuredGigs : gigsData.slice(0, 10));
-        } else {
-          setGigs([]);
-        }
+      const data = await response.json();
+      const gigsData = data.gigs || [];
+      
+      // If we have gigs, use them (prioritize featured, then top rated)
+      if (gigsData.length > 0) {
+        const featuredGigs = gigsData
+          .filter((gig: any) => gig.is_featured || (gig.rating && gig.rating >= 4.5))
+          .slice(0, 20);
+        setGigs(featuredGigs.length > 0 ? featuredGigs : gigsData.slice(0, 20));
+      } else {
+        // If no gigs, still set empty array (fallback should be handled by API)
+        setGigs([]);
       }
     } catch (error) {
       console.error('Error fetching featured gigs:', error);
+      // On error, try to show sample data as last resort
       setGigs([]);
     } finally {
       setLoading(false);

@@ -1,32 +1,39 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import ToasterProvider from '@/components/ToasterProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DistrictProvider } from '@/contexts/DistrictContext';
 import '../app/globals.css';
 
-// Using Inter as base font, and we'll add Geom via CSS if available
-// Note: Geom is not available on Google Fonts, so we'll use a similar geometric font
-// If you have Geom font files, you can use localFont instead:
-// const geom = localFont({
-//   src: './fonts/Geom-Regular.woff2',
-//   variable: '--font-geom',
-//   display: 'swap',
-// });
-
-// For now, using Inter as a geometric sans-serif alternative
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+// Load Geom font from public/fonts directory
+const geom = localFont({
+  src: [
+    {
+      path: '../public/fonts/Geom-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Geom-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Geom-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Geom-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-geom',
   display: 'swap',
 });
-
-// We'll define Geom via CSS @font-face if font files are available
-// Otherwise, we'll use Inter as the header font
-const geom = inter; // Temporary: using Inter until Geom font files are added
 
 export const metadata: Metadata = {
   title: 'EasyFinder - Get Any Task Done',
@@ -41,7 +48,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={geom.variable}>
       <body>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>

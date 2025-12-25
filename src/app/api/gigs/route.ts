@@ -113,18 +113,20 @@ export async function GET(request: NextRequest) {
 
     const { data, error, count } = await query;
 
-    if (error) {
-      console.error('Error fetching gigs:', error);
-      throw error;
-    }
-
     // Post-process results for price filtering and sorting
     let gigs = data || [];
 
-    // Fallback to sample data if database is empty (for development/demo)
-    if (gigs.length === 0 && !category && !search && !district) {
-      console.log('No gigs found in database, using sample data as fallback');
-      gigs = generateSampleGigsFromJSON(sampleGigsData, limit);
+    // If there's an error or no data, use sample data as fallback
+    if (error || gigs.length === 0) {
+      if (error) {
+        console.log('Error fetching gigs from database, using sample data as fallback:', error.message);
+      } else {
+        console.log('No gigs found in database, using sample data as fallback');
+      }
+      // Only use fallback if no specific filters are applied
+      if (!category && !search && !district) {
+        gigs = generateSampleGigsFromJSON(sampleGigsData, limit);
+      }
     }
 
     // Apply price filters if provided
