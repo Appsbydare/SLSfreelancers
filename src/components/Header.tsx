@@ -65,14 +65,25 @@ export default function Header() {
   }, []);
 
   const navigation = [
-    { name: t('browseTasks'), href: `/${locale}/browse-tasks` },
-    { name: t('postTask'), href: `/${locale}/post-task` },
+    { name: 'Browse Gigs', href: `/browse-gigs` },
+    { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
+    { name: 'Post Request', href: `/${locale}/post-task` },
+    { name: 'How It Works', href: `/${locale}/how-it-works` },
   ];
 
-  // Add Project Status for admin users
-  const displayNavigation = user?.userType === 'admin' 
-    ? [...navigation, { name: 'Project Status', href: '/project-status' }]
-    : navigation;
+  // Add Project Status for admin users and seller-specific links
+  let displayNavigation = [...navigation];
+  
+  if (user?.userType === 'tasker') {
+    displayNavigation = [
+      { name: 'Browse Gigs', href: `/browse-gigs` },
+      { name: 'My Gigs', href: `/seller/gigs` },
+      { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
+      { name: 'My Orders', href: `/orders` },
+    ];
+  } else if (user?.userType === 'admin') {
+    displayNavigation = [...navigation, { name: 'Project Status', href: '/project-status' }];
+  }
 
   const iconsById: Record<string, string> = {
     'home-property': '🏠',
@@ -158,9 +169,9 @@ export default function Header() {
       href: `/${locale}/how-it-works`,
     },
     {
-      id: 'become-tasker',
-      label: t('becomeTasker'),
-      description: 'Kick-start your earning journey as a verified tasker.',
+      id: 'become-seller',
+      label: 'Become a Seller',
+      description: 'Start earning by offering your services as a verified seller.',
       href: `/${locale}/become-tasker`,
     },
     {

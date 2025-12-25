@@ -295,3 +295,4 @@ If you encounter any issues:
 3. Check Supabase logs (Database → Logs)
 4. Verify environment variables are set correctly
 
+

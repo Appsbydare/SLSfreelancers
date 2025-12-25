@@ -349,6 +349,116 @@ create table public.admin_actions (
   created_at timestamptz not null default now()
 );
 
+-- Gig System Tables (Fiverr Model) ------------------------------------------
+
+create type public.gig_status as enum ('draft', 'active', 'paused', 'rejected');
+create type public.delivery_type as enum ('digital', 'physical', 'service');
+create type public.order_status as enum ('pending', 'in_progress', 'delivered', 'revision_requested', 'completed', 'cancelled', 'disputed');
+
+create table public.gigs (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references public.taskers(id) on delete cascade,
+  title text not null,
+  slug text unique not null,
+  description text not null,
+  category text not null,
+  subcategory text,
+  tags text[] default '{}',
+  images text[] default '{}',
+  status public.gig_status not null default 'draft',
+  delivery_type public.delivery_type default 'service',
+  is_featured boolean default false,
+  views_count int default 0,
+  orders_count int default 0,
+  rating numeric(3,2) default 0,
+  reviews_count int default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger trg_gigs_updated_at
+before update on public.gigs
+for each row execute procedure public.set_updated_at();
+
+create table public.gig_packages (
+  id uuid primary key default gen_random_uuid(),
+  gig_id uuid not null references public.gigs(id) on delete cascade,
+  tier text not null check (tier in ('basic', 'standard', 'premium')),
+  name text not null,
+  description text,
+  price numeric(10,2) not null,
+  delivery_days int not null,
+  revisions int, -- null = unlimited
+  features jsonb default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  unique(gig_id, tier)
+);
+
+create table public.gig_requirements (
+  id uuid primary key default gen_random_uuid(),
+  gig_id uuid not null references public.gigs(id) on delete cascade,
+  question text not null,
+  answer_type text not null check (answer_type in ('text', 'choice', 'file', 'multiple_choice')),
+  options jsonb, -- for choice type
+  is_required boolean default true,
+  sort_order int default 0,
+  created_at timestamptz not null default now()
+);
+
+create table public.orders (
+  id uuid primary key default gen_random_uuid(),
+  order_number text unique not null,
+  customer_id uuid not null references public.customers(id),
+  seller_id uuid not null references public.taskers(id),
+  gig_id uuid references public.gigs(id),
+  package_id uuid references public.gig_packages(id),
+  package_tier text,
+  total_amount numeric(10,2) not null,
+  platform_fee numeric(10,2) not null,
+  seller_earnings numeric(10,2) not null,
+  status public.order_status not null default 'pending',
+  requirements_response jsonb default '{}'::jsonb,
+  delivery_date timestamptz,
+  completed_at timestamptz,
+  cancelled_at timestamptz,
+  cancellation_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger trg_orders_updated_at
+before update on public.orders
+for each row execute procedure public.set_updated_at();
+
+create table public.order_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  message text,
+  attachments text[] default '{}',
+  delivered_at timestamptz not null default now()
+);
+
+create table public.order_revisions (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  requested_by uuid not null references public.users(id),
+  message text not null,
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'rejected')),
+  created_at timestamptz not null default now()
+);
+
+create table public.gig_favorites (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  gig_id uuid not null references public.gigs(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(user_id, gig_id)
+);
+
+-- Update reviews table to support both tasks and gigs
+alter table public.reviews 
+  add column order_id uuid references public.orders(id) on delete cascade;
+
 -- Indexes ------------------------------------------------------------------
 
 create index idx_users_auth_user_id on public.users(auth_user_id);
@@ -362,6 +472,20 @@ create index idx_messages_recipient on public.messages(recipient_id);
 create index idx_reviews_reviewee on public.reviews(reviewee_id);
 create index idx_verifications_user on public.verifications(user_id);
 create index idx_notifications_user on public.notifications(user_id);
+
+-- Gig system indexes
+create index idx_gigs_seller on public.gigs(seller_id);
+create index idx_gigs_category on public.gigs(category);
+create index idx_gigs_status on public.gigs(status);
+create index idx_gigs_slug on public.gigs(slug);
+create index idx_gig_packages_gig on public.gig_packages(gig_id);
+create index idx_orders_customer on public.orders(customer_id);
+create index idx_orders_seller on public.orders(seller_id);
+create index idx_orders_gig on public.orders(gig_id);
+create index idx_orders_status on public.orders(status);
+create index idx_orders_number on public.orders(order_number);
+create index idx_gig_favorites_user on public.gig_favorites(user_id);
+create index idx_gig_favorites_gig on public.gig_favorites(gig_id);
 
 -- Row Level Security Policies ---------------------------------------------
 
@@ -385,6 +509,15 @@ alter table public.transactions enable row level security;
 alter table public.verifications enable row level security;
 alter table public.notifications enable row level security;
 alter table public.admin_actions enable row level security;
+
+-- Gig system tables
+alter table public.gigs enable row level security;
+alter table public.gig_packages enable row level security;
+alter table public.gig_requirements enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_deliveries enable row level security;
+alter table public.order_revisions enable row level security;
+alter table public.gig_favorites enable row level security;
 
 -- Tasker levels readable by anyone (public data)
 create policy "Tasker levels are read-only public data"
@@ -823,6 +956,333 @@ on public.admin_actions
 for all
 using (public.is_admin())
 with check (public.is_admin());
+
+-- Gigs (public readable, seller editable)
+create policy "Anyone can view active gigs"
+on public.gigs
+for select
+using (status = 'active' or public.is_admin());
+
+create policy "Sellers can view all their gigs"
+on public.gigs
+for select
+using (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = gigs.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Sellers can create gigs"
+on public.gigs
+for insert
+with check (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = gigs.seller_id
+      and u.auth_user_id = auth.uid()
+  )
+);
+
+create policy "Sellers can update their gigs"
+on public.gigs
+for update
+using (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = gigs.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+)
+with check (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = gigs.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Sellers can delete their gigs"
+on public.gigs
+for delete
+using (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = gigs.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+-- Gig packages
+create policy "Anyone can view packages for active gigs"
+on public.gig_packages
+for select
+using (
+  exists (
+    select 1
+    from public.gigs g
+    where g.id = gig_packages.gig_id
+      and (g.status = 'active' or public.is_admin())
+  )
+);
+
+create policy "Sellers manage their gig packages"
+on public.gig_packages
+for all
+using (
+  exists (
+    select 1
+    from public.gigs g
+    join public.taskers t on t.id = g.seller_id
+    join public.users u on u.id = t.user_id
+    where g.id = gig_packages.gig_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+)
+with check (
+  exists (
+    select 1
+    from public.gigs g
+    join public.taskers t on t.id = g.seller_id
+    join public.users u on u.id = t.user_id
+    where g.id = gig_packages.gig_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+-- Gig requirements
+create policy "Anyone can view requirements for active gigs"
+on public.gig_requirements
+for select
+using (
+  exists (
+    select 1
+    from public.gigs g
+    where g.id = gig_requirements.gig_id
+      and (g.status = 'active' or public.is_admin())
+  )
+);
+
+create policy "Sellers manage their gig requirements"
+on public.gig_requirements
+for all
+using (
+  exists (
+    select 1
+    from public.gigs g
+    join public.taskers t on t.id = g.seller_id
+    join public.users u on u.id = t.user_id
+    where g.id = gig_requirements.gig_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+)
+with check (
+  exists (
+    select 1
+    from public.gigs g
+    join public.taskers t on t.id = g.seller_id
+    join public.users u on u.id = t.user_id
+    where g.id = gig_requirements.gig_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+-- Orders
+create policy "Customers view their orders"
+on public.orders
+for select
+using (
+  exists (
+    select 1
+    from public.customers c
+    join public.users u on u.id = c.user_id
+    where c.id = orders.customer_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Sellers view their orders"
+on public.orders
+for select
+using (
+  exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = orders.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Customers create orders"
+on public.orders
+for insert
+with check (
+  exists (
+    select 1
+    from public.customers c
+    join public.users u on u.id = c.user_id
+    where c.id = orders.customer_id
+      and u.auth_user_id = auth.uid()
+  )
+);
+
+create policy "Customers and sellers update orders"
+on public.orders
+for update
+using (
+  exists (
+    select 1
+    from public.customers c
+    join public.users u on u.id = c.user_id
+    where c.id = orders.customer_id
+      and u.auth_user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = orders.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+)
+with check (
+  exists (
+    select 1
+    from public.customers c
+    join public.users u on u.id = c.user_id
+    where c.id = orders.customer_id
+      and u.auth_user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.taskers t
+    join public.users u on u.id = t.user_id
+    where t.id = orders.seller_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+-- Order deliveries
+create policy "Customers and sellers view order deliveries"
+on public.order_deliveries
+for select
+using (
+  exists (
+    select 1
+    from public.orders o
+    join public.customers c on c.id = o.customer_id
+    join public.users u on u.id = c.user_id
+    where o.id = order_deliveries.order_id
+      and u.auth_user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.orders o
+    join public.taskers t on t.id = o.seller_id
+    join public.users u on u.id = t.user_id
+    where o.id = order_deliveries.order_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Sellers create order deliveries"
+on public.order_deliveries
+for insert
+with check (
+  exists (
+    select 1
+    from public.orders o
+    join public.taskers t on t.id = o.seller_id
+    join public.users u on u.id = t.user_id
+    where o.id = order_deliveries.order_id
+      and u.auth_user_id = auth.uid()
+  )
+);
+
+-- Order revisions
+create policy "Customers and sellers view order revisions"
+on public.order_revisions
+for select
+using (
+  exists (
+    select 1
+    from public.orders o
+    join public.customers c on c.id = o.customer_id
+    join public.users u on u.id = c.user_id
+    where o.id = order_revisions.order_id
+      and u.auth_user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.orders o
+    join public.taskers t on t.id = o.seller_id
+    join public.users u on u.id = t.user_id
+    where o.id = order_revisions.order_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Customers and sellers create order revisions"
+on public.order_revisions
+for insert
+with check (
+  exists (
+    select 1
+    from public.orders o
+    join public.customers c on c.id = o.customer_id
+    join public.users u on u.id = c.user_id
+    where o.id = order_revisions.order_id
+      and u.auth_user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.orders o
+    join public.taskers t on t.id = o.seller_id
+    join public.users u on u.id = t.user_id
+    where o.id = order_revisions.order_id
+      and u.auth_user_id = auth.uid()
+  )
+);
+
+-- Gig favorites
+create policy "Users view their favorites"
+on public.gig_favorites
+for select
+using (
+  exists (
+    select 1
+    from public.users u
+    where u.id = gig_favorites.user_id
+      and u.auth_user_id = auth.uid()
+  ) or public.is_admin()
+);
+
+create policy "Users manage their favorites"
+on public.gig_favorites
+for all
+using (
+  exists (
+    select 1
+    from public.users u
+    where u.id = gig_favorites.user_id
+      and u.auth_user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.users u
+    where u.id = gig_favorites.user_id
+      and u.auth_user_id = auth.uid()
+  )
+);
 
 commit;
 

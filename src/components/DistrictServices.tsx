@@ -152,7 +152,7 @@ export default function DistrictServices() {
             href={`/browse-tasks?district=${selectedDistrict.id}`}
             className="inline-flex items-center px-8 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-xl"
           >
-            {t('browseTasks')}
+            {t('browseTasks', { district: selectedDistrict.name })}
           </Link>
         </div>
       </div>
