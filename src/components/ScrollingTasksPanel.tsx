@@ -224,13 +224,9 @@ export default function ScrollingTasksPanel({
   };
 
   return (
-    <div 
-      className="py-12 bg-gradient-to-b from-gray-50 to-white"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
+    <div className="py-12 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2 font-geom">
             Open Tasks
           </h2>
@@ -252,7 +248,12 @@ export default function ScrollingTasksPanel({
           >
             {/* Duplicate tasks multiple times for seamless infinite loop */}
             {[...tasks, ...tasks, ...tasks].map((task, index) => (
-              <TaskCard key={`${task.id}-${index}`} task={task} getTimeAgo={getTimeAgo} />
+              <TaskCard 
+                key={`${task.id}-${index}`} 
+                task={task} 
+                getTimeAgo={getTimeAgo}
+                onCardHover={(isHovering) => setIsPaused(isHovering)}
+              />
             ))}
           </div>
         </div>
@@ -271,11 +272,13 @@ export default function ScrollingTasksPanel({
   );
 }
 
-function TaskCard({ task, getTimeAgo }: { task: Task; getTimeAgo: (date: Date) => string }) {
+function TaskCard({ task, getTimeAgo, onCardHover }: { task: Task; getTimeAgo: (date: Date) => string; onCardHover?: (isHovering: boolean) => void }) {
   return (
     <Link 
       href={`/browse-tasks?task=${task.id}`}
-      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden group border border-gray-200"
+      className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
+      onMouseEnter={() => onCardHover?.(true)}
+      onMouseLeave={() => onCardHover?.(false)}
     >
       <div className="p-5">
         {/* Header */}

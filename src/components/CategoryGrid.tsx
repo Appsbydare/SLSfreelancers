@@ -43,6 +43,12 @@ export default function CategoryGrid({
 
   // Auto-scroll effect
   useEffect(() => {
+    // Initialize scroll position to end for left-to-right scrolling
+    if (scrollContainerRef.current) {
+      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+      scrollContainerRef.current.scrollLeft = maxScroll;
+    }
+    
     if (autoScroll && filteredCategories.length > 0 && !isPaused) {
       startAutoScroll();
     } else {
@@ -66,13 +72,13 @@ export default function CategoryGrid({
       lastScrollTimeRef.current = now;
 
       const scrollAmount = scrollSpeed * deltaTime;
-      scrollContainerRef.current.scrollLeft += scrollAmount;
+      // Scroll left to right (opposite direction)
+      scrollContainerRef.current.scrollLeft -= scrollAmount;
 
-      // Reset scroll position when reaching the end (seamless loop)
-      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
-      if (scrollContainerRef.current.scrollLeft >= maxScroll) {
-        // Reset to start for seamless loop
-        scrollContainerRef.current.scrollLeft = 0;
+      // Reset scroll position when reaching the start (seamless loop)
+      if (scrollContainerRef.current.scrollLeft <= 0) {
+        const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+        scrollContainerRef.current.scrollLeft = maxScroll;
       }
 
       scrollAnimationRef.current = requestAnimationFrame(scroll);
@@ -92,8 +98,6 @@ export default function CategoryGrid({
     <div 
       id="popular-categories" 
       className="py-12 scroll-mt-20 bg-gradient-to-b from-white to-gray-50"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
@@ -137,7 +141,9 @@ export default function CategoryGrid({
                   <Link
                     key={`${category.id}-${index}`}
                     href={`/browse-gigs?category=${category.id}`}
-                    className="flex-shrink-0 w-48 bg-white rounded-lg border border-gray-200 p-6 hover:border-brand-green hover:shadow-lg transition-all duration-300 hover:-translate-y-2 group"
+                    className="flex-shrink-0 w-48 bg-white rounded-lg border-2 border-gray-200 shadow-lg p-6 hover:border-brand-green/50 hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-2 group hover:ring-2 hover:ring-brand-green/30"
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
                   >
                     <div className="text-center">
                       <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">

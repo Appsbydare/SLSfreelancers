@@ -129,13 +129,9 @@ export default function ScrollingGigsPanel({
   }
 
   return (
-    <div 
-      className="py-12 bg-gradient-to-b from-gray-50 to-white"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
+    <div className="py-12 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2 font-geom">
             Featured Services
           </h2>
@@ -157,7 +153,11 @@ export default function ScrollingGigsPanel({
           >
             {/* Duplicate gigs multiple times for seamless infinite loop */}
             {[...gigs, ...gigs, ...gigs].map((gig, index) => (
-              <GigCard key={`${gig.id}-${index}`} gig={gig} />
+              <GigCard 
+                key={`${gig.id}-${index}`} 
+                gig={gig} 
+                onCardHover={(isHovering) => setIsPaused(isHovering)}
+              />
             ))}
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function ScrollingGigsPanel({
   );
 }
 
-function GigCard({ gig }: { gig: any }) {
+function GigCard({ gig, onCardHover }: { gig: any; onCardHover?: (isHovering: boolean) => void }) {
   const sellerName = gig.sellerName || `${gig.seller?.user?.first_name || ''} ${gig.seller?.user?.last_name || ''}`.trim() || 'Seller';
   const sellerAvatar = gig.sellerAvatar || gig.seller?.user?.profile_image_url;
   const sellerRating = gig.sellerRating || gig.seller?.rating;
@@ -186,7 +186,9 @@ function GigCard({ gig }: { gig: any }) {
   return (
     <Link 
       href={`/gigs/${gig.slug}`}
-      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden group"
+      className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
+      onMouseEnter={() => onCardHover?.(true)}
+      onMouseLeave={() => onCardHover?.(false)}
     >
       {/* Gig Image */}
       <div className="relative h-48 bg-gray-200">
