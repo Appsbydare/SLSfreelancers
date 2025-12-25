@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import sampleGigsData from '@/data/sample-gigs.json';
 
 // GET - List/search gigs with filters
 export async function GET(request: NextRequest) {
@@ -119,6 +120,12 @@ export async function GET(request: NextRequest) {
 
     // Post-process results for price filtering and sorting
     let gigs = data || [];
+
+    // Fallback to sample data if database is empty (for development/demo)
+    if (gigs.length === 0 && !category && !search && !district) {
+      console.log('No gigs found in database, using sample data as fallback');
+      gigs = generateSampleGigsFromJSON(sampleGigsData, limit);
+    }
 
     // Apply price filters if provided
     if (minPrice || maxPrice) {
@@ -261,5 +268,54 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Helper function to generate sample gigs from JSON data
+function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
+  return sampleData.slice(0, limit).map((gigData, index) => {
+    const minPrice = Math.min(...gigData.packages.map((p: any) => p.price));
+    return {
+      id: `sample-gig-${index + 1}`,
+      seller_id: `sample-seller-${index + 1}`,
+      title: gigData.title,
+      slug: gigData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + `-${index + 1}`,
+      description: gigData.description,
+      category: gigData.category,
+      tags: gigData.tags || [],
+      images: gigData.images || [],
+      status: 'active',
+      delivery_type: gigData.deliveryType || 'service',
+      is_featured: gigData.isFeatured || false,
+      views_count: Math.floor(Math.random() * 500) + 50,
+      orders_count: gigData.ordersCount || 0,
+      rating: gigData.rating || 4.5,
+      reviews_count: gigData.reviewsCount || 0,
+      created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+      seller: {
+        id: `sample-seller-${index + 1}`,
+        level_code: gigData.isFeatured ? 'top_performer' : 'trusted_specialist',
+        rating: gigData.rating || 4.5,
+        completed_tasks: gigData.ordersCount || 0,
+        user: {
+          id: `sample-user-${index + 1}`,
+          first_name: 'Sample',
+          last_name: `Seller ${index + 1}`,
+          profile_image_url: null,
+        },
+      },
+      packages: gigData.packages.map((pkg: any, pkgIndex: number) => ({
+        id: `sample-package-${index + 1}-${pkgIndex}`,
+        tier: pkg.tier,
+        price: pkg.price,
+        delivery_days: pkg.deliveryDays,
+      })),
+      startingPrice: minPrice,
+      sellerName: `Sample Seller ${index + 1}`,
+      sellerAvatar: null,
+      sellerLevel: gigData.isFeatured ? 'top_performer' : 'trusted_specialist',
+      sellerRating: gigData.rating || 4.5,
+    };
+  });
 }
 
