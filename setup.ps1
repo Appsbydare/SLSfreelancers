@@ -34,3 +34,5 @@ Write-Host "Live site: https://sl-sfreelancers.vercel.app" -ForegroundColor Blue
 Write-Host "GitHub: https://github.com/Appsbydare/SLSfreelancers" -ForegroundColor Blue
 Write-Host ""
 Read-Host "Press Enter to continue"
+
+
