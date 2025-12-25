@@ -211,13 +211,21 @@ export default function Header() {
     }, 600);
   };
 
+  // Check if we're on a seller page
+  const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker');
+  
+  // Darker green color for seller pages: #0a9a10 (darker than brand-green #0fcc17)
+  const headerBgClass = isSellerPage 
+    ? (isScrolled 
+        ? 'bg-[#0a9a10]/95 backdrop-blur-md shadow-lg border-b border-[#088a0e]' 
+        : 'bg-[#0a9a10] shadow-sm border-b border-[#088a0e]')
+    : (isScrolled 
+        ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
+        : 'bg-black shadow-sm border-b border-gray-800');
+
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
-        : 'bg-black shadow-sm border-b border-gray-800'
-    }`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerBgClass}`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

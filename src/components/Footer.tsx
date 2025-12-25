@@ -1,13 +1,23 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { animationClasses } from '@/lib/animations';
 import Image from 'next/image';
 
 export default function Footer() {
   const t = useTranslations('navigation');
+  const pathname = usePathname();
+  
+  // Check if we're on a seller page
+  const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker');
+  
+  // Darker green color for seller pages: #0a9a10 (darker than brand-green #0fcc17)
+  const footerBgClass = isSellerPage ? 'bg-[#0a9a10] text-white' : 'bg-gray-900 text-white';
 
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className={footerBgClass}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
@@ -95,7 +105,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+        <div className={`border-t ${isSellerPage ? 'border-[#088a0e]' : 'border-gray-800'} mt-8 pt-8 animate-fade-in-up`} style={{ animationDelay: '600ms' }}>
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
               © 2024 EasyFinder. All rights reserved.

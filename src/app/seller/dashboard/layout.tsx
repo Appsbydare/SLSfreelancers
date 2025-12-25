@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function SellerDashboardLayout({
   children,
@@ -100,8 +102,9 @@ export default function SellerDashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <div className="flex flex-1 pt-16">
         {/* Sidebar */}
         <SellerSidebar 
           unreadMessages={unreadMessages}
@@ -115,6 +118,7 @@ export default function SellerDashboardLayout({
           </div>
         </main>
       </div>
+      <Footer />
     </div>
   );
 }
