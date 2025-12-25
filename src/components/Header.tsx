@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, UserSwitch, LayoutDashboard, Package, ShoppingBag, DollarSign } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -343,7 +343,7 @@ export default function Header() {
                     className="inline-flex items-center text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 border border-white/20 hover:border-brand-green/60 rounded-md"
                     title="Switch to Customer View"
                   >
-                    <UserSwitch className="h-4 w-4 mr-1" />
+                    <ArrowLeftRight className="h-4 w-4 mr-1" />
                     Switch to Customer
                   </button>
                 )}
@@ -502,7 +502,7 @@ export default function Header() {
                   }}
                   className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
                 >
-                  <UserSwitch className="h-4 w-4 mr-2" />
+                  <ArrowLeftRight className="h-4 w-4 mr-2" />
                   Switch to Customer
                 </button>
               )}
