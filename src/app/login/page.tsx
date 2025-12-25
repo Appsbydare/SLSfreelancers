@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
@@ -10,6 +10,16 @@ import { showToast } from '@/lib/toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loginType, setLoginType] = useState<'customer' | 'tasker'>('customer');
+  
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type === 'tasker') {
+      setLoginType('tasker');
+    }
+  }, [searchParams]);
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -127,6 +137,34 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Welcome back to EasyFinder
           </p>
+          
+          {/* Login Type Selector */}
+          <div className="mt-4 flex justify-center">
+            <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setLoginType('customer')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  loginType === 'customer'
+                    ? 'bg-brand-green text-white shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
+                }`}
+              >
+                Customer Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginType('tasker')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  loginType === 'tasker'
+                    ? 'bg-brand-green text-white shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
+                }`}
+              >
+                Tasker Login
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

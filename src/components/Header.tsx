@@ -65,10 +65,8 @@ export default function Header() {
   }, []);
 
   const navigation = [
-    { name: 'Browse Gigs', href: `/browse-gigs` },
     { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
     { name: 'Post Request', href: `/${locale}/post-task` },
-    { name: 'How It Works', href: `/${locale}/how-it-works` },
   ];
 
   // Add Project Status for admin users and seller-specific links
@@ -76,7 +74,6 @@ export default function Header() {
   
   if (user?.userType === 'tasker') {
     displayNavigation = [
-      { name: 'Browse Gigs', href: `/browse-gigs` },
       { name: 'My Gigs', href: `/seller/gigs` },
       { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
       { name: 'My Orders', href: `/orders` },
@@ -377,12 +374,6 @@ export default function Header() {
                   className="bg-brand-green text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
                 >
                   {t('signUp')}
-                </Link>
-                <Link
-                  href="/login?type=tasker"
-                  className="border border-white/30 text-white hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Tasker Login
                 </Link>
                 {/* District (Sri Lanka) map trigger */}
                 <button

@@ -334,6 +334,22 @@ export default function BrowseGigsPage() {
                 )}
               </div>
             )}
+            
+            {/* Post a Custom Task Section */}
+            <div className="mt-12 mb-8 bg-gradient-to-r from-brand-green/10 to-brand-green/5 rounded-lg border border-brand-green/20 p-8 text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 font-geom">
+                Can&apos;t find what you&apos;re looking for?
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                Post a custom task request and let skilled professionals reach out to you with their offers.
+              </p>
+              <Link
+                href="/post-task"
+                className="inline-flex items-center px-6 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
+                Post a Custom Task
+              </Link>
+            </div>
           </div>
         </div>
       </div>
