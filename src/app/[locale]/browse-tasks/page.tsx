@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
 import { categories } from '@/data/categories';
 import { formatCurrency } from '@/lib/utils';
+import { districts, District, City } from '@/data/districts';
+import { useDistrict } from '@/contexts/DistrictContext';
+import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 
 // Mock data for tasks
 const mockTasks = [
@@ -76,14 +80,83 @@ const mockTasks = [
 ];
 
 export default function BrowseTasksPage() {
+  const locale = useLocale();
+  const t = useTranslations();
+  const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
+  const [selectedCityId, setSelectedCityId] = useState<string>('');
   const [sortBy, setSortBy] = useState('newest');
+  const [taskerType, setTaskerType] = useState<string>('all');
+  const searchParams = useSearchParams();
+
+  // Sync with DistrictContext when district is selected from map
+  useEffect(() => {
+    if (selectedDistrict) {
+      setSelectedDistrictId(selectedDistrict.id);
+      setSelectedCityId(''); // Reset city when district changes
+    }
+  }, [selectedDistrict]);
+
+  // Prefill category from query params if present
+  useEffect(() => {
+    const cat = searchParams?.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+    }
+    const svc = searchParams?.get('service');
+    if (svc) {
+      setSearchTerm(svc);
+    }
+  }, [searchParams]);
+  // Get selected district object
+  const selectedDistrictObj = districts.find(d => d.id === selectedDistrictId);
+  
+  // Get cities for selected district
+  const availableCities = selectedDistrictObj?.cities || [];
+
+  // Get district name based on locale
+  const getDistrictName = (district: District) => {
+    switch (locale) {
+      case 'si':
+        return district.nameSi;
+      case 'ta':
+        return district.nameTa;
+      default:
+        return district.name;
+    }
+  };
+
+  // Get city name based on locale
+  const getCityName = (city: City) => {
+    switch (locale) {
+      case 'si':
+        return city.nameSi;
+      case 'ta':
+        return city.nameTa;
+      default:
+        return city.name;
+    }
+  };
+
+  // Handle district change
+  const handleDistrictChange = (districtId: string) => {
+    setSelectedDistrictId(districtId);
+    setSelectedCityId(''); // Reset city when district changes
+    const district = districts.find(d => d.id === districtId);
+    if (district) {
+      setSelectedDistrict(district);
+    } else {
+      setSelectedDistrict(null);
+    }
+  };
 
   const filteredTasks = mockTasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || task.category === selectedCategory;
+    // TODO: Add district and city filtering when task data includes these fields
     return matchesSearch && matchesCategory;
   });
 
@@ -101,62 +174,72 @@ export default function BrowseTasksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Browse Tasks
-          </h1>
-          <p className="text-gray-600">
-            Find tasks that match your skills and start earning today.
-          </p>
-        </div>
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24 pt-4 pb-6">
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        {/* Top Filters (Categories, Sort, Tasker Type, District, City) */}
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-2 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Category */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
             {/* Sort */}
-            <div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="newest">Newest First</option>
-                <option value="budget-high">Budget: High to Low</option>
-                <option value="budget-low">Budget: Low to High</option>
-              </select>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+            >
+              <option value="newest">Newest First</option>
+              <option value="budget-high">Budget: High to Low</option>
+              <option value="budget-low">Budget: Low to High</option>
+            </select>
+            {/* Tasker Type (UI only for now) */}
+            <select
+              value={taskerType}
+              onChange={(e) => setTaskerType(e.target.value)}
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+            >
+              <option value="all">Tasker Type</option>
+              <option value="individual">Individual</option>
+              <option value="company">Company</option>
+              <option value="agency">Agency</option>
+            </select>
+            {/* District */}
+            <select
+              value={selectedDistrictId}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+            >
+              <option value="">All Districts</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {getDistrictName(district)}
+                </option>
+              ))}
+            </select>
+            {/* City */}
+            <select
+              value={selectedCityId}
+              onChange={(e) => setSelectedCityId(e.target.value)}
+              disabled={!selectedDistrictId}
+              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">All Cities</option>
+              {availableCities.map((city) => (
+                <option key={city.id} value={city.id}>
+                  {getCityName(city)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -176,7 +259,7 @@ export default function BrowseTasksPage() {
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
                     {task.title}
                   </h3>
-                  <span className="text-lg font-bold text-blue-600">
+                  <span className="text-lg font-bold text-brand-green">
                     {formatCurrency(task.budget)}
                   </span>
                 </div>
@@ -214,7 +297,7 @@ export default function BrowseTasksPage() {
 
                   <div className="text-right">
                     <p className="text-sm text-gray-600">{task.offersCount} offers</p>
-                    <button className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
                       Make Offer
                     </button>
                   </div>

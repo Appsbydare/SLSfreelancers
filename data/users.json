@@ -1,1 +1,40 @@
-[]
+[
+  {
+    "id": "admin1",
+    "firstName": "Admin",
+    "lastName": "One",
+    "email": "admin1@srilankatasks.com",
+    "phone": "+94771234567",
+    "location": "Colombo",
+    "userType": "admin",
+    "password": "Admin123!",
+    "createdAt": "2025-01-20T10:00:00Z",
+    "isVerified": true,
+    "profile": {
+      "bio": "Primary Administrator",
+      "skills": ["Platform Management", "User Support", "System Administration"],
+      "rating": 5.0,
+      "completedTasks": 0,
+      "profileImage": null
+    }
+  },
+  {
+    "id": "admin2",
+    "firstName": "Admin",
+    "lastName": "Two",
+    "email": "admin2@srilankatasks.com",
+    "phone": "+94771234568",
+    "location": "Colombo",
+    "userType": "admin",
+    "password": "Admin456!",
+    "createdAt": "2025-01-20T10:00:00Z",
+    "isVerified": true,
+    "profile": {
+      "bio": "Secondary Administrator",
+      "skills": ["Content Management", "Marketing", "Quality Assurance"],
+      "rating": 5.0,
+      "completedTasks": 0,
+      "profileImage": null
+    }
+  }
+]

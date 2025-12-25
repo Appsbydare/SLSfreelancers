@@ -29,8 +29,8 @@ export default function HowItWorksPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-blue-600">1</span>
+              <div className="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-brand-green">1</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Create Your Profile
@@ -40,7 +40,7 @@ export default function HowItWorksPage() {
               </p>
               <Link
                 href="/post-task"
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+                className="inline-flex items-center text-brand-green hover:text-brand-green/80 font-medium"
               >
                 Post a task now
                 <ArrowRight className="ml-1 h-4 w-4" />
@@ -48,8 +48,8 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-blue-600">2</span>
+              <div className="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-brand-green">2</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Browse & Apply
@@ -60,8 +60,8 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-blue-600">3</span>
+              <div className="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-brand-green">3</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Complete & Get Paid
@@ -143,8 +143,8 @@ export default function HowItWorksPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-brand-green" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Payments</h3>
               <p className="text-gray-600">
@@ -173,8 +173,8 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <MessageCircle className="h-6 w-6 text-purple-600" />
+              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mb-4">
+                <MessageCircle className="h-6 w-6 text-brand-green" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Communication</h3>
               <p className="text-gray-600">
@@ -205,24 +205,24 @@ export default function HowItWorksPage() {
         </section>
 
         {/* CTA */}
-        <section className="bg-blue-600 rounded-lg p-12 text-center">
+        <section className="bg-brand-green rounded-lg p-12 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
             Join thousands of Sri Lankans who are already using our platform to get things done.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/post-task"
-              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 text-lg font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center px-8 py-4 bg-white text-brand-green text-lg font-semibold rounded-lg hover:bg-gray-50 transition-colors"
             >
               Post Your First Task
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
               href="/become-tasker"
-              className="inline-flex items-center px-8 py-4 bg-transparent text-white text-lg font-semibold rounded-lg border-2 border-white hover:bg-white hover:text-blue-600 transition-colors"
+              className="inline-flex items-center px-8 py-4 bg-transparent text-white text-lg font-semibold rounded-lg border-2 border-white hover:bg-white hover:text-brand-green transition-colors"
             >
               Start Earning Today
             </Link>

@@ -1,19 +1,30 @@
 {
   "navigation": {
     "home": "Home",
-    "browseTasks": "Browse Tasks",
+    "browseTasks": "Categories",
     "postTask": "Post a Task",
     "howItWorks": "How it Works",
     "becomeTasker": "Become a Tasker",
     "login": "Log In",
-    "signUp": "Sign Up"
+    "signUp": "Sign Up",
+    "findServices": "Find Services"
   },
   "homepage": {
     "hero": {
-      "title": "Get Anything Done",
-      "subtitle": "Post any task. Pick the best person. Get it done.",
-      "postTaskButton": "Post your task for free",
-      "earnMoneyButton": "Earn money as a Tasker"
+      "badge": "Sri Lanka's #1 Task Platform",
+      "mainTitle": "Get Any Task Done",
+      "subTitle": "Quickly & Safely",
+      "description": "Connect with skilled professionals in Sri Lanka. From home cleaning to business services, find the perfect person for any task.",
+      "feature1": "Trusted Professionals",
+      "feature2": "Quick & Reliable",
+      "feature3": "Secure Payments",
+      "browseTasksButton": "Browse Tasks",
+      "postTaskButton": "Post a Task",
+      "stats": {
+        "tasks": "Tasks",
+        "success": "Success",
+        "support": "Support"
+      }
     },
     "stats": {
       "customers": "1M+ customers",
@@ -37,7 +48,35 @@
       "assembly": "Furniture Assembly",
       "removals": "Removals",
       "business": "Business & Admin",
-      "marketing": "Marketing & Design"
+      "marketing": "Marketing & Design",
+      "viewAll": "View All Categories"
+    },
+    "map": {
+      "title": "Choose Your District",
+      "subtitle": "Select your district to see available services in your area",
+      "legend": {
+        "title": "Legend",
+        "popular": "Popular",
+        "regular": "Regular",
+        "selected": "Selected"
+      },
+      "info": {
+        "population": "Population",
+        "area": "Area",
+        "services": "Available Services"
+      },
+      "instructions": "Click on any district to see available services in that area"
+    },
+    "districtServices": {
+      "title": "Services Available in {district}",
+      "subtitle": "We have {count} service categories available in {district}",
+      "availableServices": "Available Services",
+      "comingSoon": "Coming Soon to This District",
+      "districtInfo": "District Information",
+      "population": "Population",
+      "area": "Area (km²)",
+      "availableServices": "Available Services",
+      "browseTasks": "Browse Tasks in {district}"
     }
   },
   "common": {

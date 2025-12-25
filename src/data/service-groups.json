@@ -1,0 +1,344 @@
+[
+  {
+    "id": "home-property",
+    "name": "Home & Property Services",
+    "description": "Plumbing, electrical, cleaning, pest control, landscaping, renovations",
+    "services": [
+      "Plumbing",
+      "Electrical",
+      "House Cleaning",
+      "Pest Control",
+      "Landscaping & Gardening",
+      "Home Renovations"
+    ],
+    "sections": [
+      {
+        "title": "Maintenance",
+        "items": ["Plumbing", "Electrical", "Appliance Repair", "AC Repair"]
+      },
+      {
+        "title": "Cleaning",
+        "items": ["House Cleaning", "Deep Cleaning", "Carpet & Sofa Cleaning", "Window Cleaning"]
+      },
+      {
+        "title": "Outdoors",
+        "items": ["Landscaping & Gardening", "Tree Cutting", "Pressure Washing", "Pest Control"]
+      },
+      {
+        "title": "Improvements",
+        "items": ["Home Renovations", "Painting", "Flooring", "Tiling & Grout"]
+      }
+    ]
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive Services",
+    "description": "Car repair, detailing, towing, bike services, battery replacement",
+    "services": [
+      "Car Repair",
+      "Auto Detailing",
+      "Towing",
+      "Motorbike Services",
+      "Battery Replacement"
+    ],
+    "sections": [
+      {
+        "title": "Repair & Maintenance",
+        "items": ["Car Repair", "Oil Change", "Brake Service", "Engine Diagnostics"]
+      },
+      {
+        "title": "Care",
+        "items": ["Auto Detailing", "Car Wash", "Interior Cleaning", "Ceramic Coating"]
+      },
+      {
+        "title": "Emergency",
+        "items": ["Towing", "Battery Replacement", "Flat Tyre Change", "Lockout Help"]
+      },
+      {
+        "title": "Two‑Wheel",
+        "items": ["Motorbike Services", "Scooter Repair", "Bike Accessories"]
+      }
+    ]
+  },
+  {
+    "id": "health-wellness",
+    "name": "Health & Wellness",
+    "description": "Doctors, dentists, physiotherapists, fitness trainers, spas, salons",
+    "services": [
+      "General Practitioners",
+      "Dentists",
+      "Physiotherapists",
+      "Fitness Trainers",
+      "Spas & Salons"
+    ],
+    "sections": [
+      {
+        "title": "Medical",
+        "items": ["General Practitioners", "Dentists", "Dermatologists", "Eye Clinics"]
+      },
+      {
+        "title": "Therapy",
+        "items": ["Physiotherapists", "Chiropractors", "Counseling"]
+      },
+      {
+        "title": "Fitness & Beauty",
+        "items": ["Fitness Trainers", "Yoga & Pilates", "Spas & Salons", "Makeup Artists"]
+      }
+    ]
+  },
+  {
+    "id": "education-training",
+    "name": "Education & Training",
+    "description": "Tutors, language classes, IT training, vocational courses",
+    "services": [
+      "School Tutors",
+      "Language Classes",
+      "IT Training",
+      "Vocational Courses"
+    ],
+    "sections": [
+      {
+        "title": "School & Exams",
+        "items": ["School Tutors", "A/L & O/L", "Math & Science", "English"]
+      },
+      {
+        "title": "Languages",
+        "items": ["Language Classes", "IELTS/TOEFL", "Sinhala/Tamil", "Japanese"]
+      },
+      {
+        "title": "Technology",
+        "items": ["IT Training", "Coding Bootcamps", "Graphic Design", "Office Productivity"]
+      },
+      {
+        "title": "Vocational",
+        "items": ["Vocational Courses", "Driving Lessons", "Culinary", "Handicrafts"]
+      }
+    ]
+  },
+  {
+    "id": "legal-financial",
+    "name": "Legal & Financial",
+    "description": "Lawyers, notaries, accountants, tax consultants, insurance agents",
+    "services": [
+      "Lawyers",
+      "Notaries",
+      "Accountants",
+      "Tax Consultants",
+      "Insurance Agents"
+    ],
+    "sections": [
+      {
+        "title": "Legal",
+        "items": ["Lawyers", "Notaries", "Company Registration", "Contracts & Agreements"]
+      },
+      {
+        "title": "Finance",
+        "items": ["Accountants", "Bookkeeping", "Tax Consultants", "Payroll"]
+      },
+      {
+        "title": "Insurance",
+        "items": ["Insurance Agents", "Claims Assistance", "Consulting"]
+      }
+    ]
+  },
+  {
+    "id": "events-entertainment",
+    "name": "Events & Entertainment",
+    "description": "Photographers, DJs, decorators, venues, catering, party planners",
+    "services": [
+      "Photographers",
+      "DJs",
+      "Event Decorators",
+      "Venues",
+      "Catering",
+      "Party Planners"
+    ],
+    "sections": [
+      {
+        "title": "Planning",
+        "items": ["Party Planners", "Event Managers", "Wedding Planners"]
+      },
+      {
+        "title": "Vendors",
+        "items": ["Photographers", "DJs", "Live Bands", "MCs", "Decorators", "Catering"]
+      },
+      {
+        "title": "Venue & Rentals",
+        "items": ["Venues", "Sound & Lighting", "Chairs & Tents", "Photo Booth"]
+      }
+    ]
+  },
+  {
+    "id": "business-marketing",
+    "name": "Business & Marketing",
+    "description": "Graphic design, printing, branding, digital marketing, consulting",
+    "services": ["Graphic Design", "Printing", "Branding", "Digital Marketing", "Consulting"],
+    "sections": [
+      {
+        "title": "Brand & Creative",
+        "items": ["Graphic Design", "Branding", "Logo Design", "Print Collateral", "Presentation Design"]
+      },
+      {
+        "title": "Digital Marketing",
+        "items": ["SEO", "Paid Search", "Meta Ads", "Email Marketing", "Influencer Marketing"]
+      },
+      {
+        "title": "Content & Strategy",
+        "items": ["Content Strategy", "Copywriting", "Social Media Management", "PR & Communications"]
+      }
+    ]
+  },
+  {
+    "id": "transport-travel",
+    "name": "Transport & Travel",
+    "description": "Taxi, courier, logistics, tour guides, travel agents",
+    "services": [
+      "Taxi",
+      "Courier",
+      "Logistics",
+      "Tour Guides",
+      "Travel Agents"
+    ],
+    "sections": [
+      {
+        "title": "Transport",
+        "items": ["Taxi", "Airport Pickup", "Cargo Vans", "Bike Delivery"]
+      },
+      {
+        "title": "Courier & Logistics",
+        "items": ["Courier", "Same‑Day Delivery", "Inter‑City Delivery", "Logistics"]
+      },
+      {
+        "title": "Tours & Travel",
+        "items": ["Tour Guides", "Travel Agents", "Hotel Bookings"]
+      }
+    ]
+  },
+  {
+    "id": "personal-services",
+    "name": "Personal Services",
+    "description": "Tailors, astrologers, makeup artists, babysitters, elder care",
+    "services": [
+      "Tailors",
+      "Astrologers",
+      "Makeup Artists",
+      "Babysitters",
+      "Elder Care"
+    ],
+    "sections": [
+      {
+        "title": "Fashion",
+        "items": ["Tailors", "Dressmaking", "Alterations", "Embroidery"]
+      },
+      {
+        "title": "Family",
+        "items": ["Babysitters", "Elder Care", "House Sitting"]
+      },
+      {
+        "title": "Lifestyle",
+        "items": ["Astrologers", "Personal Shoppers", "Massage Therapy"]
+      }
+    ]
+  },
+  {
+    "id": "construction-engineering",
+    "name": "Construction & Engineering",
+    "description": "Civil engineers, architects, masons, surveyors, contractors",
+    "services": [
+      "Civil Engineers",
+      "Architects",
+      "Masons",
+      "Surveyors",
+      "Contractors"
+    ],
+    "sections": [
+      {
+        "title": "Design",
+        "items": ["Architects", "Structural Engineers", "3D Rendering"]
+      },
+      {
+        "title": "Build",
+        "items": ["Contractors", "Masons", "Carpentry", "Plastering", "Roofing"]
+      },
+      {
+        "title": "Measure",
+        "items": ["Surveyors", "BOQ & Estimation", "Site Supervision"]
+      }
+    ]
+  },
+  {
+    "id": "pet-services",
+    "name": "Pet Services",
+    "description": "Grooming, veterinary care, pet boarding, training",
+    "services": [
+      "Pet Grooming",
+      "Veterinary Care",
+      "Pet Boarding",
+      "Pet Training"
+    ],
+    "sections": [
+      {
+        "title": "Care",
+        "items": ["Veterinary Care", "Vaccinations", "Medication"]
+      },
+      {
+        "title": "Groom & Train",
+        "items": ["Pet Grooming", "Pet Training", "Pet Walking"]
+      },
+      {
+        "title": "Stay",
+        "items": ["Pet Boarding", "Day Care", "Home Visits"]
+      }
+    ]
+  },
+  {
+    "id": "government-utility",
+    "name": "Government & Utility Services",
+    "description": "Document assistance, registration, utility support",
+    "services": [
+      "Document Assistance",
+      "Registration Services",
+      "Utility Support"
+    ],
+    "sections": [
+      {
+        "title": "Documents",
+        "items": ["Document Assistance", "Translations", "Attestations"]
+      },
+      {
+        "title": "Registration",
+        "items": ["Company Registration", "Business Name", "Tax Registration"]
+      },
+      {
+        "title": "Utilities",
+        "items": ["Utility Support", "Bill Payments", "New Connections"]
+      }
+    ]
+  },
+  {
+    "id": "freelance-remote",
+    "name": "Freelance & Remote Work",
+    "description": "Content writing, translation, virtual assistants, data entry",
+    "services": [
+      "Content Writing",
+      "Translation",
+      "Virtual Assistants",
+      "Data Entry"
+    ],
+    "sections": [
+      {
+        "title": "Writing & Translation",
+        "items": ["Content Writing", "Blog Posts", "Technical Writing", "Translation"]
+      },
+      {
+        "title": "Virtual Assistance",
+        "items": ["Virtual Assistants", "Data Entry", "Customer Support", "Research"]
+      },
+      {
+        "title": "Design & Tech",
+        "items": ["Web Updates", "Landing Pages", "No‑Code Automations", "QA & Testing"]
+      }
+    ]
+  }
+]
+

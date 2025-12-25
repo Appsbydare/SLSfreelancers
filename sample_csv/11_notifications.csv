@@ -1,0 +1,11 @@
+id,user_id,notification_type,title,message,is_read,created_at
+ee0e8400-e29b-41d4-a716-446655440001,550e8400-e29b-41d4-a716-446655440001,offer,New Offer Received,Saman's Handyman Services made an offer on your task: Fix Leaking Kitchen Sink,true,2024-01-28 11:00:00
+ee0e8400-e29b-41d4-a716-446655440002,550e8400-e29b-41d4-a716-446655440001,message,New Message,You have a new message from Saman's Handyman Services,true,2024-01-28 11:05:00
+ee0e8400-e29b-41d4-a716-446655440003,550e8400-e29b-41d4-a716-446655440002,offer,Offer Accepted,Your offer was accepted for: House Cleaning Service,true,2024-01-27 15:00:00
+ee0e8400-e29b-41d4-a716-446655440004,550e8400-e29b-41d4-a716-446655440003,task,Task Completed,Your task House Cleaning Service has been marked as completed,true,2024-01-27 17:00:00
+ee0e8400-e29b-41d4-a716-446655440005,550e8400-e29b-41d4-a716-446655440002,task,New Review,You received a 5-star review from Kumari Fernando,true,2024-01-27 18:00:00
+ee0e8400-e29b-41d4-a716-446655440006,550e8400-e29b-41d4-a716-446655440006,offer,New Offer Received,You received an offer on your task: Design Logo for Small Business,true,2024-01-20 12:00:00
+ee0e8400-e29b-41d4-a716-446655440007,550e8400-e29b-41d4-a716-446655440004,task,Task Assigned,You've been assigned to: Mathematics Tuition for A/L,false,2024-01-27 15:00:00
+ee0e8400-e29b-41d4-a716-446655440008,550e8400-e29b-41d4-a716-446655440001,offer,New Offer Received,Ruwan's Painting Services made an offer on your task: Fix Leaking Kitchen Sink,false,2024-01-28 12:00:00
+ee0e8400-e29b-41d4-a716-446655440009,550e8400-e29b-41d4-a716-446655440005,offer,New Offer Received,Chaminda's Delivery Service made an offer on your task: Delivery from Colombo to Jaffna,false,2024-01-28 09:00:00
+ee0e8400-e29b-41d4-a716-446655440010,550e8400-e29b-41d4-a716-446655440007,offer,New Offer Received,Ruwan's Painting Services made an offer on your task: Paint Living Room,false,2024-01-28 13:00:00

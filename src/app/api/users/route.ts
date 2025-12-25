@@ -1,79 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import bcrypt from 'bcryptjs';
+import { supabaseServer } from '@/lib/supabase-server';
+import {
+  USER_BASE_SELECT,
+  buildClientUser,
+  fetchTaskerProfile,
+  fetchUserWithProfileByEmail,
+  TaskerProfileRow,
+  DbUserRow,
+  UserType,
+} from '@/lib/user-service';
 
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-
-// Ensure data directory exists
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Initialize users file if it doesn't exist
-if (!fs.existsSync(USERS_FILE)) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
-}
-
-interface User {
-  id: string;
+interface CreateUserPayload {
   firstName: string;
   lastName: string;
+  callingName?: string;
   email: string;
   phone: string;
-  location: string;
-  userType: 'customer' | 'tasker';
+  location?: string;
+  city?: string;
+  district?: string;
+  preferredLanguage?: string;
+  userType: UserType;
   password: string;
-  createdAt: string;
-  isVerified: boolean;
-  profile: {
-    bio: string;
-    skills: string[];
-    rating: number;
-    completedTasks: number;
-    profileImage: string | null;
-  };
+  bio?: string;
+  skills?: string[] | string;
 }
 
-function readUsers(): User[] {
-  try {
-    const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading users file:', error);
-    return [];
+function normalizeSkills(skills?: string[] | string): string[] {
+  if (!skills) return [];
+  if (Array.isArray(skills)) {
+    return skills.map(skill => skill.trim()).filter(Boolean);
   }
-}
-
-function writeUsers(users: User[]): void {
-  try {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-  } catch (error) {
-    console.error('Error writing users file:', error);
-    throw new Error('Failed to save user data');
-  }
+  return skills
+    .split(',')
+    .map(skill => skill.trim())
+    .filter(Boolean);
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userData: Omit<User, 'id' | 'createdAt'> = await request.json();
+    const payload: CreateUserPayload = await request.json();
 
-    // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'location', 'userType', 'password'];
+    const requiredFields: Array<keyof CreateUserPayload> = [
+      'firstName',
+      'lastName',
+      'email',
+      'phone',
+      'userType',
+      'password',
+    ];
+
     for (const field of requiredFields) {
-      if (!userData[field as keyof typeof userData]) {
-        return NextResponse.json(
-          { message: `${field} is required` },
-          { status: 400 }
-        );
+      if (!payload[field] || (typeof payload[field] === 'string' && !payload[field]?.trim())) {
+        return NextResponse.json({ message: `${field} is required` }, { status: 400 });
       }
     }
 
-    // Read existing users
-    const users = readUsers();
+    if (payload.password.length < 6) {
+      return NextResponse.json(
+        { message: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      );
+    }
 
-    // Check if email already exists
-    const existingUser = users.find(user => user.email.toLowerCase() === userData.email.toLowerCase());
+    const sanitizedEmail = payload.email.trim().toLowerCase();
+
+    const { data: existingUser, error: existingUserError } = await supabaseServer
+      .from('users')
+      .select('id')
+      .eq('email', sanitizedEmail)
+      .maybeSingle();
+
+    if (existingUserError) {
+      throw new Error(existingUserError.message);
+    }
+
     if (existingUser) {
       return NextResponse.json(
         { message: 'Email address is already registered' },
@@ -81,29 +83,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      ...userData,
-      createdAt: new Date().toISOString(),
+    const passwordHash = await bcrypt.hash(payload.password, 12);
+
+    const userInsert = {
+      first_name: payload.firstName.trim(),
+      last_name: payload.lastName.trim(),
+      calling_name: payload.callingName?.trim() || null,
+      email: sanitizedEmail,
+      phone: payload.phone.trim(),
+      location: payload.location?.trim() || null,
+      city: payload.city?.trim() || payload.location?.trim() || null,
+      district: payload.district?.trim() || null,
+      preferred_language: payload.preferredLanguage || 'en',
+      user_type: payload.userType,
+      password_hash: passwordHash,
     };
 
-    // Add user to the list
-    users.push(newUser);
+    const { data: insertedUser, error: insertError } = await supabaseServer
+      .from('users')
+      .insert(userInsert)
+      .select(USER_BASE_SELECT)
+      .single();
 
-    // Save to file
-    writeUsers(users);
+    if (insertError || !insertedUser) {
+      throw new Error(insertError?.message || 'Failed to create user');
+    }
 
-    // Return success response (without password)
-    const { password, ...userWithoutPassword } = newUser;
+    if (payload.userType === 'customer') {
+      const { error: customerError } = await supabaseServer.from('customers').insert({
+        user_id: insertedUser.id,
+        address_line1: payload.location?.trim() || null,
+      });
+
+      if (customerError) {
+        throw new Error(customerError.message);
+      }
+    } else if (payload.userType === 'tasker') {
+      const { error: taskerError } = await supabaseServer.from('taskers').insert({
+        user_id: insertedUser.id,
+        bio: payload.bio?.trim() || '',
+        skills: normalizeSkills(payload.skills),
+      });
+
+      if (taskerError) {
+        throw new Error(taskerError.message);
+      }
+    }
+
+    const taskerProfile =
+      payload.userType === 'tasker' ? await fetchTaskerProfile(insertedUser.id) : null;
+
     return NextResponse.json(
-      { 
+      {
         message: 'User created successfully',
-        user: userWithoutPassword 
+        user: buildClientUser(insertedUser, taskerProfile),
       },
       { status: 201 }
     );
-
   } catch (error) {
     console.error('Error creating user:', error);
     return NextResponse.json(
@@ -118,27 +154,33 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
 
-    const users = readUsers();
-
     if (email) {
-      // Find user by email
-      const user = users.find(user => user.email.toLowerCase() === email.toLowerCase());
+      const user = await fetchUserWithProfileByEmail(email.toLowerCase());
       if (!user) {
-        return NextResponse.json(
-          { message: 'User not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ message: 'User not found' }, { status: 404 });
       }
-      
-      // Return user without password
-      const { password, ...userWithoutPassword } = user;
-      return NextResponse.json(userWithoutPassword);
+      return NextResponse.json(user);
     }
 
-    // Return all users (without passwords)
-    const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-    return NextResponse.json(usersWithoutPasswords);
+    const { data, error } = await supabaseServer
+      .from('users')
+      .select(`${USER_BASE_SELECT}, tasker:taskers!taskers_user_id_fkey(bio, skills, rating, completed_tasks, profile_image_url)`);
 
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const rows = (data || []) as Array<
+      DbUserRow & { tasker?: TaskerProfileRow | TaskerProfileRow[] | null }
+    >;
+
+    const users = rows.map(user => {
+      const relation = user.tasker;
+      const taskerProfile = Array.isArray(relation) ? relation[0] : relation;
+      return buildClientUser(user, taskerProfile);
+    });
+
+    return NextResponse.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(

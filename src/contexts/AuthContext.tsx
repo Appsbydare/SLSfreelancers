@@ -6,12 +6,26 @@ interface User {
   id: string;
   firstName: string;
   lastName: string;
+  callingName?: string;
   email: string;
   phone: string;
   location: string;
-  userType: 'customer' | 'tasker';
+  city?: string;
+  district?: string;
+  roadNameNumber?: string;
+  addressLine2?: string;
+  nicNumber?: string;
+  userType: 'customer' | 'tasker' | 'admin';
   createdAt: string;
   isVerified: boolean;
+  verificationStatus?: {
+    submitted: boolean;
+    approved: boolean;
+    submittedAt?: string;
+    approvedAt?: string;
+    policeReportUrl?: string;
+    idDocumentUrl?: string;
+  };
   profile: {
     bio: string;
     skills: string[];

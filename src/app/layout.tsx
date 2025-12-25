@@ -1,44 +1,34 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import type { Metadata } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import ToasterProvider from '@/components/ToasterProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { DistrictProvider } from '@/contexts/DistrictContext';
+import '../app/globals.css';
 
 export const metadata: Metadata = {
-  title: "Sri Lanka Tasks - Get Anything Done",
-  description: "Connect with skilled professionals in Sri Lanka. Post any task and get it done quickly and reliably.",
+  title: 'EasyFinder - Get Any Task Done',
+  description: 'Connect with skilled professionals in Sri Lanka. Get any task done quickly and reliably.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const messages = await getMessages();
+
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AuthProvider>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-grow">
+      <body>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
+            <DistrictProvider>
+              <ToasterProvider />
               {children}
-            </main>
-            <Footer />
-          </div>
-        </AuthProvider>
+            </DistrictProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
