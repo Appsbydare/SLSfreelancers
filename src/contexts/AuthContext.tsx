@@ -16,6 +16,7 @@ interface User {
   addressLine2?: string;
   nicNumber?: string;
   userType: 'customer' | 'tasker' | 'admin';
+  originalUserType?: 'customer' | 'tasker' | 'admin'; // Track original registration type
   createdAt: string;
   isVerified: boolean;
   verificationStatus?: {
@@ -58,7 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = localStorage.getItem('user');
         
         if (isLoggedIn && userData) {
-          setUser(JSON.parse(userData));
+          const parsedUser = JSON.parse(userData);
+          // Set originalUserType if not already set (for existing users)
+          if (!parsedUser.originalUserType) {
+            parsedUser.originalUserType = parsedUser.userType;
+            localStorage.setItem('user', JSON.stringify(parsedUser));
+          }
+          setUser(parsedUser);
         }
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -74,8 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    // Set originalUserType on login if not already set
+    const userWithOriginalType = {
+      ...userData,
+      originalUserType: userData.originalUserType || userData.userType,
+    };
+    setUser(userWithOriginalType);
+    localStorage.setItem('user', JSON.stringify(userWithOriginalType));
     localStorage.setItem('isLoggedIn', 'true');
   };
 
@@ -88,10 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const switchRole = (role: 'customer' | 'tasker') => {
     if (!user) return;
     
-    // Update user type while keeping all other user data
+    // Update user type while keeping all other user data, including originalUserType
     const updatedUser = {
       ...user,
       userType: role,
+      originalUserType: user.originalUserType || user.userType, // Preserve original registration type
     };
     
     setUser(updatedUser);

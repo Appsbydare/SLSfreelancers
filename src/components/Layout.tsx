@@ -16,7 +16,8 @@ export default function Layout({ children }: LayoutProps) {
   const { user, isLoggedIn, isLoading } = useAuth();
 
   useEffect(() => {
-    // Redirect sellers to dashboard when accessing customer pages
+    // Only redirect if user is in seller mode (userType === 'tasker')
+    // If they've toggled to customer mode, allow them to view customer pages
     if (!isLoading && isLoggedIn && user?.userType === 'tasker') {
       // Don't redirect if already on seller pages
       const isSellerPage = pathname?.startsWith('/seller') || 
@@ -25,10 +26,12 @@ export default function Layout({ children }: LayoutProps) {
                           pathname?.includes('/signup');
       
       // Redirect to dashboard if on customer pages (homepage, browse-tasks, etc.)
+      // This ensures sellers in seller mode are always on seller pages
       if (!isSellerPage && (pathname === '/en' || pathname === '/si' || pathname === '/ta' || pathname?.startsWith('/en/') || pathname?.startsWith('/si/') || pathname?.startsWith('/ta/'))) {
         router.push('/seller/dashboard');
       }
     }
+    // If userType is 'customer', they can view customer pages freely (no redirect)
   }, [user, isLoggedIn, isLoading, pathname, router]);
 
   return (

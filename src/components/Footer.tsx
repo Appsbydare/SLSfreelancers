@@ -13,8 +13,8 @@ export default function Footer() {
   // Check if we're on a seller page
   const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker');
   
-  // Darker green color for seller pages: #0a9a10 (darker than brand-green #0fcc17)
-  const footerBgClass = isSellerPage ? 'bg-[#0a9a10] text-white' : 'bg-gray-900 text-white';
+  // Darker green color for seller pages: #007413 (darker than brand-green #0fcc17)
+  const footerBgClass = isSellerPage ? 'bg-[#007413] text-white' : 'bg-gray-900 text-white';
 
   return (
     <footer className={footerBgClass}>
@@ -105,7 +105,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className={`border-t ${isSellerPage ? 'border-[#088a0e]' : 'border-gray-800'} mt-8 pt-8 animate-fade-in-up`} style={{ animationDelay: '600ms' }}>
+        <div className={`border-t ${isSellerPage ? 'border-[#004C0D]' : 'border-gray-800'} mt-8 pt-8 animate-fade-in-up`} style={{ animationDelay: '600ms' }}>
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
               © 2024 EasyFinder. All rights reserved.

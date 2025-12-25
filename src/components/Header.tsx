@@ -84,9 +84,18 @@ export default function Header() {
     displayNavigation = [...navigation, { name: 'Project Status', href: '/project-status' }];
   }
 
-  const handleSwitchToCustomer = () => {
-    switchRole('customer');
-    router.push(`/${locale}`);
+  const handleToggleMode = () => {
+    if (user?.userType === 'tasker') {
+      // If currently in seller mode, switch to customer mode
+      if (isSeller) {
+        switchRole('customer');
+        router.push(`/${locale}`);
+      } else {
+        // If in customer mode, switch to seller mode
+        switchRole('tasker');
+        router.push('/seller/dashboard');
+      }
+    }
   };
 
   const iconsById: Record<string, string> = {
@@ -214,11 +223,11 @@ export default function Header() {
   // Check if we're on a seller page
   const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker');
   
-  // Darker green color for seller pages: #0a9a10 (darker than brand-green #0fcc17)
+  // Darker green color for seller pages: #007413 (darker than brand-green #0fcc17)
   const headerBgClass = isSellerPage 
     ? (isScrolled 
-        ? 'bg-[#0a9a10]/95 backdrop-blur-md shadow-lg border-b border-[#088a0e]' 
-        : 'bg-[#0a9a10] shadow-sm border-b border-[#088a0e]')
+        ? 'bg-[#007413]/95 backdrop-blur-md shadow-lg border-b border-[#004C0D]' 
+        : 'bg-[#007413] shadow-sm border-b border-[#004C0D]')
     : (isScrolled 
         ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
         : 'bg-black shadow-sm border-b border-gray-800');
@@ -344,15 +353,15 @@ export default function Header() {
                     <VerifiedBadge size="sm" showText={false} />
                   )}
                 </div>
-                {/* Switch to Customer button - Only show for sellers */}
-                {isSeller && (
+                {/* Mode Toggle button - Only show for users registered as sellers (originalUserType === 'tasker') */}
+                {user?.originalUserType === 'tasker' && (
                   <button
-                    onClick={handleSwitchToCustomer}
+                    onClick={handleToggleMode}
                     className="inline-flex items-center text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 border border-white/20 hover:border-brand-green/60 rounded-md"
-                    title="Switch to Customer View"
+                    title={isSeller ? "Switch to Customer Mode" : "Switch to Seller Mode"}
                   >
                     <ArrowLeftRight className="h-4 w-4 mr-1" />
-                    Switch to Customer
+                    {isSeller ? 'Customer Mode' : 'Seller Mode'}
                   </button>
                 )}
                 <button
@@ -501,17 +510,17 @@ export default function Header() {
                   {t('browseTasks')}
                 </button>
               )}
-              {/* Switch to Customer button for sellers in mobile */}
-              {isSeller && (
+              {/* Mode Toggle button for sellers in mobile - Only show for users registered as sellers */}
+              {user?.originalUserType === 'tasker' && (
                 <button
                   onClick={() => {
-                    handleSwitchToCustomer();
+                    handleToggleMode();
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
                 >
                   <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  Switch to Customer
+                  {isSeller ? 'Customer Mode' : 'Seller Mode'}
                 </button>
               )}
               <div className="pt-4 pb-3 border-t border-gray-800">
