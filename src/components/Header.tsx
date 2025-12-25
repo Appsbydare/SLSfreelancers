@@ -85,16 +85,18 @@ export default function Header() {
   }
 
   const handleToggleMode = () => {
-    if (user?.userType === 'tasker') {
-      // If currently in seller mode, switch to customer mode
-      if (isSeller) {
-        switchRole('customer');
-        router.push(`/${locale}`);
-      } else {
-        // If in customer mode, switch to seller mode
-        switchRole('tasker');
-        router.push('/seller/dashboard');
-      }
+    // Only allow toggle for users registered as sellers
+    if (user?.originalUserType !== 'tasker') return;
+    
+    // Toggle between seller and customer mode
+    if (user.userType === 'tasker') {
+      // Currently in seller mode, switch to customer mode
+      switchRole('customer');
+      router.push(`/${locale}`);
+    } else {
+      // Currently in customer mode, switch to seller mode
+      switchRole('tasker');
+      router.push('/seller/dashboard');
     }
   };
 

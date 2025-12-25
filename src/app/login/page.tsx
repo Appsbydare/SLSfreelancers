@@ -7,10 +7,12 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
 import { showToast } from '@/lib/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login: authLogin } = useAuth();
   const [loginType, setLoginType] = useState<'customer' | 'tasker'>('customer');
   
   useEffect(() => {
@@ -80,29 +82,57 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          loginType: loginType, // Send the selected login type
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        const userActualType = data.user.userType;
         
-        // Store user data in localStorage (for demo purposes)
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('isLoggedIn', 'true');
+        // Validate login type selection
+        if (loginType === 'tasker' && userActualType !== 'tasker') {
+          setErrors({ submit: 'This account is not registered as a seller. Please use Customer Login.' });
+          showToast.error('This account is not registered as a seller. Please use Customer Login.');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Set originalUserType to the user's actual registration type
+        data.user.originalUserType = userActualType;
+        
+        // Set current userType based on selected login type
+        // If user is registered as tasker, they can login as either customer or tasker
+        if (userActualType === 'tasker') {
+          // User registered as tasker - can choose which mode to login in
+          if (loginType === 'tasker') {
+            data.user.userType = 'tasker'; // Seller mode
+          } else {
+            data.user.userType = 'customer'; // Customer mode (but can toggle)
+          }
+        } else {
+          // User registered as customer only - always customer mode
+          data.user.userType = 'customer';
+        }
+        
+        // Use AuthContext login function to set user (ensures originalUserType is preserved)
+        authLogin(data.user);
         
         // Show success message
         showToast.success(`Welcome back, ${data.user.firstName}!`);
         
-        // Redirect based on user type after a short delay
+        // Redirect based on selected login type after a short delay
         setTimeout(() => {
-          if (data.user.userType === 'admin') {
+          if (userActualType === 'admin') {
             // Admin users go to project status
             router.push('/project-status');
-          } else if (data.user.userType === 'tasker') {
-            // Sellers go to dashboard
+          } else if (loginType === 'tasker') {
+            // If tasker login selected, go to seller dashboard
             router.push('/seller/dashboard');
           } else {
-            // Customers go to homepage
+            // If customer login selected, go to homepage
             router.push('/en');
           }
         }, 1500);
