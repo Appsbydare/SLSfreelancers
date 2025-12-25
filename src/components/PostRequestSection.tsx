@@ -15,7 +15,7 @@ export default function PostRequestSection() {
             <div className="flex-1">
               <div className="flex items-center mb-4">
                 <Sparkles className="h-8 w-8 text-brand-green mr-3" />
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h2 className="text-3xl font-bold text-gray-900 font-geom">
                   Have a Unique Project?
                 </h2>
               </div>

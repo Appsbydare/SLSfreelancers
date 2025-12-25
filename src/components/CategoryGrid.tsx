@@ -97,7 +97,7 @@ export default function CategoryGrid({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in-up font-geom">
             {t('title')}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>

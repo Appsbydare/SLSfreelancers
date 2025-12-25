@@ -7,7 +7,7 @@ export default function HowItWorksPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 font-geom">
             How Sri Lanka Tasks Works
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -18,7 +18,7 @@ export default function HowItWorksPage() {
         {/* For Task Posters */}
         <section className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 font-geom">
               For Task Posters
             </h2>
             <p className="text-lg text-gray-600">
@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
         {/* For Taskers */}
         <section className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 font-geom">
               For Taskers
             </h2>
             <p className="text-lg text-gray-600">

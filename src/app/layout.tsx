@@ -1,10 +1,18 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { Geom } from 'next/font/google';
 import ToasterProvider from '@/components/ToasterProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DistrictProvider } from '@/contexts/DistrictContext';
 import '../app/globals.css';
+
+const geom = Geom({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-geom',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'EasyFinder - Get Any Task Done',
@@ -19,7 +27,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang="en">
+    <html lang="en" className={geom.variable}>
       <body>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>

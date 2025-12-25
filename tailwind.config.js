@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        geom: ['var(--font-geom)', 'sans-serif'],
+      },
       colors: {
         brand: {
           black: '#000000',

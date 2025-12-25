@@ -209,7 +209,7 @@ export default function HeroBanner() {
               </div>
 
               {/* Main Heading - Made Bigger */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 mb-8 leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 mb-8 leading-tight font-geom">
                 {t('mainTitle')}
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-brand-green/70 mt-2">
                   {t('subTitle')}

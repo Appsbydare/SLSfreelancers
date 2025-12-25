@@ -57,6 +57,12 @@ body {
   color: white;
 }
 
+/* Apply Geom font to main headers for English language */
+h1.font-bold,
+h2.font-bold {
+  font-family: var(--font-geom), sans-serif;
+}
+
 /* Custom utility classes */
 .text-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
