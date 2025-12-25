@@ -1,17 +1,17 @@
 import HeroBanner from '@/components/HeroBanner';
 import CategoryGrid from '@/components/CategoryGrid';
 import DistrictServices from '@/components/DistrictServices';
-import DualModeExplainer from '@/components/DualModeExplainer';
-import FeaturedGigs from '@/components/FeaturedGigs';
+import ScrollingGigsPanel from '@/components/ScrollingGigsPanel';
+import PostRequestSection from '@/components/PostRequestSection';
 import TopSellers from '@/components/TopSellers';
 
 export default function HomePage() {
   return (
     <>
       <HeroBanner />
-      <FeaturedGigs />
       <CategoryGrid />
-      <DualModeExplainer />
+      <ScrollingGigsPanel />
+      <PostRequestSection />
       <TopSellers />
       <DistrictServices />
     </>

@@ -62,7 +62,7 @@ export default function CategoryGrid() {
               {filteredCategories.map((category, index) => (
                 <Link
                   key={category.id}
-                  href={`/${locale}/browse-tasks?category=${category.id}`}
+                  href={`/browse-gigs?category=${category.id}`}
                   className="group bg-white rounded-lg border border-gray-200 p-6 hover:border-brand-green hover:shadow-lg transition-all duration-300 hover:-translate-y-2 animate-fade-in-up"
                   style={{ animationDelay: `${(index * 100) + 400}ms` }}
                 >
@@ -83,7 +83,7 @@ export default function CategoryGrid() {
 
             <div className="text-center mt-8">
               <Link
-                href={`/${locale}/browse-tasks`}
+                href="/browse-gigs"
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-brand-green bg-brand-green/10 hover:bg-brand-green/20 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-fade-in-up"
                 style={{ animationDelay: '800ms' }}
               >

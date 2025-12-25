@@ -378,6 +378,12 @@ export default function Header() {
                 >
                   {t('signUp')}
                 </Link>
+                <Link
+                  href="/login?type=tasker"
+                  className="border border-white/30 text-white hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Tasker Login
+                </Link>
                 {/* District (Sri Lanka) map trigger */}
                 <button
                   type="button"
@@ -750,7 +756,7 @@ export default function Header() {
               onDistrictSelect={(district) => {
                 setSelectedDistrict(district);
                 closeMapMenu();
-                router.push(`/${locale}/browse-tasks`);
+                router.push(`/browse-gigs?district=${district.name}`);
               }}
             />
           </div>
