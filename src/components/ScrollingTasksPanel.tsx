@@ -235,7 +235,7 @@ export default function ScrollingTasksPanel({
           </p>
         </div>
 
-        <div className="relative overflow-visible">
+        <div className="relative" style={{ overflowX: 'auto', overflowY: 'visible' }}>
           <div
             ref={scrollContainerRef}
             className="flex gap-6 overflow-x-auto scrollbar-hide py-4"
