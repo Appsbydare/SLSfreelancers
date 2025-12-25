@@ -20,6 +20,7 @@ const sampleTasks: Task[] = [
     location: 'Colombo',
     category: 'cleaning',
     postedDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    posterId: 'user-1',
     posterName: 'Sarah M.',
     posterRating: 4.8,
     offersCount: 5,
@@ -33,6 +34,7 @@ const sampleTasks: Task[] = [
     location: 'Kandy',
     category: 'assembly',
     postedDate: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+    posterId: 'user-2',
     posterName: 'John D.',
     posterRating: 4.9,
     offersCount: 8,
@@ -46,6 +48,7 @@ const sampleTasks: Task[] = [
     location: 'Galle',
     category: 'gardening',
     postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    posterId: 'user-3',
     posterName: 'Priya K.',
     posterRating: 4.7,
     offersCount: 3,
@@ -59,6 +62,7 @@ const sampleTasks: Task[] = [
     location: 'Colombo',
     category: 'delivery',
     postedDate: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+    posterId: 'user-4',
     posterName: 'Michael R.',
     posterRating: 4.6,
     offersCount: 12,
@@ -72,6 +76,7 @@ const sampleTasks: Task[] = [
     location: 'Negombo',
     category: 'handyman',
     postedDate: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+    posterId: 'user-5',
     posterName: 'David L.',
     posterRating: 5.0,
     offersCount: 7,
@@ -85,6 +90,7 @@ const sampleTasks: Task[] = [
     location: 'Colombo',
     category: 'painting',
     postedDate: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+    posterId: 'user-6',
     posterName: 'Emma W.',
     posterRating: 4.8,
     offersCount: 6,
@@ -98,6 +104,7 @@ const sampleTasks: Task[] = [
     location: 'Kandy',
     category: 'tuition',
     postedDate: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+    posterId: 'user-7',
     posterName: 'Nimal S.',
     posterRating: 4.9,
     offersCount: 4,
@@ -111,6 +118,7 @@ const sampleTasks: Task[] = [
     location: 'Colombo',
     category: 'removals',
     postedDate: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+    posterId: 'user-8',
     posterName: 'Lisa T.',
     posterRating: 4.7,
     offersCount: 9,
@@ -124,6 +132,7 @@ const sampleTasks: Task[] = [
     location: 'Colombo',
     category: 'mobile-repair',
     postedDate: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+    posterId: 'user-9',
     posterName: 'Ravi P.',
     posterRating: 4.6,
     offersCount: 11,
@@ -137,6 +146,7 @@ const sampleTasks: Task[] = [
     location: 'Galle',
     category: 'wedding',
     postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    posterId: 'user-10',
     posterName: 'Anjali N.',
     posterRating: 4.9,
     offersCount: 5,
