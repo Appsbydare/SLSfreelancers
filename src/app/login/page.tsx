@@ -98,8 +98,11 @@ export default function LoginPage() {
           if (data.user.userType === 'admin') {
             // Admin users go to project status
             router.push('/project-status');
+          } else if (data.user.userType === 'tasker') {
+            // Sellers go to dashboard
+            router.push('/seller/dashboard');
           } else {
-            // All other users (customers and taskers) go to homepage
+            // Customers go to homepage
             router.push('/en');
           }
         }, 1500);

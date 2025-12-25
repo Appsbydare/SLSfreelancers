@@ -40,6 +40,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   login: (user: User) => void;
   logout: () => void;
+  switchRole: (role: 'customer' | 'tasker') => void;
   isLoading: boolean;
 }
 
@@ -84,11 +85,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('isLoggedIn');
   };
 
+  const switchRole = (role: 'customer' | 'tasker') => {
+    if (!user) return;
+    
+    // Update user type while keeping all other user data
+    const updatedUser = {
+      ...user,
+      userType: role,
+    };
+    
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     isLoggedIn: !!user,
     login,
     logout,
+    switchRole,
     isLoading,
   };
 

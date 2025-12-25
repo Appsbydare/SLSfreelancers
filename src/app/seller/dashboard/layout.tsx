@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
 
 export default function SellerDashboardLayout({
@@ -10,6 +10,7 @@ export default function SellerDashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -19,6 +20,20 @@ export default function SellerDashboardLayout({
     checkAuth();
     loadBadgeCounts();
   }, []);
+
+  useEffect(() => {
+    // Redirect to dashboard if user tries to access non-dashboard seller pages
+    if (!loading && user && pathname) {
+      // Allow access to seller dashboard pages
+      const isDashboardPage = pathname.startsWith('/seller/dashboard');
+      const isSellerGigsPage = pathname.startsWith('/seller/gigs');
+      
+      // If accessing seller pages but not dashboard/gigs, redirect to dashboard
+      if (pathname.startsWith('/seller') && !isDashboardPage && !isSellerGigsPage) {
+        router.push('/seller/dashboard');
+      }
+    }
+  }, [pathname, loading, user, router]);
 
   const checkAuth = async () => {
     try {
@@ -30,7 +45,12 @@ export default function SellerDashboardLayout({
 
       const userData = JSON.parse(userStr);
       if (userData.userType !== 'tasker') {
-        router.push('/');
+        // If user is not a tasker, redirect based on their role
+        if (userData.userType === 'customer') {
+          router.push('/');
+        } else {
+          router.push('/');
+        }
         return;
       }
 

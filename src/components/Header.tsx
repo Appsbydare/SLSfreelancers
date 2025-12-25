@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, UserSwitch, LayoutDashboard, Package, ShoppingBag, DollarSign } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -19,7 +19,7 @@ export default function Header() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, logout, switchRole } = useAuth();
   const { setSelectedDistrict } = useDistrict();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -71,16 +71,23 @@ export default function Header() {
 
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
+  const isSeller = user?.userType === 'tasker';
   
-  if (user?.userType === 'tasker') {
+  if (isSeller) {
     displayNavigation = [
-      { name: 'My Gigs', href: `/seller/gigs` },
-      { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
-      { name: 'My Orders', href: `/orders` },
+      { name: 'Dashboard', href: `/seller/dashboard` },
+      { name: 'My Gigs', href: `/seller/dashboard/gigs` },
+      { name: 'Orders', href: `/seller/dashboard/orders` },
+      { name: 'Earnings', href: `/seller/dashboard/earnings` },
     ];
   } else if (user?.userType === 'admin') {
     displayNavigation = [...navigation, { name: 'Project Status', href: '/project-status' }];
   }
+
+  const handleSwitchToCustomer = () => {
+    switchRole('customer');
+    router.push(`/${locale}`);
+  };
 
   const iconsById: Record<string, string> = {
     'home-property': '🏠',
@@ -233,8 +240,9 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {displayNavigation.map((item, index) => {
+              // Hide Browse Tasks category menu for sellers
               const isBrowseTasks = item.href.includes('/browse-tasks');
-              if (isBrowseTasks) {
+              if (isBrowseTasks && !isSeller) {
                 return (
                   <button
                     key={item.name}
@@ -267,14 +275,14 @@ export default function Header() {
                   key={item.name}
                   href={item.href}
                   className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
-                    pathname === item.href
+                    pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))
                       ? 'text-brand-green'
                       : 'text-white hover:text-brand-green'
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <span className="relative z-10">{item.name}</span>
-                  {pathname === item.href && (
+                  {(pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))) && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
@@ -285,34 +293,36 @@ export default function Header() {
 
           {/* Right side - Search, Language switcher, and auth buttons */}
           <div className="flex items-center space-x-4">
-            {/* Search (desktop) */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsCategoryMenuOpen(false);
-                setIsQuickMenuOpen(false);
-                router.push(`/${locale}/browse-tasks`);
-              }}
-              className="hidden md:block"
-            >
-              <div className="relative w-[420px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="What service are you looking for today?"
-                  className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
-                  aria-label="Search"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </div>
-            </form>
+            {/* Search (desktop) - Hide for sellers */}
+            {!isSeller && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setIsCategoryMenuOpen(false);
+                  setIsQuickMenuOpen(false);
+                  router.push(`/${locale}/browse-tasks`);
+                }}
+                className="hidden md:block"
+              >
+                <div className="relative w-[420px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    value={headerSearch}
+                    onChange={(e) => setHeaderSearch(e.target.value)}
+                    placeholder="What service are you looking for today?"
+                    className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
+                    aria-label="Search"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            )}
 
             <LanguageSwitcher />
             
@@ -326,6 +336,17 @@ export default function Header() {
                     <VerifiedBadge size="sm" showText={false} />
                   )}
                 </div>
+                {/* Switch to Customer button - Only show for sellers */}
+                {isSeller && (
+                  <button
+                    onClick={handleSwitchToCustomer}
+                    className="inline-flex items-center text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 border border-white/20 hover:border-brand-green/60 rounded-md"
+                    title="Switch to Customer View"
+                  >
+                    <UserSwitch className="h-4 w-4 mr-1" />
+                    Switch to Customer
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center text-white hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
@@ -333,33 +354,37 @@ export default function Header() {
                   <LogOut className="h-4 w-4 mr-1" />
                   Logout
                 </button>
-                {/* District (Sri Lanka) map trigger */}
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
-                  onClick={() => {
-                    setIsMapMenuOpen(true);
-                    setIsCategoryMenuOpen(false);
-                    setIsQuickMenuOpen(false);
-                  }}
-                  aria-label="Choose district"
-                  title="Choose District"
-                >
-                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
-                </button>
-                {/* Quick menu trigger (rightmost) */}
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
-                  onClick={() => {
-                    setIsQuickMenuOpen(true);
-                    setIsCategoryMenuOpen(false);
-                    setIsMapMenuOpen(false);
-                  }}
-                  aria-label="Open quick menu"
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </button>
+                {/* District (Sri Lanka) map trigger - Hide for sellers */}
+                {!isSeller && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                    onClick={() => {
+                      setIsMapMenuOpen(true);
+                      setIsCategoryMenuOpen(false);
+                      setIsQuickMenuOpen(false);
+                    }}
+                    aria-label="Choose district"
+                    title="Choose District"
+                  >
+                    <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
+                  </button>
+                )}
+                {/* Quick menu trigger (rightmost) - Hide for sellers */}
+                {!isSeller && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                    onClick={() => {
+                      setIsQuickMenuOpen(true);
+                      setIsCategoryMenuOpen(false);
+                      setIsMapMenuOpen(false);
+                    }}
+                    aria-label="Open quick menu"
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             ) : (
               <div className="hidden md:flex items-center space-x-4">
@@ -405,18 +430,20 @@ export default function Header() {
               </div>
             )}
 
-            {/* Quick menu button (mobile) */}
-            <button
-              type="button"
-              className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
-              onClick={() => {
-                setIsQuickMenuOpen(true);
-                setIsCategoryMenuOpen(false);
-              }}
-              aria-label="Open quick menu"
-            >
-              <Grid3X3 className="h-5 w-5" />
-            </button>
+            {/* Quick menu button (mobile) - Hide for sellers */}
+            {!isSeller && (
+              <button
+                type="button"
+                className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
+                onClick={() => {
+                  setIsQuickMenuOpen(true);
+                  setIsCategoryMenuOpen(false);
+                }}
+                aria-label="Open quick menu"
+              >
+                <Grid3X3 className="h-5 w-5" />
+              </button>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -453,7 +480,8 @@ export default function Header() {
                   {item.name}
                 </Link>
               ))}
-              {(serviceGroups as any).length > 0 && (
+              {/* Hide Browse Tasks category menu for sellers in mobile */}
+              {!isSeller && (serviceGroups as any).length > 0 && (
                 <button
                   type="button"
                   className="block w-full text-left px-3 py-2 text-base font-medium text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
@@ -463,6 +491,19 @@ export default function Header() {
                   }}
                 >
                   {t('browseTasks')}
+                </button>
+              )}
+              {/* Switch to Customer button for sellers in mobile */}
+              {isSeller && (
+                <button
+                  onClick={() => {
+                    handleSwitchToCustomer();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
+                >
+                  <UserSwitch className="h-4 w-4 mr-2" />
+                  Switch to Customer
                 </button>
               )}
               <div className="pt-4 pb-3 border-t border-gray-800">
@@ -509,7 +550,7 @@ export default function Header() {
         )}
       </div>
     </header>
-    {isCategoryMenuOpen && activeGroup && (
+    {isCategoryMenuOpen && activeGroup && !isSeller && (
       <div
         id="category-mega-menu"
         className="fixed top-16 left-0 right-0 z-[55] bg-black/95 backdrop-blur-lg border-t border-b border-gray-800 shadow-2xl"
