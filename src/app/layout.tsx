@@ -7,26 +7,26 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { DistrictProvider } from '@/contexts/DistrictContext';
 import '../app/globals.css';
 
-// Load Geom font from public/fonts directory
+// Load Geom font from fonts directory at root
 const geom = localFont({
   src: [
     {
-      path: '../public/fonts/Geom-Regular.ttf',
+      path: '../../fonts/Geom-Regular.ttf',
       weight: '400',
       style: 'normal',
     },
     {
-      path: '../public/fonts/Geom-Medium.ttf',
+      path: '../../fonts/Geom-Medium.ttf',
       weight: '500',
       style: 'normal',
     },
     {
-      path: '../public/fonts/Geom-SemiBold.ttf',
+      path: '../../fonts/Geom-SemiBold.ttf',
       weight: '600',
       style: 'normal',
     },
     {
-      path: '../public/fonts/Geom-Bold.ttf',
+      path: '../../fonts/Geom-Bold.ttf',
       weight: '700',
       style: 'normal',
     },

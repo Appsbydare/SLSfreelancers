@@ -172,13 +172,16 @@ export async function GET(request: NextRequest) {
       gigs.sort((a: any, b: any) => b.startingPrice - a.startingPrice);
     }
 
+    // Determine if we're using sample data
+    const isUsingSampleData = gigs.length > 0 && gigs[0]?.id?.startsWith('sample-gig-');
+    
     return NextResponse.json({
       gigs,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total: isUsingSampleData ? gigs.length : (count || 0),
+        totalPages: isUsingSampleData ? 1 : Math.ceil((count || 0) / limit),
       },
     });
   } catch (error) {
