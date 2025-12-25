@@ -219,53 +219,50 @@ function GigCard({ gig, onCardHover }: { gig: any; onCardHover?: (isHovering: bo
 
         {/* Seller Info */}
         <div className="mb-3 pb-3 border-b border-gray-100">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center flex-1">
-              {sellerAvatar ? (
-                <div className="relative h-8 w-8 mr-2">
-                  <Image
-                    src={sellerAvatar}
-                    alt={sellerName}
-                    fill
-                    className="rounded-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center mr-2">
-                  <span className="text-brand-green text-xs font-semibold">
-                    {sellerName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">{sellerName}</p>
-                  {gig.isVerified && (
-                    <VerifiedBadge size="sm" showText={false} />
-                  )}
-                </div>
-                {sellerRating && (
-                  <div className="flex items-center">
-                    <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                    <span className="text-xs text-gray-600">{sellerRating.toFixed(1)}</span>
-                  </div>
-                )}
+          <div className="flex items-center mb-2">
+            {sellerAvatar ? (
+              <div className="relative h-8 w-8 mr-2">
+                <Image
+                  src={sellerAvatar}
+                  alt={sellerName}
+                  fill
+                  className="rounded-full object-cover"
+                />
               </div>
-            </div>
-            {gig.hasEasyFindersChoice && (
-              <div className="ml-2 flex-shrink-0">
-                <span className="inline-flex items-center px-2 py-1 rounded-full bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs font-semibold">
-                  <Award className="h-3 w-3 mr-1" />
-                  EasyFinders Choice
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center mr-2">
+                <span className="text-brand-green text-xs font-semibold">
+                  {sellerName.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-          </div>
-          {gig.sellerLevel && (
-            <div className="mt-2">
-              <SellerLevelBadge level={gig.sellerLevel} size="sm" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="text-sm font-medium text-gray-900 truncate">{sellerName}</p>
+                {gig.isVerified && (
+                  <VerifiedBadge size="sm" showText={false} />
+                )}
+              </div>
+              {sellerRating && (
+                <div className="flex items-center">
+                  <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
+                  <span className="text-xs text-gray-600">{sellerRating.toFixed(1)}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          {/* Badges Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {gig.sellerLevel && (
+              <SellerLevelBadge level={gig.sellerLevel} size="sm" />
+            )}
+            {gig.hasEasyFindersChoice && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-yellow-100 border border-yellow-300 text-yellow-800 text-xs font-semibold">
+                <Award className="h-3 w-3 mr-1" />
+                EasyFinders Choice
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
