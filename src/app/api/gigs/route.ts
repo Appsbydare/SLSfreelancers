@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import sampleGigsData from '@/data/sample-gigs.json';
+import fs from 'fs';
+import path from 'path';
 
 // GET - List/search gigs with filters
 export async function GET(request: NextRequest) {
@@ -317,6 +319,34 @@ function getSellerLevel(rating: number, isFeatured: boolean, index: number): 'st
   }
 }
 
+// Helper function to get gig image path based on seller name
+// Images are stored in public/images/ with format "Sellername.jpeg"
+function getGigImagePath(sellerName: string): string | null {
+  try {
+    // Construct the image filename
+    const imageFileName = `${sellerName}.jpeg`;
+    const publicImagesPath = path.join(process.cwd(), 'public', 'images', imageFileName);
+    
+    // Check if file exists
+    if (fs.existsSync(publicImagesPath)) {
+      // Return the public URL path (Next.js serves public folder at root)
+      return `/images/${imageFileName}`;
+    }
+    
+    // Also check for .jpg extension
+    const imageFileNameJpg = `${sellerName}.jpg`;
+    const publicImagesPathJpg = path.join(process.cwd(), 'public', 'images', imageFileNameJpg);
+    if (fs.existsSync(publicImagesPathJpg)) {
+      return `/images/${imageFileNameJpg}`;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error checking image for ${sellerName}:`, error);
+    return null;
+  }
+}
+
 // Helper function to generate sample gigs from JSON data
 function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
   return sampleData.slice(0, limit).map((gigData, index) => {
@@ -326,6 +356,11 @@ function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
     const isVerified = shouldBeVerified(index);
     const hasEasyFindersChoice = shouldHaveEasyFindersChoice(index);
     
+    // Get image path based on seller name
+    const gigImagePath = getGigImagePath(sellerName);
+    // Use seller-specific image if available, otherwise use original images or empty array
+    const images = gigImagePath ? [gigImagePath] : (gigData.images || []);
+    
     return {
       id: `sample-gig-${index + 1}`,
       seller_id: `sample-seller-${index + 1}`,
@@ -334,7 +369,7 @@ function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
       description: gigData.description,
       category: gigData.category,
       tags: gigData.tags || [],
-      images: gigData.images || [],
+      images: images,
       status: 'active',
       delivery_type: gigData.deliveryType || 'service',
       is_featured: gigData.isFeatured || false,
