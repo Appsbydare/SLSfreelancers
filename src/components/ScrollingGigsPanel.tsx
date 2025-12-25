@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Clock } from 'lucide-react';
-import { Gig } from '@/types';
 
 interface ScrollingGigsPanelProps {
   autoScroll?: boolean;
@@ -15,7 +14,7 @@ export default function ScrollingGigsPanel({
   autoScroll = true, 
   scrollSpeed = 30 
 }: ScrollingGigsPanelProps) {
-  const [gigs, setGigs] = useState<Gig[]>([]);
+  const [gigs, setGigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -44,14 +43,19 @@ export default function ScrollingGigsPanel({
       if (response.ok) {
         const data = await response.json();
         const gigsData = data.gigs || [];
-        // Filter for featured gigs or take top rated ones
-        const featuredGigs = gigsData
-          .filter((gig: any) => gig.is_featured || (gig.rating && gig.rating >= 4.5))
-          .slice(0, 20);
-        setGigs(featuredGigs.length > 0 ? featuredGigs : gigsData.slice(0, 10));
+        // If we have gigs, use them (prioritize featured, then top rated)
+        if (gigsData.length > 0) {
+          const featuredGigs = gigsData
+            .filter((gig: any) => gig.is_featured || (gig.rating && gig.rating >= 4.5))
+            .slice(0, 20);
+          setGigs(featuredGigs.length > 0 ? featuredGigs : gigsData.slice(0, 10));
+        } else {
+          setGigs([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching featured gigs:', error);
+      setGigs([]);
     } finally {
       setLoading(false);
     }
@@ -70,9 +74,10 @@ export default function ScrollingGigsPanel({
       const scrollAmount = scrollSpeed * deltaTime;
       scrollContainerRef.current.scrollLeft += scrollAmount;
 
-      // Reset scroll position when reaching the end
-      if (scrollContainerRef.current.scrollLeft >= 
-          scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth) {
+      // Reset scroll position when reaching the end (seamless loop)
+      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+      if (scrollContainerRef.current.scrollLeft >= maxScroll) {
+        // Reset to start for seamless loop
         scrollContainerRef.current.scrollLeft = 0;
       }
 
@@ -101,8 +106,25 @@ export default function ScrollingGigsPanel({
     );
   }
 
-  if (gigs.length === 0) {
-    return null;
+  if (gigs.length === 0 && !loading) {
+    // Show a message if no gigs are available
+    return (
+      <div className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Featured Services
+            </h2>
+            <p className="text-gray-600">
+              Discover top-rated services from trusted sellers
+            </p>
+          </div>
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No featured services available at the moment. Check back soon!</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -121,18 +143,22 @@ export default function ScrollingGigsPanel({
           </p>
         </div>
 
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide"
-          style={{
-            scrollBehavior: 'auto',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {/* Duplicate gigs for seamless loop */}
-          {[...gigs, ...gigs].map((gig, index) => (
-            <GigCard key={`${gig.id}-${index}`} gig={gig} />
-          ))}
+        <div className="relative overflow-hidden">
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-6 overflow-x-auto scrollbar-hide"
+            style={{
+              scrollBehavior: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            {/* Duplicate gigs multiple times for seamless infinite loop */}
+            {[...gigs, ...gigs, ...gigs].map((gig, index) => (
+              <GigCard key={`${gig.id}-${index}`} gig={gig} />
+            ))}
+          </div>
         </div>
       </div>
 

@@ -9,8 +9,8 @@ export default function HomePage() {
   return (
     <>
       <HeroBanner />
-      <CategoryGrid />
       <ScrollingGigsPanel />
+      <CategoryGrid />
       <PostRequestSection />
       <TopSellers />
       <DistrictServices />

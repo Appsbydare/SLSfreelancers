@@ -4,7 +4,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { ChevronRight, Sparkles, Users, Clock, Shield } from 'lucide-react';
 import SriLankaMap from './SriLankaMap';
-import AdCarousel from './AdCarousel';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
@@ -177,12 +176,6 @@ export default function HeroBanner() {
   const successCounter = useCountUpRange(97, 99, 2000);
   const supportCounter = useDualCounter(24, 7, 9, 5, 2000);
 
-  // Advertisement images - add more images here as needed
-  const adImages = [
-    '/images/sponsor-ad.png',
-    '/images/sponsor-ad-2.png',
-  ];
-
   const handleDistrictSelect = (district: any) => {
     setSelectedDistrict(district);
     // Scroll to the popular categories section
@@ -353,17 +346,6 @@ export default function HeroBanner() {
           </div>
         </div>
       </section>
-
-      {/* Advertisement Section - Below Map, Above Categories */}
-      {adImages.length > 0 && (
-        <section className="bg-white py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="animate-fade-in-up">
-              <AdCarousel images={adImages} interval={10000} />
-            </div>
-          </div>
-        </section>
-      )}
     </>
   );
 }
