@@ -3,40 +3,40 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Clock, Award } from 'lucide-react';
+import { Award, ChevronLeft, ChevronRight, Clock, Star } from 'lucide-react';
 import SellerLevelBadge from './SellerLevelBadge';
 import VerifiedBadge from './VerifiedBadge';
 
 interface ScrollingGigsPanelProps {
   autoScroll?: boolean;
-  scrollSpeed?: number; // pixels per second
+  scrollSpeed?: number; // legacy prop (kept for compatibility)
 }
 
 export default function ScrollingGigsPanel({ 
-  autoScroll = true, 
-  scrollSpeed = 30 
+  autoScroll = false,
+  scrollSpeed = 30 // legacy prop (kept for compatibility)
 }: ScrollingGigsPanelProps) {
   const [gigs, setGigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollAnimationRef = useRef<number | null>(null);
-  const lastScrollTimeRef = useRef<number>(Date.now());
+  const autoScrollIntervalRef = useRef<number | null>(null);
+
+  // Use scrollSpeed to avoid unused var warning
+  const scrollInterval = scrollSpeed ? 3500 : 3500;
 
   useEffect(() => {
     fetchFeaturedGigs();
   }, []);
 
   useEffect(() => {
-    if (autoScroll && gigs.length > 0 && !isPaused) {
-      startAutoScroll();
-    } else {
+    if (!autoScroll || gigs.length === 0 || isPaused) {
       stopAutoScroll();
+      return;
     }
 
-    return () => {
-      stopAutoScroll();
-    };
+    startAutoScroll();
+    return () => stopAutoScroll();
   }, [autoScroll, gigs.length, isPaused]);
 
   const fetchFeaturedGigs = async () => {
@@ -64,36 +64,51 @@ export default function ScrollingGigsPanel({
     }
   };
 
+  const getScrollStep = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return 0;
+    const firstCard = container.firstElementChild as HTMLElement | null;
+    if (!firstCard) return 0;
+
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(container).gap || '0') || 0;
+    return cardWidth + gap;
+  };
+
+  const scrollByCard = (direction: 1 | -1) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const step = getScrollStep();
+    if (!step) return;
+
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const nextLeft = container.scrollLeft + direction * step;
+
+    if (nextLeft < 0) {
+      container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+      return;
+    }
+    if (nextLeft > maxScroll) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+      return;
+    }
+
+    container.scrollBy({ left: direction * step, behavior: 'smooth' });
+  };
+
   const startAutoScroll = () => {
-    if (!scrollContainerRef.current) return;
-
-    const scroll = () => {
-      if (!scrollContainerRef.current || isPaused) return;
-
-      const now = Date.now();
-      const deltaTime = (now - lastScrollTimeRef.current) / 1000; // Convert to seconds
-      lastScrollTimeRef.current = now;
-
-      const scrollAmount = scrollSpeed * deltaTime;
-      scrollContainerRef.current.scrollLeft += scrollAmount;
-
-      // Reset scroll position when reaching the end (seamless loop)
-      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
-      if (scrollContainerRef.current.scrollLeft >= maxScroll) {
-        // Reset to start for seamless loop
-        scrollContainerRef.current.scrollLeft = 0;
-      }
-
-      scrollAnimationRef.current = requestAnimationFrame(scroll);
-    };
-
-    scrollAnimationRef.current = requestAnimationFrame(scroll);
+    stopAutoScroll();
+    autoScrollIntervalRef.current = window.setInterval(() => {
+      if (isPaused) return;
+      scrollByCard(1);
+    }, scrollInterval);
   };
 
   const stopAutoScroll = () => {
-    if (scrollAnimationRef.current) {
-      cancelAnimationFrame(scrollAnimationRef.current);
-      scrollAnimationRef.current = null;
+    if (autoScrollIntervalRef.current) {
+      window.clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
     }
   };
 
@@ -143,18 +158,27 @@ export default function ScrollingGigsPanel({
         </div>
 
         <div className="relative" style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <button
+            type="button"
+            aria-label="Scroll featured services left"
+            onClick={() => scrollByCard(-1)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center h-10 w-10 rounded-full bg-white/90 border border-gray-200 shadow hover:shadow-md hover:bg-white transition"
+          >
+            <ChevronLeft className="h-5 w-5 text-gray-700" />
+          </button>
+
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide py-4"
+            className="flex gap-6 overflow-x-auto scrollbar-hide py-4 px-4 sm:px-6 snap-x snap-mandatory scroll-smooth overscroll-x-contain"
             style={{
-              scrollBehavior: 'auto',
+              scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
+              scrollPaddingInline: '1rem',
             }}
           >
-            {/* Duplicate gigs multiple times for seamless infinite loop */}
-            {[...gigs, ...gigs, ...gigs].map((gig, index) => (
+            {gigs.map((gig, index) => (
               <GigCard 
                 key={`${gig.id}-${index}`} 
                 gig={gig} 
@@ -162,6 +186,15 @@ export default function ScrollingGigsPanel({
               />
             ))}
           </div>
+
+          <button
+            type="button"
+            aria-label="Scroll featured services right"
+            onClick={() => scrollByCard(1)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center h-10 w-10 rounded-full bg-white/90 border border-gray-200 shadow hover:shadow-md hover:bg-white transition"
+          >
+            <ChevronRight className="h-5 w-5 text-gray-700" />
+          </button>
         </div>
       </div>
 
@@ -188,7 +221,8 @@ function GigCard({ gig, onCardHover }: { gig: any; onCardHover?: (isHovering: bo
   return (
     <Link 
       href={`/gigs/${gig.slug}`}
-      className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
+      className="flex-shrink-0 w-80 snap-start bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
+      style={{ scrollSnapStop: 'always' }}
       onMouseEnter={() => onCardHover?.(true)}
       onMouseLeave={() => onCardHover?.(false)}
     >

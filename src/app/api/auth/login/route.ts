@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         ? await fetchTaskerProfile(userWithPassword.id)
         : null;
 
-    const clientUser = buildClientUser(userWithPassword, taskerProfile);
+    const clientUser = await buildClientUser(userWithPassword, taskerProfile);
 
     return NextResponse.json({
       message: 'Login successful',

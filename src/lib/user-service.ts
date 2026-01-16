@@ -53,6 +53,9 @@ export interface ClientUser {
   city?: string;
   district?: string;
   userType: UserType;
+  originalUserType?: UserType; // Track the user's registration type
+  hasCustomerAccount?: boolean; // User has customer record
+  hasTaskerAccount?: boolean; // User has tasker record
   createdAt: string;
   isVerified: boolean;
   profile: {
@@ -78,7 +81,32 @@ export async function fetchTaskerProfile(userId: string) {
   return data;
 }
 
-export function buildClientUser(user: DbUserRow, taskerProfile?: TaskerProfileRow | null): ClientUser {
+/**
+ * Check if user has both customer and tasker accounts
+ */
+export async function checkDualRoles(userId: string) {
+  const [customerResult, taskerResult] = await Promise.all([
+    supabaseServer.from('customers').select('id').eq('user_id', userId).maybeSingle(),
+    supabaseServer.from('taskers').select('id').eq('user_id', userId).maybeSingle()
+  ]);
+
+  return {
+    hasCustomerAccount: !!customerResult.data,
+    hasTaskerAccount: !!taskerResult.data
+  };
+}
+
+export async function buildClientUser(user: DbUserRow, taskerProfile?: TaskerProfileRow | null): Promise<ClientUser> {
+  // Check if user has both roles
+  const dualRoles = await checkDualRoles(user.id);
+  
+  // Determine original user type
+  let originalUserType = user.user_type;
+  if (dualRoles.hasCustomerAccount && dualRoles.hasTaskerAccount) {
+    // User has both - set original to tasker (they upgraded)
+    originalUserType = 'tasker';
+  }
+
   return {
     id: user.id,
     firstName: user.first_name,
@@ -90,6 +118,9 @@ export function buildClientUser(user: DbUserRow, taskerProfile?: TaskerProfileRo
     city: user.city ?? undefined,
     district: user.district ?? undefined,
     userType: user.user_type,
+    originalUserType,
+    hasCustomerAccount: dualRoles.hasCustomerAccount,
+    hasTaskerAccount: dualRoles.hasTaskerAccount,
     createdAt: user.created_at,
     isVerified: user.is_verified,
     profile: {

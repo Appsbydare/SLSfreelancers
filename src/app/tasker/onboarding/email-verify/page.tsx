@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 export default function EmailVerifyPage() {
   const router = useRouter();
@@ -18,19 +19,21 @@ export default function EmailVerifyPage() {
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+
+
   useEffect(() => {
     // Get email and userId from sessionStorage
     const pendingEmail = sessionStorage.getItem('pendingTaskerEmail');
     const pendingId = sessionStorage.getItem('pendingTaskerId');
-    
+
     if (!pendingEmail || !pendingId) {
       router.push('/tasker/onboarding/stage-1');
       return;
     }
-    
+
     setEmail(pendingEmail);
     setUserId(pendingId);
-    
+
     // Auto-send OTP on page load
     sendOTP(pendingEmail);
   }, [router]);
@@ -47,16 +50,18 @@ export default function EmailVerifyPage() {
 
   const sendOTP = async (emailAddress: string) => {
     try {
-      // In a real implementation, this would call an API to send OTP via email
-      // For now, we'll simulate it
-      console.log('Sending OTP to:', emailAddress);
-      // TODO: Implement actual OTP sending via email service
-      
-      // For demo purposes, show the OTP in console
-      const demoOTP = '123456';
-      console.log('Demo OTP:', demoOTP);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: emailAddress,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('OTP sent successfully to:', emailAddress);
     } catch (error) {
       console.error('Error sending OTP:', error);
+      setErrors({ otp: 'Failed to send verification code. Please try again.' });
     }
   };
 
@@ -91,14 +96,14 @@ export default function EmailVerifyPage() {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').slice(0, 6);
-    
+
     if (!/^\d+$/.test(pastedData)) {
       return;
     }
 
     const newOtp = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
     setOtp(newOtp.slice(0, 6));
-    
+
     // Focus the next empty input or the last input
     const nextEmptyIndex = newOtp.findIndex(val => !val);
     if (nextEmptyIndex !== -1) {
@@ -110,7 +115,7 @@ export default function EmailVerifyPage() {
 
   const handleResendOTP = async () => {
     if (!canResend || isResending) return;
-    
+
     setIsResending(true);
     await sendOTP(email);
     setIsResending(false);
@@ -122,9 +127,9 @@ export default function EmailVerifyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const otpValue = otp.join('');
-    
+
     if (otpValue.length !== 6) {
       setErrors({ otp: 'Please enter the complete 6-digit code' });
       return;
@@ -133,21 +138,26 @@ export default function EmailVerifyPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual OTP verification
-      // For demo purposes, accept '123456' as valid OTP
-      if (otpValue === '123456') {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpValue,
+        type: 'email',
+      });
+
+      if (error) {
+        console.error('Verification error:', error);
+        setErrors({ otp: 'Invalid verification code. Please try again.' });
+      } else {
         // Mark email as verified
-        // In real implementation, this would update the database
+        // In real implementation, this would update the database (which we do by just continuing)
         sessionStorage.removeItem('pendingTaskerEmail');
         sessionStorage.removeItem('pendingTaskerId');
-        
+
         // Store verified user info for next stage
         sessionStorage.setItem('verifiedTaskerId', userId);
-        
+
         // Redirect to Stage 2
         router.push('/tasker/onboarding/stage-2');
-      } else {
-        setErrors({ otp: 'Invalid verification code. Please try again.' });
       }
     } catch (error) {
       console.error('Verification error:', error);
@@ -176,7 +186,7 @@ export default function EmailVerifyPage() {
         <p className="mt-2 text-center text-sm text-gray-600">
           Stage 1 of 4: Email Verification
         </p>
-        
+
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="flex items-center justify-center space-x-2">
@@ -227,9 +237,8 @@ export default function EmailVerifyPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-xl font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green ${
-                      errors.otp ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`w-12 h-12 text-center text-xl font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green ${errors.otp ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     autoFocus={index === 0}
                   />
                 ))}

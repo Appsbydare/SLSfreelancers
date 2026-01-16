@@ -12,16 +12,16 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, user, isLoggedIn } = useAuth();
   const [loginType, setLoginType] = useState<'customer' | 'tasker'>('customer');
-  
+
   useEffect(() => {
     const type = searchParams.get('type');
     if (type === 'tasker') {
       setLoginType('tasker');
     }
   }, [searchParams]);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -91,7 +91,7 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         const userActualType = data.user.userType;
-        
+
         // Validate login type selection
         if (loginType === 'tasker' && userActualType !== 'tasker') {
           setErrors({ submit: 'This account is not registered as a seller. Please use Customer Login.' });
@@ -99,10 +99,10 @@ export default function LoginPage() {
           setIsLoading(false);
           return;
         }
-        
+
         // Set originalUserType to the user's actual registration type
         data.user.originalUserType = userActualType;
-        
+
         // Set current userType based on selected login type
         // If user is registered as tasker, they can login as either customer or tasker
         if (userActualType === 'tasker') {
@@ -116,13 +116,13 @@ export default function LoginPage() {
           // User registered as customer only - always customer mode
           data.user.userType = 'customer';
         }
-        
+
         // Use AuthContext login function to set user (ensures originalUserType is preserved)
         authLogin(data.user);
-        
+
         // Show success message
         showToast.success(`Welcome back, ${data.user.firstName}!`);
-        
+
         // Redirect based on selected login type after a short delay
         setTimeout(() => {
           if (userActualType === 'admin') {
@@ -170,37 +170,53 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Welcome back to EasyFinder
           </p>
-          
+
           {/* Login Type Selector */}
           <div className="mt-4 flex justify-center">
             <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
               <button
                 type="button"
                 onClick={() => setLoginType('customer')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  loginType === 'customer'
+                disabled={isLoggedIn && user?.userType === 'customer'}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${loginType === 'customer'
                     ? 'bg-brand-green text-white shadow-sm'
                     : 'text-gray-700 hover:text-gray-900'
-                }`}
+                  } ${isLoggedIn && user?.userType === 'customer' ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
               >
                 Customer Login
+                {isLoggedIn && user?.userType === 'customer' && (
+                  <span className="ml-2 text-xs">(Already logged in)</span>
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setLoginType('tasker')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  loginType === 'tasker'
+                disabled={isLoggedIn && user?.userType === 'tasker'}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${loginType === 'tasker'
                     ? 'bg-brand-green text-white shadow-sm'
                     : 'text-gray-700 hover:text-gray-900'
-                }`}
+                  } ${isLoggedIn && user?.userType === 'tasker' ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
               >
                 Tasker Login
+                {isLoggedIn && user?.userType === 'tasker' && (
+                  <span className="ml-2 text-xs">(Already logged in)</span>
+                )}
               </button>
             </div>
           </div>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          {isLoggedIn && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-blue-800">
+                You are already logged in as <strong>{user?.callingName || user?.firstName}</strong> ({user?.userType === 'tasker' ? 'Tasker' : 'Customer'}).
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                The {user?.userType === 'tasker' ? 'Tasker' : 'Customer'} login option is locked. Please logout to switch accounts.
+              </p>
+            </div>
+          )}
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Email */}
@@ -216,9 +232,8 @@ export default function LoginPage() {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.email ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="john@example.com"
                   />
                 </div>
@@ -240,9 +255,8 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.password ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.password ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="••••••••"
                   />
                   <button
@@ -317,10 +331,10 @@ export default function LoginPage() {
 
               <div className="mt-6">
                 <Link
-                  href="/signup"
+                  href={loginType === 'tasker' ? '/become-tasker' : '/signup'}
                   className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
                 >
-                  Create a new account
+                  {loginType === 'tasker' ? 'Become a Tasker' : 'Create a new account'}
                 </Link>
               </div>
             </div>

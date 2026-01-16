@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Phone, Lock, Eye, EyeOff, CreditCard, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { showToast } from '@/lib/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TaskerStage1Page() {
   const router = useRouter();
+  const { user, isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,11 +27,13 @@ export default function TaskerStage1Page() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [existingUser, setExistingUser] = useState<any>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -42,7 +46,72 @@ export default function TaskerStage1Page() {
         [name]: ''
       }));
     }
+
+    // Check if email belongs to existing customer when email field changes
+    if (name === 'email' && value.includes('@') && value.length > 5) {
+      checkExistingUser(value);
+    }
   };
+
+  const checkExistingUser = async (email: string) => {
+    setIsCheckingEmail(true);
+    try {
+      const response = await fetch('/api/users/upgrade-to-tasker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.canUpgrade && data.hasCustomerAccount) {
+          setExistingUser(data);
+          // Pre-fill form with existing user data
+          setFormData(prev => ({
+            ...prev,
+            firstName: data.firstName || prev.firstName,
+            lastName: data.lastName || prev.lastName,
+            phone: data.phone || prev.phone,
+          }));
+        } else if (data.hasTaskerAccount) {
+          setErrors(prev => ({
+            ...prev,
+            email: 'This email is already registered as a tasker. Please login instead.'
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  // Pre-fill data if user is logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        // NIC is usually not in user object if they are just a customer, so we leave it blank
+      }));
+      // Also set existing user state so we know to upgrade instead of create
+      setExistingUser({ canUpgrade: true, userId: user.id, isEmailVerified: true }); // Assuming logged in means email verified or good enough
+    }
+  }, [isLoggedIn, user]);
+
+  useEffect(() => {
+    // Check for pending data from become-tasker page
+    const pendingBio = sessionStorage.getItem('pendingTaskerBio');
+    const pendingSkills = sessionStorage.getItem('pendingTaskerSkills');
+    if (pendingBio || pendingSkills) {
+      // We might want to save these for later stages or just keep in session
+      // Stage 1 doesn't use bio/skills, so we just let them persist in session for Stage 2/3
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -78,20 +147,22 @@ export default function TaskerStage1Page() {
       newErrors.nicNumber = 'Please enter a valid NIC number (9 digits + V/X or 12 digits)';
     }
 
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, and number';
-    }
+    // Password validation - only if not logged in
+    if (!isLoggedIn) {
+      if (!formData.password) {
+        newErrors.password = 'Password is required';
+      } else if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(formData.password)) {
+        newErrors.password = 'Password must contain uppercase, lowercase, and number';
+      }
 
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      // Confirm password validation
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
     }
 
     // Terms agreement validation
@@ -105,7 +176,7 @@ export default function TaskerStage1Page() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -113,6 +184,35 @@ export default function TaskerStage1Page() {
     setIsLoading(true);
 
     try {
+      // If user is upgrading from customer, skip user creation
+      if (existingUser && existingUser.canUpgrade) {
+        // Show success message
+        showToast.success('Upgrading your account to tasker! Proceeding to next step...');
+
+        // Store user data for next stages
+        sessionStorage.setItem('pendingTaskerEmail', formData.email);
+        sessionStorage.setItem('pendingTaskerId', existingUser.userId);
+        sessionStorage.setItem('isUpgradingToTasker', 'true');
+
+        // Skip email verification if already verified
+        if (existingUser.isEmailVerified) {
+          sessionStorage.setItem('stage1Complete', 'true');
+          // Important: Set verifiedTaskerId so Stage 2 doesn't kick us back
+          sessionStorage.setItem('verifiedTaskerId', existingUser.userId);
+
+          setTimeout(() => {
+            router.push('/tasker/onboarding/stage-2');
+          }, 1000);
+        } else {
+          // Still need email verification
+          setTimeout(() => {
+            router.push('/tasker/onboarding/email-verify');
+          }, 1000);
+        }
+        return;
+      }
+
+      // New user - create account
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -139,14 +239,14 @@ export default function TaskerStage1Page() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Show success message
         showToast.success('Account created successfully! Please verify your email.');
-        
+
         // Store user data temporarily for email verification
         sessionStorage.setItem('pendingTaskerEmail', formData.email);
         sessionStorage.setItem('pendingTaskerId', data.user.id);
-        
+
         // Redirect to email verification after short delay
         setTimeout(() => {
           router.push('/tasker/onboarding/email-verify');
@@ -184,7 +284,7 @@ export default function TaskerStage1Page() {
         <p className="mt-2 text-center text-sm text-gray-600">
           Stage 1 of 4: Quick Signup
         </p>
-        
+
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="flex items-center justify-center space-x-2">
@@ -219,9 +319,8 @@ export default function TaskerStage1Page() {
                     type="text"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.firstName ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.firstName ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="John"
                   />
                 </div>
@@ -242,9 +341,8 @@ export default function TaskerStage1Page() {
                     type="text"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                      errors.lastName ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.lastName ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="Doe"
                   />
                 </div>
@@ -267,9 +365,9 @@ export default function TaskerStage1Page() {
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  disabled={isLoggedIn}
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.email ? 'border-red-300' : 'border-gray-300'
+                    } ${isLoggedIn ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                   placeholder="john@example.com"
                 />
               </div>
@@ -291,9 +389,8 @@ export default function TaskerStage1Page() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.phone ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="+94 77 123 4567"
                 />
               </div>
@@ -315,9 +412,8 @@ export default function TaskerStage1Page() {
                   type="text"
                   value={formData.nicNumber}
                   onChange={handleInputChange}
-                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.nicNumber ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`pl-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.nicNumber ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="123456789V or 199012345678"
                 />
               </div>
@@ -347,70 +443,71 @@ export default function TaskerStage1Page() {
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password *
-              </label>
-              <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Must be 8+ characters with uppercase, lowercase, and number
-              </p>
-            </div>
+            {/* Password Fields - Only for new users */}
+            {!isLoggedIn && (
+              <>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password *
+                  </label>
+                  <div className="mt-1 relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.password ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Must be 8+ characters with uppercase, lowercase, and number
+                  </p>
+                </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password *
-              </label>
-              <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                    Confirm Password *
+                  </label>
+                  <div className="mt-1 relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`pl-10 pr-10 w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Terms Agreement */}
             <div>
@@ -422,9 +519,8 @@ export default function TaskerStage1Page() {
                     type="checkbox"
                     checked={formData.agreeToTerms}
                     onChange={handleInputChange}
-                    className={`focus:ring-brand-green h-4 w-4 text-brand-green border-gray-300 rounded ${
-                      errors.agreeToTerms ? 'border-red-300' : ''
-                    }`}
+                    className={`focus:ring-brand-green h-4 w-4 text-brand-green border-gray-300 rounded ${errors.agreeToTerms ? 'border-red-300' : ''
+                      }`}
                   />
                 </div>
                 <div className="ml-3 text-sm">
@@ -452,7 +548,10 @@ export default function TaskerStage1Page() {
                 disabled={isLoading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating Account...' : 'Continue to Email Verification'}
+                {isLoading
+                  ? (isLoggedIn ? 'Processing...' : 'Creating Account...')
+                  : (isLoggedIn ? 'Continue to Next Step' : 'Continue to Email Verification')
+                }
               </button>
             </div>
           </form>

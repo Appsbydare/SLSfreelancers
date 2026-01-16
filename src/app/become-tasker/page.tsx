@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield, Lock } from 'lucide-react';
 import { showToast } from '@/lib/toast';
+import Layout from '@/components/Layout';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BecomeTaskerPage() {
   const router = useRouter();
+  const { user, isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,9 +25,29 @@ export default function BecomeTaskerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Show notice to use new onboarding flow
+  // Auto-fill form if user is logged in
   useEffect(() => {
-    showToast.info('We recommend using our new step-by-step onboarding process for a better experience!');
+    if (isLoggedIn && user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.firstName + (user.lastName ? ` ${user.lastName}` : ''),
+        email: user.email || '',
+        phone: user.phone || '',
+        location: user.location || '',
+      }));
+    }
+  }, [isLoggedIn, user]);
+
+  // Show notice to use new onboarding flow (only once per session)
+  useEffect(() => {
+    const hasShown = sessionStorage.getItem('onboarding-toast-shown');
+    if (!hasShown) {
+      const timer = setTimeout(() => {
+        showToast.info('We recommend using our new step-by-step onboarding process for a better experience!');
+        sessionStorage.setItem('onboarding-toast-shown', 'true');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -44,14 +67,17 @@ export default function BecomeTaskerPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setStatusMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
-      return;
-    }
+    // Only validate password if not logged in
+    if (!isLoggedIn) {
+      if (formData.password.length < 6) {
+        setStatusMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
+        return;
+      }
 
-    if (formData.password !== formData.confirmPassword) {
-      setStatusMessage({ type: 'error', text: 'Passwords do not match.' });
-      return;
+      if (formData.password !== formData.confirmPassword) {
+        setStatusMessage({ type: 'error', text: 'Passwords do not match.' });
+        return;
+      }
     }
 
     const [firstName, ...rest] = formData.name.trim().split(' ');
@@ -59,6 +85,53 @@ export default function BecomeTaskerPage() {
 
     setIsSubmitting(true);
 
+    if (isLoggedIn) {
+      // Handle Upgrade Flow
+      // We'll redirect them to the dedicated onboarding flow which handles upgrades better
+      // Or we could call an upgrade API here. For now, let's redirect to stage-1 with intent.
+      // But user wanted "auto fill and will be locked", implying they might fill other fields here.
+
+      // Let's call the upgrade API or the user creation API with a flag? 
+      // Actually, since this is a simple form, let's direct them to the new onboarding flow which is "enhanced"
+      // or try to upgrade them here if possible.
+      // Given the complex requirements (NIC etc) which are NOT in this simple form, 
+      // it might be safer to redirect them to stage-1 if they are logged in, 
+      // OR specifically call the upgrade endpoint if we just want to execute a simple upgrade.
+
+      // However, the simple form DOES collect bio and skills.
+      // Let's TRY to use the 'upgrade-to-tasker' logic or just direct them to stage 1?
+      // "become-tasker page should auto fill and will be locked"
+
+      // Let's implement a direct upgrade attempt via the users API (handling duplicates/upgrades) or a specific endpoint.
+      // Existing API /api/users seems to handle duplicates with 409.
+
+      // Strategy: Since this form is "Quick Signup", and we have a "New Onboarding Process",
+      // maybe we should just push them to the new process?
+      // But if they fill THIS form, they expect it to work.
+
+      // Let's try to simulate the Stage 1 submission behavior:
+      // Store data in session and redirect to next stage?
+      // Or actually upgrade them.
+
+      // Let's try to redirect to Stage 1 with pre-filled data in session storage?
+      // "we highly recommend using the new process" is already on the page.
+
+      // Let's do this: If logged in, we assume they want to upgrade.
+      // The current simple form LACKS NIC number which is required for taskers.
+      // So we CANNOT fully upgrade them here without NIC.
+      // So the BEST approach for logged-in users on this page is to redirect them to Stage 1 
+      // where they MUST enter NIC.
+
+      sessionStorage.setItem('pendingTaskerBio', formData.bio);
+      sessionStorage.setItem('pendingTaskerSkills', formData.skills);
+
+      showToast.success('Please complete your profile verification (NIC required).');
+      router.push('/tasker/onboarding/stage-1');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // New User Flow
     fetch('/api/users', {
       method: 'POST',
       headers: {
@@ -74,6 +147,14 @@ export default function BecomeTaskerPage() {
         password: formData.password,
         bio: formData.bio,
         skills: formData.skills,
+        // Note: Simple form doesn't capture NIC, which might be an issue later if strict.
+        // But for "Quick Signup" maybe it's allowed for now? 
+        // The API might reject if we made NIC required in the schema/API validation?
+        // Let's check API... API checks fields but NIC wasn't strictly required in the create payload interface 
+        // in previous view (Step 93), wait...
+        // Step 93 view of /api/users/route.ts: 
+        // requiredFields = ['firstName', 'lastName', 'email', 'phone', 'userType', 'password']
+        // NIC is NOT in requiredFields list in that file. So simple signup works.
       }),
     })
       .then(async response => {
@@ -94,7 +175,7 @@ export default function BecomeTaskerPage() {
         });
         setStatusMessage({ type: 'success', text: 'Application submitted successfully! We will review your profile shortly.' });
         showToast.success('Application submitted successfully! Redirecting to login...');
-        
+
         // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/login');
@@ -109,354 +190,357 @@ export default function BecomeTaskerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 font-geom">
-            Become a Tasker
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Turn your skills into income. Join thousands of taskers earning money on Sri Lanka Tasks.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Benefits */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              Why Join as a Tasker?
-            </h2>
-
-            <div className="space-y-6">
-              <div className="flex items-start">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Earn Extra Income</h3>
-                  <p className="text-gray-600">
-                    Set your own rates and work on your schedule. Earn money doing what you&apos;re good at.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <Clock className="h-6 w-6 text-brand-green" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Flexible Schedule</h3>
-                  <p className="text-gray-600">
-                    Work when you want, where you want. Choose tasks that fit your availability.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <Users className="h-6 w-6 text-brand-green" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Build Your Business</h3>
-                  <p className="text-gray-600">
-                    Grow your client base and build a reputation through our review system.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <Shield className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Payments</h3>
-                  <p className="text-gray-600">
-                    Get paid securely and on time. No chasing payments or dealing with bad clients.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Success Stories */}
-            <div className="mt-12 bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Success Stories</h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-sm font-medium text-gray-600">SJ</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Sarah J.</p>
-                    <p className="text-sm text-gray-600">&quot;I&apos;ve earned over LKR 50,000 in my first month!&quot;</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-sm font-medium text-gray-600">MR</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Michael R.</p>
-                    <p className="text-sm text-gray-600">&quot;Perfect for my part-time schedule. Great platform!&quot;</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4 font-geom">
+              Become a Tasker
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Turn your skills into income. Join thousands of taskers earning money on Sri Lanka Tasks.
+            </p>
           </div>
 
-          {/* Application Form */}
-          <div className="bg-white rounded-lg shadow-sm border p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Apply to Become a Tasker
-            </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Benefits */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                Why Join as a Tasker?
+              </h2>
 
-            {/* Notice about new onboarding flow */}
-            <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-              <div className="flex items-start">
-                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-900 mb-1">
-                    ✨ New! Enhanced Step-by-Step Onboarding
-                  </p>
-                  <p className="text-sm text-blue-800 mb-3">
-                    We&apos;ve created a better onboarding experience with guided steps, document verification, 
-                    and profile building. We highly recommend using the new process!
-                  </p>
-                  <Link
-                    href="/tasker/onboarding/stage-1"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Use New Onboarding Process
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Earn Extra Income</h3>
+                    <p className="text-gray-600">
+                      Set your own rates and work on your schedule. Earn money doing what you&apos;re good at.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                    <Clock className="h-6 w-6 text-brand-green" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Flexible Schedule</h3>
+                    <p className="text-gray-600">
+                      Work when you want, where you want. Choose tasks that fit your availability.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                    <Users className="h-6 w-6 text-brand-green" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Build Your Business</h3>
+                    <p className="text-gray-600">
+                      Grow your client base and build a reputation through our review system.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                    <Shield className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Payments</h3>
+                    <p className="text-gray-600">
+                      Get paid securely and on time. No chasing payments or dealing with bad clients.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Success Stories */}
+              <div className="mt-12 bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Success Stories</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-sm font-medium text-gray-600">SJ</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Sarah J.</p>
+                      <p className="text-sm text-gray-600">&quot;I&apos;ve earned over LKR 50,000 in my first month!&quot;</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-sm font-medium text-gray-600">MR</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Michael R.</p>
+                      <p className="text-sm text-gray-600">&quot;Perfect for my part-time schedule. Great platform!&quot;</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {statusMessage && (
-                <div
-                  className={`rounded-lg p-4 text-sm ${
-                    statusMessage.type === 'success'
+            {/* Application Form */}
+            <div className="bg-white rounded-lg shadow-sm border p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Apply to Become a Tasker
+              </h2>
+
+              {/* Notice about new onboarding flow */}
+              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                <div className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 mb-1">
+                      ✨ New! Enhanced Step-by-Step Onboarding
+                    </p>
+                    <p className="text-sm text-blue-800 mb-3">
+                      We&apos;ve created a better onboarding experience with guided steps, document verification,
+                      and profile building. We highly recommend using the new process!
+                    </p>
+                    <Link
+                      href="/tasker/onboarding/stage-1"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Use New Onboarding Process
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {statusMessage && (
+                  <div
+                    className={`rounded-lg p-4 text-sm ${statusMessage.type === 'success'
                       ? 'bg-green-50 text-green-800 border border-green-200'
                       : 'bg-red-50 text-red-800 border border-red-200'
-                  }`}
-                >
-                  {statusMessage.text}
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      type="password"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                      required
-                      minLength={6}
-                    />
+                      }`}
+                  >
+                    {statusMessage.text}
                   </div>
-                </div>
+                )}
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm Password
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
                 </div>
-              </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
+                {!isLoggedIn && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="password"
+                          id="password"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                          required={!isLoggedIn}
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
 
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                          type="password"
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                          required={!isLoggedIn}
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Colombo, Kandy, Galle"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
-                  Skills & Services
-                </label>
-                <input
-                  type="text"
-                  id="skills"
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Cleaning, Handyman, Delivery, Tutoring"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-2">
-                  Experience Level
-                </label>
-                <select
-                  id="experience"
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Colombo, Kandy, Galle"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
+                    Skills & Services
+                  </label>
+                  <input
+                    type="text"
+                    id="skills"
+                    name="skills"
+                    value={formData.skills}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Cleaning, Handyman, Delivery, Tutoring"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-2">
+                    Experience Level
+                  </label>
+                  <select
+                    id="experience"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select experience level</option>
+                    <option value="beginner">Beginner (0-1 years)</option>
+                    <option value="intermediate">Intermediate (1-3 years)</option>
+                    <option value="experienced">Experienced (3-5 years)</option>
+                    <option value="expert">Expert (5+ years)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tell us about yourself
+                  </label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows={4}
+                    placeholder="Describe your experience, qualifications, and what makes you a great tasker..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full inline-flex items-center justify-center px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
                 >
-                  <option value="">Select experience level</option>
-                  <option value="beginner">Beginner (0-1 years)</option>
-                  <option value="intermediate">Intermediate (1-3 years)</option>
-                  <option value="experienced">Experienced (3-5 years)</option>
-                  <option value="expert">Expert (5+ years)</option>
-                </select>
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  {!isSubmitting && <ArrowRight className="ml-2 h-5 w-5" />}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link href="/login" className="text-brand-green hover:text-brand-green/80 font-medium">
+                    Sign in here
+                  </Link>
+                </p>
               </div>
-
-              <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tell us about yourself
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  rows={4}
-                  placeholder="Describe your experience, qualifications, and what makes you a great tasker..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                {!isSubmitting && <ArrowRight className="ml-2 h-5 w-5" />}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link href="/login" className="text-brand-green hover:text-brand-green/80 font-medium">
-                  Sign in here
-                </Link>
-              </p>
             </div>
           </div>
-        </div>
 
-        {/* Requirements */}
-        <div className="mt-16 bg-white rounded-lg shadow-sm border p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Requirements to Become a Tasker
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-brand-green" />
+          {/* Requirements */}
+          <div className="mt-16 bg-white rounded-lg shadow-sm border p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              Requirements to Become a Tasker
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-brand-green" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">18+ Years Old</h3>
+                <p className="text-sm text-gray-600">Must be at least 18 years of age</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">18+ Years Old</h3>
-              <p className="text-sm text-gray-600">Must be at least 18 years of age</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Valid ID</h3>
+                <p className="text-sm text-gray-600">National ID or passport required</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Valid ID</h3>
-              <p className="text-sm text-gray-600">National ID or passport required</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-brand-green" />
+              <div className="text-center">
+                <div className="w-12 h-12 bg-brand-green/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-brand-green" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Bank Account</h3>
+                <p className="text-sm text-gray-600">For secure payments</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Bank Account</h3>
-              <p className="text-sm text-gray-600">For secure payments</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-yellow-600" />
+              <div className="text-center">
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-yellow-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Skills & Experience</h3>
+                <p className="text-sm text-gray-600">Relevant skills for your services</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Skills & Experience</h3>
-              <p className="text-sm text-gray-600">Relevant skills for your services</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

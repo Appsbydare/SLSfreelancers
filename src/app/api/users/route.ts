@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: 'User created successfully',
-        user: buildClientUser(insertedUser, taskerProfile),
+        user: await buildClientUser(insertedUser, taskerProfile),
       },
       { status: 201 }
     );
@@ -174,11 +174,13 @@ export async function GET(request: NextRequest) {
       DbUserRow & { tasker?: TaskerProfileRow | TaskerProfileRow[] | null }
     >;
 
-    const users = rows.map(user => {
-      const relation = user.tasker;
-      const taskerProfile = Array.isArray(relation) ? relation[0] : relation;
-      return buildClientUser(user, taskerProfile);
-    });
+    const users = await Promise.all(
+      rows.map(async (user) => {
+        const relation = user.tasker;
+        const taskerProfile = Array.isArray(relation) ? relation[0] : relation;
+        return await buildClientUser(user, taskerProfile);
+      })
+    );
 
     return NextResponse.json(users);
   } catch (error) {

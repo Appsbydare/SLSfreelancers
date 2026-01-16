@@ -24,12 +24,12 @@ export default function TaskerStage2Page() {
   useEffect(() => {
     // Check if user has completed email verification
     const verifiedId = sessionStorage.getItem('verifiedTaskerId');
-    
+
     if (!verifiedId) {
       router.push('/tasker/onboarding/stage-1');
       return;
     }
-    
+
     setUserId(verifiedId);
   }, [router]);
 
@@ -95,7 +95,7 @@ export default function TaskerStage2Page() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -103,53 +103,45 @@ export default function TaskerStage2Page() {
     setIsLoading(true);
 
     try {
-      // Upload NIC front
-      const nicFrontResult = await uploadFile(
-        formData.nicFrontFiles[0],
-        'verifications',
-        `${userId}/nic`
-      );
+      // Helper function to upload via API
+      const uploadViaApi = async (file: File, folder: string): Promise<string> => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${userId}/${folder}/${fileName}`;
 
-      if (!nicFrontResult.success) {
-        throw new Error('Failed to upload NIC front photo');
-      }
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('bucket', 'verifications');
+        formData.append('path', filePath);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Upload failed');
+        }
+
+        const data = await response.json();
+        return data.url;
+      };
+
+      // Upload NIC front
+      const nicFrontUrl = await uploadViaApi(formData.nicFrontFiles[0], 'nic');
 
       // Upload NIC back
-      const nicBackResult = await uploadFile(
-        formData.nicBackFiles[0],
-        'verifications',
-        `${userId}/nic`
-      );
-
-      if (!nicBackResult.success) {
-        throw new Error('Failed to upload NIC back photo');
-      }
+      const nicBackUrl = await uploadViaApi(formData.nicBackFiles[0], 'nic');
 
       // Upload police report if provided
       let policeReportUrl = null;
       if (formData.policeReportFiles.length > 0) {
-        const policeReportResult = await uploadFile(
-          formData.policeReportFiles[0],
-          'verifications',
-          `${userId}/police`
-        );
-
-        if (!policeReportResult.success) {
-          throw new Error('Failed to upload police report');
-        }
-        policeReportUrl = policeReportResult.url;
+        policeReportUrl = await uploadViaApi(formData.policeReportFiles[0], 'police');
       }
 
       // Upload address proof
-      const addressProofResult = await uploadFile(
-        formData.addressProofFiles[0],
-        'verifications',
-        `${userId}/address`
-      );
-
-      if (!addressProofResult.success) {
-        throw new Error('Failed to upload address proof');
-      }
+      const addressProofUrl = await uploadViaApi(formData.addressProofFiles[0], 'address');
 
       // Save verification data to database
       const response = await fetch('/api/verifications', {
@@ -162,7 +154,7 @@ export default function TaskerStage2Page() {
           verifications: [
             {
               type: 'nic',
-              documents: [nicFrontResult.url, nicBackResult.url],
+              documents: [nicFrontUrl, nicBackUrl],
             },
             ...(policeReportUrl ? [{
               type: 'police_report',
@@ -170,7 +162,7 @@ export default function TaskerStage2Page() {
             }] : []),
             {
               type: 'address_proof',
-              documents: [addressProofResult.url],
+              documents: [addressProofUrl],
             },
           ],
         }),
@@ -179,10 +171,10 @@ export default function TaskerStage2Page() {
       if (response.ok) {
         // Show success message
         showToast.success('Documents uploaded successfully! Moving to next step...');
-        
+
         // Store completion status
         sessionStorage.setItem('stage2Complete', 'true');
-        
+
         // Redirect to Stage 3 after short delay
         setTimeout(() => {
           router.push('/tasker/onboarding/stage-3');
@@ -228,7 +220,7 @@ export default function TaskerStage2Page() {
           <p className="mt-2 text-sm text-gray-600">
             Stage 2 of 4: Verify Your Identity
           </p>
-          
+
           {/* Progress Bar */}
           <div className="mt-4">
             <div className="flex items-center justify-center space-x-2">

@@ -17,6 +17,8 @@ interface User {
   nicNumber?: string;
   userType: 'customer' | 'tasker' | 'admin';
   originalUserType?: 'customer' | 'tasker' | 'admin'; // Track original registration type
+  hasCustomerAccount?: boolean; // User has customer record
+  hasTaskerAccount?: boolean; // User has tasker record
   createdAt: string;
   isVerified: boolean;
   verificationStatus?: {

@@ -35,6 +35,30 @@ const DISTRICTS = [
   'Monaragala', 'Ratnapura', 'Kegalle',
 ];
 
+const uploadViaApi = async (file: File, folder: string, bucketName: string, userId: string): Promise<string> => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+  const filePath = `${userId}/${folder}/${fileName}`;
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('bucket', bucketName);
+  formData.append('path', filePath);
+
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to upload image');
+  }
+
+  const data = await response.json();
+  return data.url;
+};
+
 export default function TaskerStage3Page() {
   const router = useRouter();
   const [userId, setUserId] = useState('');
@@ -53,18 +77,18 @@ export default function TaskerStage3Page() {
 
   useEffect(() => {
     const verifiedId = sessionStorage.getItem('verifiedTaskerId');
-    
+
     if (!verifiedId) {
       router.push('/tasker/onboarding/stage-1');
       return;
     }
-    
+
     setUserId(verifiedId);
   }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value,
@@ -83,7 +107,7 @@ export default function TaskerStage3Page() {
       const categories = prev.categories.includes(category)
         ? prev.categories.filter(c => c !== category)
         : [...prev.categories, category];
-      
+
       return { ...prev, categories };
     });
 
@@ -97,7 +121,7 @@ export default function TaskerStage3Page() {
       const serviceAreas = prev.serviceAreas.includes(district)
         ? prev.serviceAreas.filter(d => d !== district)
         : [...prev.serviceAreas, district];
-      
+
       return { ...prev, serviceAreas };
     });
 
@@ -180,7 +204,7 @@ export default function TaskerStage3Page() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -189,22 +213,29 @@ export default function TaskerStage3Page() {
 
     try {
       // Upload profile image
-      const profileImageResult = await uploadFile(
-        formData.profileImageFiles[0],
-        'profiles',
-        userId
-      );
-
-      if (!profileImageResult.success) {
-        throw new Error('Failed to upload profile image');
+      let profileImageUrl = '';
+      if (formData.profileImageFiles.length > 0) {
+        profileImageUrl = await uploadViaApi(
+          formData.profileImageFiles[0],
+          'profile',
+          'profiles',
+          userId
+        );
       }
 
       // Upload portfolio images
       const portfolioUrls: string[] = [];
       for (const file of formData.portfolioFiles) {
-        const result = await uploadFile(file, 'portfolios', userId);
-        if (result.success && result.url) {
-          portfolioUrls.push(result.url);
+        try {
+          const url = await uploadViaApi(
+            file,
+            'portfolio',
+            'portfolios',
+            userId
+          );
+          portfolioUrls.push(url);
+        } catch (err) {
+          console.error('Failed to upload portfolio image:', err);
         }
       }
 
@@ -221,7 +252,7 @@ export default function TaskerStage3Page() {
           skills: formData.skills,
           serviceAreas: formData.serviceAreas,
           hourlyRate: parseFloat(formData.hourlyRate),
-          profileImageUrl: profileImageResult.url,
+          profileImageUrl: profileImageUrl,
           portfolioUrls,
         }),
       });
@@ -229,9 +260,9 @@ export default function TaskerStage3Page() {
       if (response.ok) {
         // Show success message
         showToast.success('Professional profile created! One more step to go...');
-        
+
         sessionStorage.setItem('stage3Complete', 'true');
-        
+
         // Redirect after short delay
         setTimeout(() => {
           router.push('/tasker/onboarding/stage-4');
@@ -271,7 +302,7 @@ export default function TaskerStage3Page() {
           <p className="mt-2 text-sm text-gray-600">
             Stage 3 of 4: Build Your Profile
           </p>
-          
+
           {/* Progress Bar */}
           <div className="mt-4">
             <div className="flex items-center justify-center space-x-2">
@@ -314,9 +345,8 @@ export default function TaskerStage3Page() {
                 rows={5}
                 value={formData.bio}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                  errors.bio ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.bio ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 placeholder="Tell customers about your experience, expertise, and what makes you great at what you do..."
               />
               <div className="mt-1 flex justify-between items-center">
@@ -339,11 +369,10 @@ export default function TaskerStage3Page() {
                     key={category}
                     type="button"
                     onClick={() => handleCategoryToggle(category)}
-                    className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-                      formData.categories.includes(category)
-                        ? 'bg-brand-green text-white border-brand-green'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-brand-green'
-                    }`}
+                    className={`px-3 py-2 text-sm rounded-md border transition-colors ${formData.categories.includes(category)
+                      ? 'bg-brand-green text-white border-brand-green'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-brand-green'
+                      }`}
                   >
                     {category}
                   </button>
@@ -382,7 +411,7 @@ export default function TaskerStage3Page() {
               {errors.skillInput && (
                 <p className="mt-1 text-sm text-red-600">{errors.skillInput}</p>
               )}
-              
+
               {formData.skills.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {formData.skills.map(skill => (
@@ -449,9 +478,8 @@ export default function TaskerStage3Page() {
                 step="50"
                 value={formData.hourlyRate}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${
-                  errors.hourlyRate ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-brand-green focus:border-brand-green ${errors.hourlyRate ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 placeholder="1000"
               />
               <p className="mt-1 text-xs text-gray-500">This is your base rate. You can adjust pricing for specific tasks.</p>

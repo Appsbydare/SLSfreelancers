@@ -22,50 +22,75 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update user profile image
-    const { error: userUpdateError } = await supabaseServer
-      .from('users')
-      .update({
-        profile_image_url: profileImageUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-
-    if (userUpdateError) {
-      console.error('Error updating user:', userUpdateError);
-      throw userUpdateError;
-    }
-
-    // Update tasker profile
-    const { data: taskerData, error: taskerError } = await supabaseServer
+    // Check if tasker record exists, if not create it (for upgrading customers)
+    const { data: existingTasker } = await supabaseServer
       .from('taskers')
-      .update({
-        bio,
-        skills,
-        hourly_rate: hourlyRate,
-        updated_at: new Date().toISOString(),
-      })
+      .select('id')
       .eq('user_id', userId)
-      .select()
-      .single();
+      .maybeSingle();
 
-    if (taskerError) {
-      console.error('Error updating tasker:', taskerError);
-      throw taskerError;
+    let taskerId;
+
+    if (!existingTasker) {
+      // Create new tasker record for upgrading customer
+      const { data: newTasker, error: createError } = await supabaseServer
+        .from('taskers')
+        .insert({
+          user_id: userId,
+          bio,
+          skills,
+          hourly_rate: hourlyRate,
+          profile_image_url: profileImageUrl,
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating tasker:', createError);
+        throw createError;
+      }
+
+      taskerId = newTasker.id;
+
+      // Update user_type to tasker
+      await supabaseServer
+        .from('users')
+        .update({ user_type: 'tasker' })
+        .eq('id', userId);
+    } else {
+      // Update existing tasker profile
+      const { data: taskerData, error: taskerError } = await supabaseServer
+        .from('taskers')
+        .update({
+          bio,
+          skills,
+          hourly_rate: hourlyRate,
+          profile_image_url: profileImageUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (taskerError) {
+        console.error('Error updating tasker:', taskerError);
+        throw taskerError;
+      }
+
+      taskerId = taskerData.id;
     }
 
     // Delete existing skills and insert new ones
     await supabaseServer
       .from('tasker_skills')
       .delete()
-      .eq('tasker_id', taskerData.id);
+      .eq('tasker_id', taskerId);
 
     if (categories && categories.length > 0) {
       const skillsToInsert = categories.map((category: string) => ({
-        tasker_id: taskerData.id,
-        category,
+        tasker_id: taskerId,
         skill_name: category,
-        years_experience: 0,
+        experience_years: 0,
       }));
 
       const { error: skillsError } = await supabaseServer
@@ -81,13 +106,12 @@ export async function PUT(request: NextRequest) {
     await supabaseServer
       .from('tasker_service_areas')
       .delete()
-      .eq('tasker_id', taskerData.id);
+      .eq('tasker_id', taskerId);
 
     if (serviceAreas && serviceAreas.length > 0) {
       const areasToInsert = serviceAreas.map((district: string) => ({
-        tasker_id: taskerData.id,
+        tasker_id: taskerId,
         district,
-        travel_cost_per_km: 50, // Default value
       }));
 
       const { error: areasError } = await supabaseServer
@@ -103,12 +127,12 @@ export async function PUT(request: NextRequest) {
     await supabaseServer
       .from('tasker_portfolio')
       .delete()
-      .eq('tasker_id', taskerData.id);
+      .eq('tasker_id', taskerId);
 
     if (portfolioUrls && portfolioUrls.length > 0) {
       const portfolioToInsert = portfolioUrls.map((url: string, index: number) => ({
-        tasker_id: taskerData.id,
-        image_url: url,
+        tasker_id: taskerId,
+        image_urls: [url],
         title: `Portfolio Image ${index + 1}`,
         description: '',
       }));
@@ -125,7 +149,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         message: 'Profile updated successfully',
-        tasker: taskerData,
+        taskerId,
       },
       { status: 200 }
     );

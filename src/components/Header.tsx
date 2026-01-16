@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -31,7 +31,9 @@ export default function Header() {
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
   const [isMapMenuClosing, setIsMapMenuClosing] = useState(false);
   const [headerSearch, setHeaderSearch] = useState('');
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const groupScrollRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -50,6 +52,7 @@ export default function Header() {
     setIsCategoryMenuOpen(false);
     setIsQuickMenuOpen(false);
     setIsMobileMenuOpen(false);
+    setIsProfileDropdownOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -57,11 +60,23 @@ export default function Header() {
       if (event.key === 'Escape') {
         setIsCategoryMenuOpen(false);
         setIsQuickMenuOpen(false);
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const navigation = [
@@ -85,8 +100,10 @@ export default function Header() {
   }
 
   const handleToggleMode = () => {
-    // Only allow toggle for users registered as sellers
-    if (user?.originalUserType !== 'tasker') return;
+    // Only allow toggle for users who have both accounts OR are registered as tasker
+    const canToggle = user?.hasTaskerAccount || user?.originalUserType === 'tasker';
+    
+    if (!canToggle) return;
     
     // Toggle between seller and customer mode
     if (user.userType === 'tasker') {
@@ -238,7 +255,7 @@ export default function Header() {
     <>
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerBgClass}`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center h-16 gap-6">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link
@@ -257,7 +274,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
             {displayNavigation.map((item, index) => {
               // Hide Browse Tasks category menu for sellers
               const isBrowseTasks = item.href.includes('/browse-tasks');
@@ -310,69 +327,138 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Right side - Search, Language switcher, and auth buttons */}
-          <div className="flex items-center space-x-4">
-            {/* Search (desktop) - Hide for sellers */}
-            {!isSeller && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setIsCategoryMenuOpen(false);
-                  setIsQuickMenuOpen(false);
-                  router.push(`/${locale}/browse-tasks`);
-                }}
-                className="hidden md:block"
-              >
-                <div className="relative w-[420px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    value={headerSearch}
-                    onChange={(e) => setHeaderSearch(e.target.value)}
-                    placeholder="What service are you looking for today?"
-                    className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
-                    aria-label="Search"
-                  >
-                    <Search className="h-4 w-4" />
-                  </button>
-                </div>
-              </form>
-            )}
+          {/* Center - Search Bar */}
+          {!isSeller && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsCategoryMenuOpen(false);
+                setIsQuickMenuOpen(false);
+                router.push(`/${locale}/browse-tasks`);
+              }}
+              className="hidden md:block flex-1 max-w-xl mx-6"
+            >
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="What service are you looking for today?"
+                  className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
+                  aria-label="Search"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+          )}
 
+          {/* Right side - Language switcher and auth buttons */}
+          <div className="flex items-center gap-3 ml-auto">
             <LanguageSwitcher />
             
             {isLoggedIn ? (
-              <div className="hidden md:flex items-center space-x-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm font-medium">
-                    Welcome, {user?.callingName || user?.firstName}
-                  </span>
-                  {user?.userType === 'tasker' && user?.isVerified && (
-                    <VerifiedBadge size="sm" showText={false} />
+              <div className="hidden md:flex items-center gap-3">
+                {/* Profile Dropdown */}
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50"
+                    title="Profile Menu"
+                  >
+                    <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                      {user?.profile?.profileImage ? (
+                        <Image
+                          src={user.profile.profileImage}
+                          alt="Profile"
+                          width={32}
+                          height={32}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <UserIcon className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/70 text-sm">Welcome,</span>
+                      <span className="text-white text-sm font-medium">
+                        {user?.callingName || user?.firstName}
+                      </span>
+                      {user?.userType === 'tasker' && user?.isVerified && (
+                        <VerifiedBadge size="sm" showText={false} />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50">
+                      <div className="p-4 border-b border-gray-800">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                            {user?.profile?.profileImage ? (
+                              <Image
+                                src={user.profile.profileImage}
+                                alt="Profile"
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <UserIcon className="h-6 w-6 text-gray-400" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{user?.callingName || user?.firstName}</p>
+                            <p className="text-gray-400 text-sm">{user?.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-2">
+                        {/* Mode Switch / Become a Seller */}
+                        {user?.hasTaskerAccount ? (
+                          <button
+                            onClick={() => {
+                              handleToggleMode();
+                              setIsProfileDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
+                          >
+                            <ArrowLeftRight className="h-4 w-4" />
+                            {isSeller ? 'Switch to Customer Mode' : 'Switch to Seller Mode'}
+                          </button>
+                        ) : user?.hasCustomerAccount && !user?.hasTaskerAccount ? (
+                          <Link
+                            href="/become-tasker"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-brand-green hover:text-white hover:bg-brand-green/10 rounded-md transition-all duration-300 border border-brand-green/30"
+                          >
+                            <ArrowLeftRight className="h-4 w-4" />
+                            Become a Seller
+                          </Link>
+                        ) : null}
+                        
+                        {/* Logout Button */}
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setIsProfileDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-md transition-all duration-300"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
-                {/* Mode Toggle button - Only show for users registered as sellers (originalUserType === 'tasker') */}
-                {user?.originalUserType === 'tasker' && (
-                  <button
-                    onClick={handleToggleMode}
-                    className="inline-flex items-center text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 border border-white/20 hover:border-brand-green/60 rounded-md"
-                    title={isSeller ? "Switch to Customer Mode" : "Switch to Seller Mode"}
-                  >
-                    <ArrowLeftRight className="h-4 w-4 mr-1" />
-                    {isSeller ? 'Customer Mode' : 'Seller Mode'}
-                  </button>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center text-white hover:text-red-600 px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Logout
-                </button>
                 {/* District (Sri Lanka) map trigger - Hide for sellers */}
                 {!isSeller && (
                   <button
@@ -398,6 +484,7 @@ export default function Header() {
                       setIsQuickMenuOpen(true);
                       setIsCategoryMenuOpen(false);
                       setIsMapMenuOpen(false);
+                      setIsProfileDropdownOpen(false);
                     }}
                     aria-label="Open quick menu"
                   >
@@ -406,7 +493,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <div className="hidden md:flex items-center space-x-4">
+              <div className="hidden md:flex items-center gap-3">
                 <Link
                   href="/login"
                   className="text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
@@ -427,6 +514,7 @@ export default function Header() {
                     setIsMapMenuOpen(true);
                     setIsCategoryMenuOpen(false);
                     setIsQuickMenuOpen(false);
+                    setIsProfileDropdownOpen(false);
                   }}
                   aria-label="Choose district"
                   title="Choose District"
@@ -441,6 +529,7 @@ export default function Header() {
                     setIsQuickMenuOpen(true);
                     setIsCategoryMenuOpen(false);
                     setIsMapMenuOpen(false);
+                    setIsProfileDropdownOpen(false);
                   }}
                   aria-label="Open quick menu"
                 >
@@ -457,6 +546,7 @@ export default function Header() {
                 onClick={() => {
                   setIsQuickMenuOpen(true);
                   setIsCategoryMenuOpen(false);
+                  setIsProfileDropdownOpen(false);
                 }}
                 aria-label="Open quick menu"
               >
@@ -512,8 +602,8 @@ export default function Header() {
                   {t('browseTasks')}
                 </button>
               )}
-              {/* Mode Toggle button for sellers in mobile - Only show for users registered as sellers */}
-              {user?.originalUserType === 'tasker' && (
+              {/* Mode Toggle button or Login as Tasker */}
+              {user?.originalUserType === 'tasker' ? (
                 <button
                   onClick={() => {
                     handleToggleMode();
@@ -522,14 +612,29 @@ export default function Header() {
                   className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
                 >
                   <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  {isSeller ? 'Customer Mode' : 'Seller Mode'}
+                  {isSeller ? 'Customer Mode' : 'Login as Tasker'}
                 </button>
+              ) : isLoggedIn && (
+                 <Link
+                    href="/login?type=tasker"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
+                 >
+                    Login as Tasker
+                 </Link>
               )}
               <div className="pt-4 pb-3 border-t border-gray-800">
                 {isLoggedIn ? (
                   <>
                     <div className="px-3 py-2 text-base font-medium text-white flex items-center gap-2">
-                      Welcome, {user?.callingName || user?.firstName}
+                      <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                        {user?.profile?.profileImage ? (
+                          <Image src={user.profile.profileImage} alt="Profile" width={32} height={32} className="h-full w-full object-cover" />
+                        ) : (
+                          <UserIcon className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                      <span className="truncate max-w-[150px]">{user?.callingName || user?.firstName}</span>
                       {user?.userType === 'tasker' && user?.isVerified && (
                         <VerifiedBadge size="sm" showText={false} />
                       )}
