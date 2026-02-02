@@ -102,6 +102,9 @@ export default function LoginPage() {
       if (data.user) {
         console.log('[LOGIN] User authenticated, fetching profile...');
 
+        // Wait a moment for the session to be set in the client
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Fetch user profile to check role using auth_user_id
         const { data: profile, error: profileError } = await supabase
           .from('users')
@@ -109,7 +112,7 @@ export default function LoginPage() {
           .eq('auth_user_id', data.user.id)
           .single();
 
-        console.log('[LOGIN] Profile fetch complete:', { hasProfile: !!profile, hasError: !!profileError });
+        console.log('[LOGIN] Profile fetch complete:', { hasProfile: !!profile, hasError: !!profileError, errorDetails: profileError });
 
         if (profileError) {
           console.error('Profile fetch error:', profileError);
