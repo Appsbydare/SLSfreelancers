@@ -10,13 +10,15 @@ interface SriLankaMapProps {
   selectedDistrictId?: string;
   showLabels?: boolean;
   className?: string;
+  serviceCounts?: Record<string, number>;
 }
 
 export default function SriLankaMap({ 
   onDistrictSelect, 
   selectedDistrictId, 
   showLabels = true,
-  className = '' 
+  className = '',
+  serviceCounts = {}
 }: SriLankaMapProps) {
   const t = useTranslations('homepage.map');
   const locale = useLocale();
@@ -40,6 +42,11 @@ export default function SriLankaMap({
     }
   };
 
+  const getMaxCount = () => {
+    const counts = Object.values(serviceCounts);
+    return counts.length > 0 ? Math.max(...counts) : 0;
+  };
+
   const getDistrictColor = (district: District) => {
     if (selectedDistrictId === district.id) {
       return '#0fcc17'; // Brand green for selected
@@ -47,10 +54,33 @@ export default function SriLankaMap({
     if (hoveredDistrict === district.id) {
       return '#0fcc17'; // Brand green for hover
     }
-    if (district.popular) {
-      return '#10b981'; // Green for popular districts
+    
+    // Dynamic coloring based on service counts
+    const count = serviceCounts[district.name] || 0;
+    const maxCount = getMaxCount();
+    
+    if (count > 0) {
+      // Calculate opacity/intensity based on count relative to max
+      // Use a minimum intensity so even 1 gig is visible green
+      // Scale: Low (0) -> High (max) maps to Light Green -> Dark Green
+      if (maxCount === 0) return '#e5e7eb';
+      
+      const intensity = count / maxCount;
+      
+      if (intensity > 0.7) return '#059669'; // High density (Dark Green)
+      if (intensity > 0.3) return '#10b981'; // Medium density (Regular Green)
+      return '#6ee7b7'; // Low density (Light Green)
     }
-    return '#e5e7eb'; // Gray for regular districts
+
+    if (district.popular) {
+      // Fallback to static popular if no counts available or count is 0 but marked popular
+      // but if we have counts, we probably trust them more. 
+      // Let's keep popular flag as a secondary "promoted" indicator if needed, 
+      // but for color, let's stick to gray if 0 services.
+      // Actually, user said "dynamically adjust", so gray if 0 is correct.
+      return '#e5e7eb'; 
+    }
+    return '#e5e7eb'; // Gray for no services
   };
 
   const getDistrictOpacity = (district: District) => {
@@ -79,7 +109,7 @@ export default function SriLankaMap({
         <div className="flex justify-center">
           <svg
             viewBox="0 0 800 1200"
-            className="w-full max-w-2xl h-auto transition-all duration-500 hover:scale-105"
+            className="w-full max-w-2xl h-auto transition-all duration-500 hover:scale-[1.01]"
             style={{ filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1))' }}
           >
             {/* Background */}
@@ -116,7 +146,7 @@ export default function SriLankaMap({
                   stroke="#ffffff"
                   strokeWidth="2"
                   opacity={getDistrictOpacity(district)}
-                  className={`cursor-pointer transition-all duration-300 hover:filter hover:drop-shadow-lg ${
+                  className={`cursor-pointer transition-all duration-300 ${
                     isLoaded ? 'animate-fade-in-up' : 'opacity-0'
                   }`}
                   style={{ 

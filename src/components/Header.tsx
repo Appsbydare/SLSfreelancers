@@ -80,13 +80,23 @@ export default function Header() {
   }, []);
 
   const navigation = [
-    { name: 'Browse Requests', href: `/${locale}/browse-tasks` },
+    { name: 'Browse Services', href: `/${locale}/browse-services` },
     { name: 'Post Request', href: `/${locale}/post-task` },
   ];
 
+  // Check localStorage for user's preferred mode
+  const [preferredMode, setPreferredMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read preferred mode from localStorage on mount
+    const savedMode = localStorage.getItem('userPreferredMode');
+    setPreferredMode(savedMode);
+  }, [user?.userType, user?.id]); // Re-check when user type or user changes
+
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
-  const isSeller = user?.userType === 'tasker';
+  // Check if user is a tasker AND prefers seller mode (or hasn't set a preference)
+  const isSeller = user?.userType === 'tasker' && preferredMode !== 'customer';
 
   if (isSeller) {
     displayNavigation = [
@@ -105,13 +115,20 @@ export default function Header() {
 
     if (!canToggle) return;
 
+    // Check current mode from preferredMode, fallback to user.userType
+    const currentMode = preferredMode || (user.userType === 'tasker' ? 'seller' : 'customer');
+
     // Toggle between seller and customer mode
-    if (user.userType === 'tasker') {
+    if (currentMode === 'seller' || (currentMode !== 'customer' && user.userType === 'tasker')) {
       // Currently in seller mode, switch to customer mode
+      localStorage.setItem('userPreferredMode', 'customer');
+      setPreferredMode('customer');
       switchRole('customer');
       router.push(`/${locale}`);
     } else {
       // Currently in customer mode, switch to seller mode
+      localStorage.setItem('userPreferredMode', 'seller');
+      setPreferredMode('seller');
       switchRole('tasker');
       router.push(`/${locale}/seller/dashboard`);
     }
@@ -279,8 +296,8 @@ export default function Header() {
             <nav className="hidden md:flex items-center space-x-6">
               {displayNavigation.map((item, index) => {
                 // Hide Browse Tasks category menu for sellers
-                const isBrowseTasks = item.href.includes('/browse-tasks');
-                if (isBrowseTasks && !isSeller) {
+                const isBrowseServices = item.href.includes('/browse-services');
+                if (isBrowseServices && !isSeller) {
                   return (
                     <button
                       key={item.name}
@@ -334,7 +351,7 @@ export default function Header() {
                   e.preventDefault();
                   setIsCategoryMenuOpen(false);
                   setIsQuickMenuOpen(false);
-                  router.push(`/${locale}/browse-tasks`);
+                  router.push(`/${locale}/browse-services`);
                 }}
                 className="hidden md:block flex-1 max-w-xl mx-6"
               >
@@ -431,7 +448,9 @@ export default function Header() {
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
                             >
                               <ArrowLeftRight className="h-4 w-4" />
-                              {isSeller ? 'Switch to Customer Mode' : 'Switch to Seller Mode'}
+                              {preferredMode === 'customer' || (user?.userType === 'customer' && !preferredMode)
+                                ? 'Switch to Seller Mode'
+                                : 'Switch to Customer Mode'}
                             </button>
                           ) : user?.hasCustomerAccount && !user?.hasTaskerAccount ? (
                             <Link
@@ -769,7 +788,7 @@ export default function Header() {
                                 className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
                                 onClick={() => {
                                   setIsCategoryMenuOpen(false);
-                                  router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(label)}`);
+                                  router.push(`/${locale}/browse-services?service=${encodeURIComponent(label)}`);
                                 }}
                               >
                                 {label}
@@ -795,7 +814,7 @@ export default function Header() {
                         className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
                         onClick={() => {
                           setIsCategoryMenuOpen(false);
-                          router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
+                          router.push(`/${locale}/browse-services?service=${encodeURIComponent(svc)}`);
                         }}
                       >
                         {svc}

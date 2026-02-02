@@ -6,7 +6,7 @@ import { ChevronRight, Sparkles, Users, Clock, Shield } from 'lucide-react';
 import SriLankaMap from './SriLankaMap';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Animated counter hook
 function useCountUp(end: number, duration: number = 2000, suffix: string = '', start: number = 0) {
@@ -173,21 +173,60 @@ export default function HeroBanner() {
   const locale = useLocale();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const router = useRouter();
+  const [districtServiceCount, setDistrictServiceCount] = useState<number>(0);
+  const [allDistrictCounts, setAllDistrictCounts] = useState<Record<string, number>>({});
 
   // Animated counters
   const tasksCounter = useCountUp(500, 2000, '+');
   const successCounter = useCountUpRange(97, 99, 2000);
   const supportCounter = useDualCounter(24, 7, 9, 5, 2000);
 
+  // Fetch service count for selected district
+  const fetchDistrictServiceCount = useCallback(async (districtName: string) => {
+    try {
+      const params = new URLSearchParams();
+      params.append('district', districtName);
+      const response = await fetch(`/api/gigs?${params.toString()}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDistrictServiceCount(result.gigs?.length || 0);
+      } else {
+        setDistrictServiceCount(0);
+      }
+    } catch (err) {
+      console.error('Error fetching district service count:', err);
+      setDistrictServiceCount(0);
+    }
+  }, []);
+
+  // Update count when district changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      fetchDistrictServiceCount(selectedDistrict.name);
+    } else {
+      setDistrictServiceCount(0);
+    }
+  }, [selectedDistrict, fetchDistrictServiceCount]);
+
+  // Fetch all district counts for the map visualization
+  useEffect(() => {
+    const fetchAllCounts = async () => {
+      try {
+        const response = await fetch('/api/gigs/districts');
+        if (response.ok) {
+          const result = await response.json();
+          setAllDistrictCounts(result.districtCounts || {});
+        }
+      } catch (err) {
+        console.error('Error fetching all district counts:', err);
+      }
+    };
+    fetchAllCounts();
+  }, []);
+
   const handleDistrictSelect = (district: any) => {
     setSelectedDistrict(district);
-    // Scroll to the popular categories section
-    setTimeout(() => {
-      const categoriesSection = document.getElementById('popular-categories');
-      if (categoriesSection) {
-        categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
   };
 
   return (
@@ -202,7 +241,7 @@ export default function HeroBanner() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
           {/* Main Content Grid - Single Unified Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8 items-start mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8 items-stretch mb-6">
             {/* Left Column - Get Any Task Done Content */}
             <div className="flex flex-col animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               {/* Badge */}
@@ -243,10 +282,10 @@ export default function HeroBanner() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
                 <Link
-                  href={`/${locale}/browse-tasks`}
+                  href={`/${locale}/browse-services`}
                   className="inline-flex items-center justify-center px-10 py-5 bg-brand-green text-white text-xl font-semibold rounded-xl hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
-                  {t('browseTasksButton')}
+                  Browse Services
                   <ChevronRight className="ml-2 h-6 w-6" />
                 </Link>
                 <Link
@@ -305,46 +344,65 @@ export default function HeroBanner() {
               </div>
             </div>
 
-            {/* Right Column - Map (No Border, Larger) */}
-            <div className="flex flex-col animate-fade-in-up lg:pr-4" style={{ animationDelay: '400ms' }}>
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Choose Your District
-                </h3>
-                <p className="text-base text-gray-600">
-                  Select your district to find service providers near you
-                </p>
-              </div>
+            {/* Right Column - Map (Compact) */}
+            <div className="flex flex-col animate-fade-in-up items-center justify-center lg:block" style={{ animationDelay: '400ms' }}>
+              
+              <div className="w-full max-w-[420px] mx-auto relative">
+                {/* Desktop: Title floating inside map area */}
+                <div className="hidden lg:block absolute top-12 right-6 max-w-[180px] text-right z-10 pointer-events-none">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">
+                    Choose Your District
+                  </h3>
+                  <p className="text-xs text-gray-600 leading-snug">
+                    Select to find providers
+                  </p>
+                </div>
 
-              <div className="w-full">
+                {/* Mobile: Title on top */}
+                <div className="lg:hidden text-center mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    Choose Your District
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Select to find service providers
+                  </p>
+                </div>
+
                 <SriLankaMap
                   onDistrictSelect={handleDistrictSelect}
                   selectedDistrictId={selectedDistrict?.id}
                   showLabels={true}
-                  className="mb-4"
+                  className=""
+                  serviceCounts={allDistrictCounts}
                 />
-              </div>
 
-              {selectedDistrict && (
-                <div className="mt-6 p-5 bg-brand-green/10 rounded-xl border border-brand-green/20">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-brand-green">Selected District</p>
-                      <p className="text-xl font-bold text-brand-green">{selectedDistrict.name}</p>
-                    </div>
-                    <div className="text-center sm:text-right">
-                      <p className="text-sm text-brand-green/80 mb-2">{selectedDistrict.services.length} Services</p>
-                      <Link
-                        href={`/${locale}/browse-tasks?district=${selectedDistrict.id}`}
-                        className="inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors"
-                      >
-                        Browse Tasks
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                      </Link>
+                {/* Selected District Info - Expanded Version */}
+                {selectedDistrict && (
+                  <div className="mt-5 p-5 bg-gradient-to-br from-brand-green to-brand-green/80 rounded-2xl shadow-xl border border-white/20 animate-fade-in-up w-[110%] -ml-[5%] relative z-20 transform hover:scale-[1.02] transition-transform duration-300">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="pl-2">
+                        <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">Selected District</p>
+                        <p className="text-2xl font-bold text-white drop-shadow-md leading-tight">{selectedDistrict.name}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="text-right border-r border-white/20 pr-4">
+                          <p className="text-3xl font-bold text-white leading-none">{districtServiceCount}</p>
+                          <p className="text-xs text-white/90 font-medium mt-1">Services</p>
+                        </div>
+                        
+                        <Link
+                          href={`/${locale}/browse-services?district=${selectedDistrict.id}`}
+                          className="inline-flex items-center px-4 py-2.5 bg-white text-brand-green text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          Show All
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -26,13 +26,14 @@ export default async function HomePage({ params }: HomePageProps) {
     .from('tasks')
     .select(`
       *,
-      customers (
-        users (
+      customers!inner (
+        id,
+        user:users!customers_user_id_fkey (
           first_name,
           last_name
         )
       ),
-      offers (count)
+      offers!offers_task_id_fkey (count)
     `)
     .eq('status', 'open')
     .order('created_at', { ascending: false })
@@ -43,12 +44,12 @@ export default async function HomePage({ params }: HomePageProps) {
     id: t.id,
     title: t.title,
     description: t.description,
-    budget: t.budget,
+    budget: parseFloat(t.budget || 0),
     location: t.location,
     category: t.category,
     postedDate: new Date(t.created_at),
     posterId: t.customer_id,
-    posterName: t.customers?.users?.first_name || 'Unknown',
+    posterName: t.customers?.user?.first_name || 'Unknown',
     posterRating: 5.0, // Placeholder
     offersCount: t.offers?.[0]?.count || 0,
     status: t.status,
@@ -87,12 +88,12 @@ export default async function HomePage({ params }: HomePageProps) {
     isVerified: g.seller?.level_code !== 'starter_pro', // Example logic
   })) || [];
 
-  // Fetch top sellers
+  // Fetch top sellers with review counts
   const { data: sellersData } = await supabaseServer
     .from('taskers')
     .select(`
       *,
-      user:user_id (
+      user:users!taskers_user_id_fkey (
         id,
         first_name,
         last_name,
@@ -100,7 +101,23 @@ export default async function HomePage({ params }: HomePageProps) {
       )
     `)
     .order('rating', { ascending: false })
+    .order('completed_tasks', { ascending: false })
     .limit(8);
+
+  // Get review counts for each seller
+  const sellersWithReviews = await Promise.all(
+    (sellersData || []).map(async (seller) => {
+      const { count } = await supabaseServer
+        .from('reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('reviewee_id', seller.user_id);
+
+      return {
+        ...seller,
+        total_reviews: count || 0,
+      };
+    })
+  );
 
   return (
     <>
@@ -109,7 +126,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <CategoryGrid categories={categories || []} />
       <ScrollingTasksPanel tasks={tasks} />
       <PostRequestSection />
-      <TopSellers sellers={sellersData || []} />
+      <TopSellers sellers={sellersWithReviews || []} />
       <DistrictServices />
 
       {/* How It Works Section */}

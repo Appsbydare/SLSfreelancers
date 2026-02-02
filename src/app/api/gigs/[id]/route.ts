@@ -7,7 +7,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: gigId } = await params;
+    const { id: gigIdOrSlug } = await params;
+
+    // Check if this is a slug (contains hyphens and doesn't look like a UUID)
+    const isSlug = gigIdOrSlug.includes('-') && !gigIdOrSlug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
     const { data: gigData, error: gigError } = await supabaseServer
       .from('gigs')
@@ -47,7 +50,7 @@ export async function GET(
           sort_order
         )
       `)
-      .eq('id', gigId)
+      .eq(isSlug ? 'slug' : 'id', gigIdOrSlug)
       .single();
 
     if (gigError || !gigData) {
@@ -61,7 +64,7 @@ export async function GET(
     await supabaseServer
       .from('gigs')
       .update({ views_count: (gigData.views_count || 0) + 1 })
-      .eq('id', gigId);
+      .eq('id', gigData.id);
 
     // Get seller's service areas
     const { data: serviceAreas } = await supabaseServer
@@ -99,10 +102,10 @@ export async function GET(
       reviews: reviews || [],
       packages: (gigData.packages || []).sort((a: any, b: any) => {
         const tierOrder = { basic: 1, standard: 2, premium: 3 };
-        return (tierOrder[a.tier as keyof typeof tierOrder] || 0) - 
-               (tierOrder[b.tier as keyof typeof tierOrder] || 0);
+        return (tierOrder[a.tier as keyof typeof tierOrder] || 0) -
+          (tierOrder[b.tier as keyof typeof tierOrder] || 0);
       }),
-      requirements: (gigData.requirements || []).sort((a: any, b: any) => 
+      requirements: (gigData.requirements || []).sort((a: any, b: any) =>
         (a.sort_order || 0) - (b.sort_order || 0)
       ),
     };

@@ -28,6 +28,9 @@ export default function BrowseTasksPage() {
   const [selectedCityId, setSelectedCityId] = useState<string>('');
   const [sortBy, setSortBy] = useState('newest');
   const [taskerType, setTaskerType] = useState<string>('all');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [maxDeliveryDays, setMaxDeliveryDays] = useState<string>('');
 
   // Sync filters from URL/Context
   useEffect(() => {
@@ -57,70 +60,39 @@ export default function BrowseTasksPage() {
     fetchCategories();
   }, []);
 
-  // Fetch Tasks
+  // Fetch Gigs (Services) using the API
   const fetchTasks = useCallback(async () => {
     setIsLoading(true);
     try {
-      let query = supabase
-        .from('tasks')
-        .select(`
-          *,
-          customers!inner (
-            users (
-              first_name,
-              last_name,
-              profile_image_url
-            )
-          ),
-          offers (count)
-        `)
-        .eq('status', 'open');
-
-      if (searchTerm) {
-        // Simple OR search on title and description
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-
-      if (selectedCategory) {
-        query = query.eq('category', selectedCategory);
-      }
-
+      const params = new URLSearchParams();
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (selectedCategory) params.append('category', selectedCategory);
       if (selectedDistrictId) {
-        // Assuming location column stores somewhat structured data or we filter by text
-        // Ideally schema has district_id. For now, text search on location
         const dist = districts.find(d => d.id === selectedDistrictId)?.name;
-        if (dist) {
-          query = query.ilike('location', `%${dist}%`);
-        }
+        if (dist) params.append('district', dist);
       }
+      if (minPrice) params.append('minPrice', minPrice);
+      if (maxPrice) params.append('maxPrice', maxPrice);
+      if (maxDeliveryDays) params.append('maxDeliveryDays', maxDeliveryDays);
+      params.append('sortBy', sortBy);
 
-      // Sorting
-      switch (sortBy) {
-        case 'budget-high':
-          query = query.order('budget', { ascending: false });
-          break;
-        case 'budget-low':
-          query = query.order('budget', { ascending: true });
-          break;
-        case 'newest':
-        default:
-          query = query.order('created_at', { ascending: false });
-          break;
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching tasks:', error);
+      const response = await fetch(`/api/gigs?${params.toString()}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        setTasks(result.gigs || []);
       } else {
-        setTasks(data || []);
+        console.error('Error fetching gigs:', response.statusText);
+        setTasks([]);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
+      setTasks([]);
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, selectedCategory, selectedDistrictId, sortBy]); // Removed dependencies that might cause loop if not careful, using manual debouncing logic is better, but this is simple
+  }, [searchTerm, selectedCategory, selectedDistrictId, sortBy, minPrice, maxPrice, maxDeliveryDays]);
 
   // Trigger fetch when filters change
   // Use debounce for search term could be good, but for now simple effect
@@ -175,10 +147,44 @@ export default function BrowseTasksPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
-                placeholder="Search tasks by title..."
+                placeholder="Search services by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Price and Delivery Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Min Price (LKR)</label>
+              <input
+                type="number"
+                placeholder="Min price"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Max Price (LKR)</label>
+              <input
+                type="number"
+                placeholder="Max price"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Max Delivery (Days)</label>
+              <input
+                type="number"
+                placeholder="Max days"
+                value={maxDeliveryDays}
+                onChange={(e) => setMaxDeliveryDays(e.target.value)}
+                className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
               />
             </div>
           </div>
@@ -192,8 +198,7 @@ export default function BrowseTasksPage() {
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.id}> // Assuming DB uses 'id' or 'slug'
-                  {/* We might need to handle localization here if we want perfect polish, but name is reliable */}
+                <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
@@ -205,8 +210,10 @@ export default function BrowseTasksPage() {
               className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
             >
               <option value="newest">Newest First</option>
-              <option value="budget-high">Budget: High to Low</option>
-              <option value="budget-low">Budget: Low to High</option>
+              <option value="popular">Most Popular</option>
+              <option value="rating">Highest Rated</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
             </select>
 
             {/* District */}
@@ -246,16 +253,16 @@ export default function BrowseTasksPage() {
             <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
           ) : (
             <p className="text-gray-600">
-              Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+              Showing {tasks.length} service{tasks.length !== 1 ? 's' : ''}
             </p>
           )}
         </div>
 
-        {/* Task Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gig Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {isLoading ? (
             // Skeletons
-            [...Array(4)].map((_, i) => (
+            [...Array(6)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
                 <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
@@ -266,68 +273,69 @@ export default function BrowseTasksPage() {
               </div>
             ))
           ) : (
-            tasks.map((task) => {
-              // Safe accessors
-              const posterName = task.customers?.users?.first_name || 'Unknown User';
-              const posterInitial = posterName.charAt(0);
-              const offersCount = task.offers?.[0]?.count || 0;
-              const formattedDate = new Date(task.created_at).toLocaleDateString();
+            tasks.map((gig) => {
+              // Safe accessors for gig data from API
+              const sellerName = gig.sellerName || 'Unknown Seller';
+              const sellerInitial = sellerName.charAt(0);
+              const rating = gig.rating || gig.sellerRating || 0;
+              const reviewCount = gig.reviews_count || 0;
+              const orders = gig.orders_count || 0;
+              const startingPrice = gig.startingPrice || 0;
 
               return (
-                <div key={task.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                <div key={gig.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
-                        {task.title}
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1">
+                        {gig.title}
                       </h3>
-                      <span className="text-lg font-bold text-brand-green">
-                        {formatCurrency(task.budget)}
-                      </span>
                     </div>
 
                     <p className="text-gray-600 mb-4 line-clamp-2">
-                      {task.description}
+                      {gig.description}
                     </p>
 
                     <div className="flex items-center text-sm text-gray-500 mb-4 space-x-4">
+                      {gig.location && (
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {gig.location}
+                        </div>
+                      )}
                       <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {task.location}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {formattedDate}
+                        <span className="text-yellow-400">★</span>
+                        <span className="ml-1">{rating.toFixed(1)}</span>
+                        <span className="ml-1">({reviewCount})</span>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center pt-4 border-t">
                       <div className="flex items-center">
-                        {task.customers?.users?.profile_image_url ? (
+                        {gig.sellerAvatar ? (
                           <img
-                            src={task.customers.users.profile_image_url}
-                            alt={posterName}
+                            src={gig.sellerAvatar}
+                            alt={sellerName}
                             className="w-8 h-8 rounded-full mr-2 object-cover"
                           />
                         ) : (
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
                             <span className="text-sm font-medium text-gray-600">
-                              {posterInitial}
+                              {sellerInitial}
                             </span>
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{posterName}</p>
-                          <div className="flex items-center">
-                            <span className="text-yellow-400">★</span>
-                            <span className="text-sm text-gray-600 ml-1">5.0</span>
-                          </div>
+                          <p className="text-sm font-medium text-gray-900">{sellerName}</p>
+                          <p className="text-xs text-gray-500">{orders} orders</p>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-sm text-gray-600">{offersCount} offers</p>
+                        <p className="text-lg font-bold text-brand-green">
+                          {formatCurrency(startingPrice)}
+                        </p>
                         <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
-                          Make Offer
+                          View Details
                         </button>
                       </div>
                     </div>
@@ -343,9 +351,9 @@ export default function BrowseTasksPage() {
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No services found</h3>
             <p className="text-gray-600">
-              Try adjusting your search criteria or check back later for new tasks.
+              Try adjusting your search criteria or check back later for new services.
             </p>
           </div>
         )}

@@ -119,7 +119,7 @@ export default function PostTaskPage() {
         
         // Redirect after a short delay to show the success message
         setTimeout(() => {
-          router.push('/browse-tasks');
+          router.push('/browse-services');
         }, 1500);
       } else {
         const errorData = await response.json();

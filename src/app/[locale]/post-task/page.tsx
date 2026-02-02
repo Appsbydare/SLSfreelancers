@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useFormState } from 'react-dom';
+import { useState, useEffect, useActionState } from 'react';
 import { ArrowRight, Upload, MapPin, Calendar, DollarSign, AlertCircle } from 'lucide-react';
 import { categories } from '@/data/categories';
 import { createTask } from '@/app/actions/tasks';
-import { supabase } from '@/lib/supabase';
 
 interface FormState {
   message: string;
@@ -20,7 +18,7 @@ const initialState: FormState = {
 };
 
 export default function PostTaskPage() {
-  const [state, dispatch] = useFormState(createTask, initialState);
+  const [state, dispatch] = useActionState(createTask, initialState);
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
 
   // Since we use controlled inputs for some UX (like image preview), we keep state.
@@ -29,8 +27,13 @@ export default function PostTaskPage() {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data } = await supabase.from('categories').select('*').order('name');
-      if (data) setCategoriesList(data);
+      try {
+        const response = await fetch('/api/categories');
+        const { categories } = await response.json();
+        if (categories) setCategoriesList(categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
     };
     fetchCategories();
   }, []);
@@ -110,15 +113,7 @@ export default function PostTaskPage() {
               >
                 <option value="">Select a category</option>
                 {categoriesList.map((category) => (
-                  <option key={category.id} value={category.id}> // Use name or ID based on schema. Schema likely stores TEXT category? Or ID? DB schema said 'category' text?
-                    // Actually `categories` table has ID. `tasks.category` column type?
-                    // Let's assume `tasks.category` stores the ID or name. 
-                    // In typical refactor, I should store ID. 
-                    // But legacy mock data used slug. 
-                    // I'll stick to ID if foreign key exists? 
-                    // Schema.sql said `category` column in tasks is just text? 
-                    // Wait, `tasks` table `category` column is Text. 
-                    // I will store category ID or Name. 
+                  <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}

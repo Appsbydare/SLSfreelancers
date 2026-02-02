@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Check, Upload, X, AlertCircle } from 'lucide-react';
 import { categories } from '@/data/categories';
@@ -15,10 +16,18 @@ const STEPS = [
   { id: 5, name: 'Publish', description: 'Review & publish' },
 ];
 
+import { useAuth } from '@/contexts/AuthContext';
+
+// ... inside component ...
 export default function CreateGigPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const { user, isLoading } = useAuth();
+
+  // Local state for form logic
   const [currentStep, setCurrentStep] = useState(1);
-  const [user, setUser] = useState<any>(null);
+  // Remove local 'user' state since we use context user
+  // const [user, setUser] = useState<any>(null); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,21 +53,18 @@ export default function CreateGigPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Check authentication
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      router.push('/login?redirect=/seller/gigs/create');
+    if (isLoading) return;
+
+    if (!user) {
+      router.push(`/${locale}/login?redirect=/${locale}/seller/gigs/create`);
       return;
     }
 
-    const userData = JSON.parse(userStr);
-    if (userData.userType !== 'tasker') {
-      router.push('/');
+    if (user.userType !== 'tasker') {
+      router.push(`/${locale}`);
       return;
     }
-
-    setUser(userData);
-  }, [router]);
+  }, [user, isLoading, router, locale]);
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -191,6 +197,7 @@ export default function CreateGigPage() {
 
   const handlePublish = async () => {
     if (!validateStep(3)) return;
+    if (!user) return;
 
     setLoading(true);
     setError('');
@@ -283,7 +290,7 @@ export default function CreateGigPage() {
       });
 
       // Redirect to gig page
-      router.push(`/gigs/${gig.slug}?new=true`);
+      router.push(`/${locale}/gigs/${gig.slug}?new=true`);
     } catch (err: any) {
       console.error('Publish error:', err);
       setError(err.message || 'Failed to publish gig');

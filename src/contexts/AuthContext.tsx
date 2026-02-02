@@ -41,6 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (authUser: SupabaseUser) => {
     try {
+      // Check cache first for faster loads
+      const cachedProfile = sessionStorage.getItem(`user_profile_${authUser.id}`);
+      if (cachedProfile) {
+        try {
+          return JSON.parse(cachedProfile) as User;
+        } catch (e) {
+          sessionStorage.removeItem(`user_profile_${authUser.id}`);
+        }
+      }
+
       // Use auth_user_id to fetch the user profile from public.users table
       const { data: profile, error } = await supabase
         .from('users')
@@ -77,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         hasCustomerAccount: true, // Assuming all users have a customer account
         isVerified: taskerProfile?.onboarding_completed || false,
       };
+
+      // Cache for faster subsequent loads
+      sessionStorage.setItem(`user_profile_${authUser.id}`, JSON.stringify(mappedUser));
 
       return mappedUser;
     } catch (err) {
@@ -133,6 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []); // Remove dependency on user state to avoid infinite loop
 
   const logout = async () => {
+    // Clear cache on logout
+    if (user?.id) {
+      sessionStorage.removeItem(`user_profile_${user.id}`);
+    }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -140,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (session?.user) {
+      // Clear cache to force fresh data
+      sessionStorage.removeItem(`user_profile_${session.user.id}`);
       const profile = await fetchUserProfile(session.user);
       setUser(profile);
     }
@@ -152,6 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const switchRole = (role: 'customer' | 'tasker') => {
     if (!user) return;
+
+    // Clear cache so next fetch gets fresh data with correct role
+    if (session?.user?.id) {
+      sessionStorage.removeItem(`user_profile_${session.user.id}`);
+    }
+
     setUser({ ...user, userType: role });
   };
 

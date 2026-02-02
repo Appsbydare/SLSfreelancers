@@ -1,9 +1,10 @@
 'use server';
 
-import { supabaseServer } from '@/lib/supabase-server';
+import { createServerClient } from '@supabase/ssr';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { cookies } from 'next/headers';
 
 const createTaskSchema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters'),
@@ -15,9 +16,25 @@ const createTaskSchema = z.object({
 });
 
 export async function createTask(prevState: any, formData: FormData) {
-    const user = await supabaseServer.auth.getUser();
-    if (!user.data.user) {
-        return { message: 'Unauthorized', errors: {} };
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { message: 'Unauthorized - Please log in to post a task', errors: {} };
     }
 
     const rawData = {
@@ -39,17 +56,17 @@ export async function createTask(prevState: any, formData: FormData) {
     }
 
     // Get customer ID for the user
-    const { data: customer } = await supabaseServer
+    const { data: customer } = await supabase
         .from('customers')
         .select('id')
-        .eq('user_id', user.data.user.id)
+        .eq('user_id', user.id)
         .single();
 
     if (!customer) {
-        return { message: 'Customer profile not found', errors: {} };
+        return { message: 'Customer profile not found. Please contact support.', errors: {} };
     }
 
-    const { error } = await supabaseServer.from('tasks').insert({
+    const { error } = await supabase.from('tasks').insert({
         customer_id: customer.id,
         title: validated.data.title,
         description: validated.data.description,
@@ -65,11 +82,14 @@ export async function createTask(prevState: any, formData: FormData) {
         return { message: 'Database error: ' + error.message, errors: {} };
     }
 
-    revalidatePath('/browse-tasks');
-    redirect('/browse-tasks');
+    revalidatePath('/browse-services');
+    redirect('/browse-services');
 }
 
 export async function getOpenTasks(limit = 20) {
+    // Import supabaseServer for server-side queries
+    const { supabaseServer } = await import('@/lib/supabase-server');
+
     const { data: tasks, error } = await supabaseServer
         .from('tasks')
         .select(`

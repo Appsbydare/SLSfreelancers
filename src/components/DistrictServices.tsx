@@ -59,7 +59,7 @@ export default function DistrictServices() {
             {availableCategories.map((category, index) => (
               <Link
                 key={category.id}
-                href={`/browse-tasks?category=${category.id}&district=${selectedDistrict.id}`}
+                href={`/browse-services?category=${category.id}&district=${selectedDistrict.id}`}
                 className="group bg-white rounded-lg border border-gray-200 p-6 hover:border-green-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 animate-fade-in-up"
                 style={{ animationDelay: `${(index * 100) + 400}ms` }}
               >
@@ -149,7 +149,7 @@ export default function DistrictServices() {
         {/* Call to Action */}
         <div className="text-center mt-8 animate-fade-in-up" style={{ animationDelay: '1200ms' }}>
           <Link
-            href={`/browse-tasks?district=${selectedDistrict.id}`}
+            href={`/browse-services?district=${selectedDistrict.id}`}
             className="inline-flex items-center px-8 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-xl"
           >
             {t('browseTasks', { district: selectedDistrict.name })}

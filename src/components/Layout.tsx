@@ -17,14 +17,24 @@ export default function Layout({ children }: LayoutProps) {
 
   useEffect(() => {
     // Only redirect if user is in seller mode (userType === 'tasker')
-    // If they've toggled to customer mode, allow them to view customer pages
+    // Check localStorage for user's preferred mode
     if (!isLoading && isLoggedIn && user?.userType === 'tasker') {
-      // Don't redirect if already on seller pages
-      const isSellerPage = pathname?.startsWith('/seller') || 
-                          pathname?.startsWith('/tasker') ||
-                          pathname?.includes('/login') ||
-                          pathname?.includes('/signup');
-      
+      // Check if user has explicitly chosen customer mode
+      const preferredMode = typeof window !== 'undefined' ? localStorage.getItem('userPreferredMode') : null;
+
+      // If user prefers customer mode, don't redirect them to seller pages
+      if (preferredMode === 'customer') {
+        return;
+      }
+
+      // Don't redirect if already on seller pages, gig pages, or auth pages
+      // Updated to strictly handle localized paths (e.g. /en/seller/...)
+      const isSellerPage = pathname?.includes('/seller') ||
+        pathname?.includes('/tasker') ||
+        pathname?.includes('/gigs') || // Allow taskers to view gig detail pages
+        pathname?.includes('/login') ||
+        pathname?.includes('/signup');
+
       // Redirect to dashboard if on customer pages (homepage, browse-tasks, etc.)
       // This ensures sellers in seller mode are always on seller pages
       if (!isSellerPage && (pathname === '/en' || pathname === '/si' || pathname === '/ta' || pathname?.startsWith('/en/') || pathname?.startsWith('/si/') || pathname?.startsWith('/ta/'))) {

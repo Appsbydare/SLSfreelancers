@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { User, Edit } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSellerDashboardData } from '@/app/actions/seller';
 
 export default function SellerProfilePage() {
   const router = useRouter();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ export default function SellerProfilePage() {
   const loadProfile = useCallback(async () => {
     if (authLoading) return;
     if (!user) {
-      router.push('/login?type=tasker');
+      router.push(`/${locale}/login?type=tasker`);
       return;
     }
 

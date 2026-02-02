@@ -54,6 +54,7 @@ export async function middleware(request: NextRequest) {
     const isAuthPage = /^\/(?:en|si|ta)?\/?(login|signup|forgot-password|reset-password)/.test(pathname)
 
     // Protected routes that require authentication
+    // Protected routes that require authentication
     const isProtectedSeller = pathname.includes('/seller')
     const isProtectedAdmin = pathname.includes('/project-status')
     const isProtectedTasker = pathname.includes('/tasker/onboarding')
@@ -65,9 +66,12 @@ export async function middleware(request: NextRequest) {
 
     // 1. Redirect logged-in users away from auth pages to home or dashboard
     if (user && isAuthPage) {
-        // Extract locale or default to 'en'
+        // Extract locale from path
         const localeMatch = pathname.match(/^\/(en|si|ta)/);
-        const locale = localeMatch ? localeMatch[1] : 'en';
+        // If no locale in path, try cookie, else default to 'en'
+        const localeCookie = request.cookies.get('NEXT_LOCALE')?.value;
+        const locale = localeMatch ? localeMatch[1] : (localeCookie || 'en');
+
         return NextResponse.redirect(new URL(`/${locale}`, request.url))
     }
 

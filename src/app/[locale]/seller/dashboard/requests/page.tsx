@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { FileText, DollarSign, MapPin, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOpenTasks } from '@/app/actions/tasks';
 
 export default function SellerRequestsPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ export default function SellerRequestsPage() {
   const loadRequests = useCallback(async () => {
     if (authLoading) return;
     if (!user) {
-      router.push('/login?type=tasker');
+      router.push(`/${locale}/login?type=tasker`);
       return;
     }
 
@@ -61,7 +63,7 @@ export default function SellerRequestsPage() {
           {requests.map((request) => (
             <Link
               key={request.id}
-              href={`/tasks/${request.id}`}
+              href={`/${locale}/tasks/${request.id}`}
               className="block bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
             >
               <div className="flex items-start justify-between">

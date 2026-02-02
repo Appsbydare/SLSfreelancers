@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       const { data: serviceAreaData } = await supabaseServer
         .from('tasker_service_areas')
         .select('tasker_id')
-        .eq('district', district);
+        .ilike('district', district);
       
       if (serviceAreaData && serviceAreaData.length > 0) {
         const taskerIds = serviceAreaData.map((area: any) => area.tasker_id);
@@ -83,8 +83,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Apply seller level filter by getting matching taskers
     if (sellerLevel) {
-      query = query.eq('seller.level_code', sellerLevel);
+      const { data: taskerData } = await supabaseServer
+        .from('taskers')
+        .select('id')
+        .eq('level_code', sellerLevel);
+      
+      if (taskerData && taskerData.length > 0) {
+        const taskerIds = taskerData.map((t: any) => t.id);
+        query = query.in('seller_id', taskerIds);
+      } else {
+        // No sellers with this level
+        return NextResponse.json({
+          gigs: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
     }
 
     // Sorting

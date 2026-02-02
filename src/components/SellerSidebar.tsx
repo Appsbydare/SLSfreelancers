@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingBag, 
-  MessageSquare, 
-  DollarSign, 
-  User, 
+import { useLocale } from 'next-intl';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  MessageSquare,
+  DollarSign,
+  User,
   FileText,
   Menu,
   X
@@ -20,11 +21,12 @@ interface SellerSidebarProps {
   activeOrders?: number;
 }
 
-export default function SellerSidebar({ 
-  unreadMessages = 0, 
-  activeOrders = 0 
+export default function SellerSidebar({
+  unreadMessages = 0,
+  activeOrders = 0
 }: SellerSidebarProps) {
   const pathname = usePathname();
+  const locale = useLocale();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuItems = [
@@ -119,19 +121,18 @@ export default function SellerSidebar({
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
-                
+
                 return (
                   <li key={item.id}>
                     <Link
-                      href={item.href}
+                      href={`/${locale}${item.href}`}
                       onClick={() => setIsMobileOpen(false)}
                       className={`
                         flex items-center justify-between px-4 py-3 rounded-lg
                         transition-all duration-200
-                        ${
-                          active
-                            ? 'bg-brand-green/10 text-brand-green font-semibold'
-                            : 'text-gray-700 hover:bg-gray-100'
+                        ${active
+                          ? 'bg-brand-green/10 text-brand-green font-semibold'
+                          : 'text-gray-700 hover:bg-gray-100'
                         }
                       `}
                     >
@@ -154,7 +155,7 @@ export default function SellerSidebar({
           {/* Footer */}
           <div className="p-4 border-t border-gray-200">
             <Link
-              href="/seller/gigs/create"
+              href={`/${locale}/seller/gigs/create`}
               className="w-full flex items-center justify-center px-4 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
             >
               <Package className="h-5 w-5 mr-2" />

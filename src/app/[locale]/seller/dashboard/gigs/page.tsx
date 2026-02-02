@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import {
   Plus,
@@ -19,6 +20,7 @@ import { showToast } from '@/lib/toast';
 
 export default function SellerGigsPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ export default function SellerGigsPage() {
   const loadGigs = useCallback(async () => {
     if (authLoading) return;
     if (!user) {
-      router.push('/login?type=tasker');
+      router.push(`/${locale}/login?type=tasker`);
       return;
     }
 
@@ -103,7 +105,7 @@ export default function SellerGigsPage() {
           <p className="text-gray-600 mt-1">Manage your service offerings</p>
         </div>
         <Link
-          href="/seller/gigs/create"
+          href={`/${locale}/seller/gigs/create`}
           className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
@@ -118,7 +120,7 @@ export default function SellerGigsPage() {
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No gigs yet</h3>
           <p className="text-gray-600 mb-6">Create your first gig to start selling services</p>
           <Link
-            href="/seller/gigs/create"
+            href={`/${locale}/seller/gigs/create`}
             className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -185,14 +187,14 @@ export default function SellerGigsPage() {
                   {/* Actions */}
                   <div className="flex flex-wrap gap-3">
                     <Link
-                      href={`/gigs/${gig.slug}`}
+                      href={`/${locale}/gigs/${gig.slug}`}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </Link>
                     <Link
-                      href={`/seller/gigs/${gig.id}/edit`}
+                      href={`/${locale}/seller/gigs/${gig.id}/edit`}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Edit className="h-4 w-4 mr-2" />

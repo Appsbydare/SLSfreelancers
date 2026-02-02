@@ -138,7 +138,7 @@ export default function ScrollingTasksPanel({
 function TaskCard({ task, getTimeAgo, onCardHover }: { task: Task; getTimeAgo: (date: Date) => string; onCardHover?: (isHovering: boolean) => void }) {
   return (
     <Link
-      href={`/browse-tasks?task=${task.id}`}
+      href={`/browse-services?task=${task.id}`}
       className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
       onMouseEnter={() => onCardHover?.(true)}
       onMouseLeave={() => onCardHover?.(false)}

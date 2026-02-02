@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOrders } from '@/app/actions/orders';
 
 export default function SellerOrdersPage() {
   const router = useRouter();
+  const locale = useLocale();
   const { user, isLoading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -16,9 +18,15 @@ export default function SellerOrdersPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   const loadOrders = useCallback(async () => {
+    // Strictly wait for auth loading to complete
     if (authLoading) return;
+
+    // Double check user persistence. If user is null but we just finished loading, 
+    // it COULD be a logout. But if session exists (checked in layout), user should be here.
+    // However, if we redirect here, we might cause a loop or flicker.
+    // Better to show access denied or rely on Layout to handle the redirect.
     if (!user) {
-      router.push('/login?type=tasker');
+      router.push(`/${locale}/login?type=tasker`);
       return;
     }
 
@@ -117,7 +125,7 @@ export default function SellerOrdersPage() {
           {filteredOrders.map((order) => (
             <Link
               key={order.id}
-              href={`/orders/${order.id}`}
+              href={`/${locale}/orders/${order.id}`}
               className="block bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
             >
               <div className="flex items-center justify-between">

@@ -55,7 +55,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/browse-tasks" className="text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <Link href="/browse-services" className="text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
                   {t('browseTasks')}
                 </Link>
               </li>
