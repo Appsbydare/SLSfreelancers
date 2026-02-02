@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Star, Clock, CheckCircle, MapPin, Shield, ArrowLeft, Heart } from 'lucide-react';
@@ -25,17 +25,11 @@ export default function GigDetailPage({ params }: { params: Promise<{ slug: stri
     });
   }, [params]);
 
-  useEffect(() => {
-    if (slug) {
-      fetchGigDetails();
-    }
-  }, [slug]);
-
-  const fetchGigDetails = async () => {
+  const fetchGigDetails = useCallback(async () => {
     try {
       // Extract ID from slug (format: title-slug-timestamp)
       const gigId = slug.split('-').pop();
-      
+
       const response = await fetch(`/api/gigs/${gigId}`);
       if (response.ok) {
         const data = await response.json();
@@ -48,7 +42,13 @@ export default function GigDetailPage({ params }: { params: Promise<{ slug: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    if (slug) {
+      fetchGigDetails();
+    }
+  }, [slug, fetchGigDetails]);
 
   const handlePackageSelect = (packageId: string, packageData: GigPackage) => {
     setSelectedPackage(packageData);
@@ -139,9 +139,8 @@ export default function GigDetailPage({ params }: { params: Promise<{ slug: stri
                     />
                     <button
                       onClick={handleFavoriteToggle}
-                      className={`absolute top-4 right-4 p-3 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors ${
-                        isFavorited ? 'text-red-500' : 'text-gray-400'
-                      }`}
+                      className={`absolute top-4 right-4 p-3 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors ${isFavorited ? 'text-red-500' : 'text-gray-400'
+                        }`}
                     >
                       <Heart className={`h-6 w-6 ${isFavorited ? 'fill-current' : ''}`} />
                     </button>
@@ -160,9 +159,8 @@ export default function GigDetailPage({ params }: { params: Promise<{ slug: stri
                     <button
                       key={index}
                       onClick={() => setActiveImageIndex(index)}
-                      className={`relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border-2 ${
-                        activeImageIndex === index ? 'border-brand-green' : 'border-gray-200'
-                      }`}
+                      className={`relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border-2 ${activeImageIndex === index ? 'border-brand-green' : 'border-gray-200'
+                        }`}
                     >
                       <Image
                         src={image}

@@ -7,6 +7,8 @@ import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield, Lock }
 import { showToast } from '@/lib/toast';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { createProfile } from '@/app/actions/create-profile';
 
 export default function BecomeTaskerPage() {
   const router = useRouter();
@@ -58,7 +60,7 @@ export default function BecomeTaskerPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage(null);
 
@@ -132,36 +134,47 @@ export default function BecomeTaskerPage() {
     }
 
     // New User Flow
-    fetch('/api/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        firstName: firstName || formData.name.trim(),
-        lastName,
-        email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
-        location: formData.location.trim(),
-        userType: 'tasker',
+    try {
+      // 1. Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
         password: formData.password,
-        bio: formData.bio,
-        skills: formData.skills,
-        // Note: Simple form doesn't capture NIC, which might be an issue later if strict.
-        // But for "Quick Signup" maybe it's allowed for now? 
-        // The API might reject if we made NIC required in the schema/API validation?
-        // Let's check API... API checks fields but NIC wasn't strictly required in the create payload interface 
-        // in previous view (Step 93), wait...
-        // Step 93 view of /api/users/route.ts: 
-        // requiredFields = ['firstName', 'lastName', 'email', 'phone', 'userType', 'password']
-        // NIC is NOT in requiredFields list in that file. So simple signup works.
-      }),
-    })
-      .then(async response => {
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || 'Failed to submit application. Please try again.');
+        options: {
+          data: {
+            first_name: firstName || formData.name,
+            last_name: lastName,
+          }
         }
+      });
+
+      if (authError) {
+        setStatusMessage({ type: 'error', text: authError.message });
+        showToast.error(authError.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (authData.user) {
+        // 2. Create Public Profile
+        const profileResult = await createProfile(authData.user.id, {
+          firstName: firstName || formData.name,
+          lastName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          userType: 'tasker',
+          bio: formData.bio,
+          skills: formData.skills
+        });
+
+        if (!profileResult.success) {
+          console.error('Tasker profile creation failed:', profileResult.error);
+          setStatusMessage({ type: 'error', text: 'Account created but profile setup failed. Please contact support.' });
+          showToast.error('Profile setup failed.');
+          setIsSubmitting(false);
+          return;
+        }
+
         setFormData({
           name: '',
           email: '',
@@ -173,20 +186,22 @@ export default function BecomeTaskerPage() {
           password: '',
           confirmPassword: '',
         });
-        setStatusMessage({ type: 'success', text: 'Application submitted successfully! We will review your profile shortly.' });
+
+        setStatusMessage({ type: 'success', text: 'Application submitted successfully! Redirecting to login...' });
         showToast.success('Application submitted successfully! Redirecting to login...');
 
         // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/login');
         }, 3000);
-      })
-      .catch(error => {
-        console.error('Tasker application error:', error);
-        setStatusMessage({ type: 'error', text: error.message || 'Something went wrong. Please try again.' });
-        showToast.error(error.message || 'Something went wrong. Please try again.');
-      })
-      .finally(() => setIsSubmitting(false));
+      }
+    } catch (error) {
+      console.error('Tasker application error:', error);
+      setStatusMessage({ type: 'error', text: 'An unexpected error occurred.' });
+      showToast.error('An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

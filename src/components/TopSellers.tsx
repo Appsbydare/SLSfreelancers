@@ -6,34 +6,20 @@ import Image from 'next/image';
 import { Star, CheckCircle, ArrowRight } from 'lucide-react';
 import SellerLevelBadge from './SellerLevelBadge';
 
-export default function TopSellers() {
-  const [sellers, setSellers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface TopSellersProps {
+  sellers: any[];
+}
 
-  useEffect(() => {
-    fetchTopSellers();
-  }, []);
+export default function TopSellers({ sellers = [] }: TopSellersProps) {
+  // const [sellers, setSellers] = useState<any[]>([]); // Removed local state
+  // const [loading, setLoading] = useState(true); // Removed local state
+  const loading = false;
 
-  const fetchTopSellers = async () => {
-    try {
-      // Fetch top sellers - we'll get this from taskers with high ratings
-      const response = await fetch('/api/taskers?limit=8&sortBy=rating');
-      if (response.ok) {
-        const data = await response.json();
-        setSellers(data.taskers || []);
-      } else {
-        // Silently fail - don't show errors on homepage
-        console.warn('Failed to load top sellers:', response.status);
-        setSellers([]);
-      }
-    } catch (error) {
-      // Silently fail - don't show errors on homepage
-      console.warn('Error fetching top sellers:', error);
-      setSellers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // useEffect(() => {
+  //   fetchTopSellers();
+  // }, []);
+
+  // fetchTopSellers removed
 
   if (loading) {
     return (
@@ -109,11 +95,11 @@ export default function TopSellers() {
                   </div>
                 )}
               </div>
-              
+
               <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
                 {seller.user?.first_name} {seller.user?.last_name?.charAt(0)}.
               </h3>
-              
+
               {seller.rating > 0 && (
                 <div className="flex items-center justify-center text-xs text-gray-600 mb-2">
                   <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
@@ -121,7 +107,7 @@ export default function TopSellers() {
                   <span className="ml-1">({seller.total_reviews || 0})</span>
                 </div>
               )}
-              
+
               {seller.completed_tasks > 0 && (
                 <div className="flex items-center justify-center text-xs text-gray-500">
                   <CheckCircle className="h-3 w-3 mr-1" />

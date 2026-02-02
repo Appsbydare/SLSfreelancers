@@ -1,125 +1,169 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '@/lib/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
-interface User {
+// Extended User type to include profile data from public.users
+export interface User {
   id: string;
   firstName: string;
   lastName: string;
   callingName?: string;
   email: string;
-  phone: string;
-  location: string;
-  city?: string;
-  district?: string;
-  roadNameNumber?: string;
-  addressLine2?: string;
-  nicNumber?: string;
+  phone?: string;
+  location?: string;
   userType: 'customer' | 'tasker' | 'admin';
-  originalUserType?: 'customer' | 'tasker' | 'admin'; // Track original registration type
-  hasCustomerAccount?: boolean; // User has customer record
-  hasTaskerAccount?: boolean; // User has tasker record
-  createdAt: string;
-  isVerified: boolean;
-  verificationStatus?: {
-    submitted: boolean;
-    approved: boolean;
-    submittedAt?: string;
-    approvedAt?: string;
-    policeReportUrl?: string;
-    idDocumentUrl?: string;
-  };
-  profile: {
-    bio: string;
-    skills: string[];
-    rating: number;
-    completedTasks: number;
-    profileImage: string | null;
-  };
+  originalUserType?: 'customer' | 'tasker' | 'admin';
+  profileImage?: string;
+  hasTaskerAccount?: boolean;
+  hasCustomerAccount?: boolean;
+  isVerified?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
+  session: any | null;
   isLoggedIn: boolean;
-  login: (user: User) => void;
-  logout: () => void;
-  switchRole: (role: 'customer' | 'tasker') => void;
   isLoading: boolean;
+  login: () => void;
+  logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  switchRole: (role: 'customer' | 'tasker') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUserProfile = async (authUser: SupabaseUser) => {
+    try {
+      // Use auth_user_id to fetch the user profile from public.users table
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      // Check if user is a tasker to determine verified status and dual role capability
+      // Use the public user id (profile.id) to query taskers table
+      const { data: taskerProfile } = await supabase
+        .from('taskers')
+        .select('id, onboarding_completed')
+        .eq('user_id', profile.id)
+        .single();
+
+      // Map DB fields to Context User type
+      const mappedUser: User = {
+        id: profile.id,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        callingName: profile.calling_name,
+        email: authUser.email || '',
+        phone: profile.phone,
+        location: profile.location,
+        userType: profile.user_type as 'customer' | 'tasker' | 'admin',
+        originalUserType: profile.user_type, // Default to same initially
+        profileImage: profile.profile_image,
+        hasTaskerAccount: !!taskerProfile,
+        hasCustomerAccount: true, // Assuming all users have a customer account
+        isVerified: taskerProfile?.onboarding_completed || false,
+      };
+
+      return mappedUser;
+    } catch (err) {
+      console.error('Unexpected error fetching profile:', err);
+      return null;
+    }
+  };
+
   useEffect(() => {
-    // Check if user is logged in on app load
-    const checkAuth = () => {
-      try {
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        const userData = localStorage.getItem('user');
-        
-        if (isLoggedIn && userData) {
-          const parsedUser = JSON.parse(userData);
-          // Set originalUserType if not already set (for existing users)
-          if (!parsedUser.originalUserType) {
-            parsedUser.originalUserType = parsedUser.userType;
-            localStorage.setItem('user', JSON.stringify(parsedUser));
-          }
-          setUser(parsedUser);
+    let mounted = true;
+
+    // 1. Check active session
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (mounted) {
+        setSession(session);
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user);
+          setUser(profile);
         }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        // Clear invalid data
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('user');
-      } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
-  }, []);
+    initAuth();
 
-  const login = (userData: User) => {
-    // Set originalUserType on login if not already set
-    const userWithOriginalType = {
-      ...userData,
-      originalUserType: userData.originalUserType || userData.userType,
+    // 2. Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (mounted) {
+        setSession(session);
+        if (session?.user) {
+          // If we just logged in or signed up, fetch/refresh profile
+          // But careful not to overwrite if we only refreshed token
+          // For simplicity we refresh profile
+          if (!user || user.id !== session.user.id) {
+            // Don't set isLoading(true) here - it causes login button to hang
+            // The profile fetch is fast enough and login page handles its own loading state
+            const profile = await fetchUserProfile(session.user);
+            setUser(profile);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
     };
-    setUser(userWithOriginalType);
-    localStorage.setItem('user', JSON.stringify(userWithOriginalType));
-    localStorage.setItem('isLoggedIn', 'true');
+  }, []); // Remove dependency on user state to avoid infinite loop
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('isLoggedIn');
+  const refreshProfile = async () => {
+    if (session?.user) {
+      const profile = await fetchUserProfile(session.user);
+      setUser(profile);
+    }
+  };
+
+  // Legacy compatibility
+  const login = () => {
+    // No-op
   };
 
   const switchRole = (role: 'customer' | 'tasker') => {
     if (!user) return;
-    
-    // Update user type while keeping all other user data, including originalUserType
-    const updatedUser = {
-      ...user,
-      userType: role,
-      originalUserType: user.originalUserType || user.userType, // Preserve original registration type
-    };
-    
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser({ ...user, userType: role });
   };
 
   const value = {
     user,
+    session,
     isLoggedIn: !!user,
+    isLoading,
     login,
     logout,
-    switchRole,
-    isLoading,
+    refreshProfile,
+    switchRole
   };
 
   return (

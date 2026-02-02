@@ -35,8 +35,8 @@ export default function Header() {
   const groupScrollRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/en');
   };
 
@@ -72,7 +72,7 @@ export default function Header() {
 
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -87,24 +87,24 @@ export default function Header() {
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
   const isSeller = user?.userType === 'tasker';
-  
+
   if (isSeller) {
     displayNavigation = [
-      { name: 'Dashboard', href: `/seller/dashboard` },
-      { name: 'My Gigs', href: `/seller/dashboard/gigs` },
-      { name: 'Orders', href: `/seller/dashboard/orders` },
-      { name: 'Earnings', href: `/seller/dashboard/earnings` },
+      { name: 'Dashboard', href: `/${locale}/seller/dashboard` },
+      { name: 'My Gigs', href: `/${locale}/seller/dashboard/gigs` },
+      { name: 'Orders', href: `/${locale}/seller/dashboard/orders` },
+      { name: 'Earnings', href: `/${locale}/seller/dashboard/earnings` },
     ];
   } else if (user?.userType === 'admin') {
-    displayNavigation = [...navigation, { name: 'Project Status', href: '/project-status' }];
+    displayNavigation = [...navigation, { name: 'Project Status', href: `/${locale}/project-status` }];
   }
 
   const handleToggleMode = () => {
     // Only allow toggle for users who have both accounts OR are registered as tasker
     const canToggle = user?.hasTaskerAccount || user?.originalUserType === 'tasker';
-    
+
     if (!canToggle) return;
-    
+
     // Toggle between seller and customer mode
     if (user.userType === 'tasker') {
       // Currently in seller mode, switch to customer mode
@@ -113,11 +113,12 @@ export default function Header() {
     } else {
       // Currently in customer mode, switch to seller mode
       switchRole('tasker');
-      router.push('/seller/dashboard');
+      router.push(`/${locale}/seller/dashboard`);
     }
   };
 
-  const iconsById: Record<string, string> = {
+
+  const iconsById: Record<string, string> = useMemo(() => ({
     'home-property': '🏠',
     'automotive': '🚗',
     'health-wellness': '💊',
@@ -131,7 +132,7 @@ export default function Header() {
     'pet-services': '🐾',
     'government-utility': '🏛️',
     'freelance-remote': '💻'
-  };
+  }), []);
 
   const combinedGroups = useMemo(() => {
     const trendingServices = [
@@ -150,11 +151,11 @@ export default function Header() {
       // Normalize section items to support optional badges
       const normalizedSections = g.sections
         ? g.sections.map((s: any) => ({
-            title: s.title,
-            items: (s.items || []).map((it: any) =>
-              typeof it === 'string' ? { label: it } : it
-            ),
-          }))
+          title: s.title,
+          items: (s.items || []).map((it: any) =>
+            typeof it === 'string' ? { label: it } : it
+          ),
+        }))
         : undefined;
 
       // Randomly mark one item as NEW per group (if sections exist)
@@ -187,7 +188,7 @@ export default function Header() {
       },
       ...withIcons
     ];
-  }, []);
+  }, [iconsById]);
 
   const activeGroup =
     combinedGroups.find((group: any) => group.id === activeCategoryGroup) ??
@@ -240,227 +241,272 @@ export default function Header() {
   };
 
   // Check if we're on a seller page
-  const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker');
-  
+  const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker') ||
+    pathname?.startsWith(`/${locale}/seller`) || pathname?.startsWith(`/${locale}/tasker`);
+
   // Darker green color for seller pages: #007413 (darker than brand-green #0fcc17)
-  const headerBgClass = isSellerPage 
-    ? (isScrolled 
-        ? 'bg-[#007413]/95 backdrop-blur-md shadow-lg border-b border-[#004C0D]' 
-        : 'bg-[#007413] shadow-sm border-b border-[#004C0D]')
-    : (isScrolled 
-        ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800' 
-        : 'bg-black shadow-sm border-b border-gray-800');
+  const headerBgClass = isSellerPage
+    ? (isScrolled
+      ? 'bg-[#007413]/95 backdrop-blur-md shadow-lg border-b border-[#004C0D]'
+      : 'bg-[#007413] shadow-sm border-b border-[#004C0D]')
+    : (isScrolled
+      ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800'
+      : 'bg-black shadow-sm border-b border-gray-800');
 
   return (
     <>
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerBgClass}`}>
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24">
-        <div className="flex items-center h-16 gap-6">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link
-              href={`/${locale}`}
-              className="flex items-center group outline-none focus:outline-none focus:ring-0 ring-0"
-            >
-              <Image
-                src="/logo-white.svg"
-                alt="EasyFinder"
-                width={188}
-                height={64}
-                className="h-16 w-auto transition-all duration-300 group-hover:scale-110"
-                priority
-              />
-            </Link>
-          </div>
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24">
+          <div className="flex items-center h-16 gap-6">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link
+                href={`/${locale}`}
+                className="flex items-center group outline-none focus:outline-none focus:ring-0 ring-0"
+              >
+                <Image
+                  src="/logo-white.svg"
+                  alt="EasyFinder"
+                  width={188}
+                  height={64}
+                  className="h-16 w-auto transition-all duration-300 group-hover:scale-110"
+                  priority
+                />
+              </Link>
+            </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {displayNavigation.map((item, index) => {
-              // Hide Browse Tasks category menu for sellers
-              const isBrowseTasks = item.href.includes('/browse-tasks');
-              if (isBrowseTasks && !isSeller) {
-                return (
-                  <button
-                    key={item.name}
-                    type="button"
-                    onMouseEnter={() => {
-                      setIsCategoryMenuOpen(true);
-                      setIsQuickMenuOpen(false);
-                    }}
-                    onFocus={() => setIsCategoryMenuOpen(true)}
-                    className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
-                      isCategoryMenuOpen
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
+              {displayNavigation.map((item, index) => {
+                // Hide Browse Tasks category menu for sellers
+                const isBrowseTasks = item.href.includes('/browse-tasks');
+                if (isBrowseTasks && !isSeller) {
+                  return (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onMouseEnter={() => {
+                        setIsCategoryMenuOpen(true);
+                        setIsQuickMenuOpen(false);
+                      }}
+                      onFocus={() => setIsCategoryMenuOpen(true)}
+                      className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${isCategoryMenuOpen
                         ? 'text-brand-green'
                         : 'text-white hover:text-brand-green'
-                    }`}
+                        }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      aria-haspopup="true"
+                      aria-expanded={isCategoryMenuOpen}
+                      aria-controls="category-mega-menu"
+                    >
+                      <span className="relative z-10">{t('browseTasks')}</span>
+                      {isCategoryMenuOpen && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    </button>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))
+                      ? 'text-brand-green'
+                      : 'text-white hover:text-brand-green'
+                      }`}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    aria-haspopup="true"
-                    aria-expanded={isCategoryMenuOpen}
-                    aria-controls="category-mega-menu"
                   >
-                    <span className="relative z-10">{t('browseTasks')}</span>
-                    {isCategoryMenuOpen && (
+                    <span className="relative z-10">{item.name}</span>
+                    {(pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))) && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
                     )}
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
+                  </Link>
                 );
-              }
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${
-                    pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))
-                      ? 'text-brand-green'
-                      : 'text-white hover:text-brand-green'
-                  }`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <span className="relative z-10">{item.name}</span>
-                  {(pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))) && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </Link>
-              );
-            })}
-          </nav>
+              })}
+            </nav>
 
-          {/* Center - Search Bar */}
-          {!isSeller && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsCategoryMenuOpen(false);
-                setIsQuickMenuOpen(false);
-                router.push(`/${locale}/browse-tasks`);
-              }}
-              className="hidden md:block flex-1 max-w-xl mx-6"
-            >
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="What service are you looking for today?"
-                  className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
-                  aria-label="Search"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Right side - Language switcher and auth buttons */}
-          <div className="flex items-center gap-3 ml-auto">
-            <LanguageSwitcher />
-            
-            {isLoggedIn ? (
-              <div className="hidden md:flex items-center gap-3">
-                {/* Profile Dropdown */}
-                <div className="relative" ref={profileDropdownRef}>
+            {/* Center - Search Bar */}
+            {!isSeller && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setIsCategoryMenuOpen(false);
+                  setIsQuickMenuOpen(false);
+                  router.push(`/${locale}/browse-tasks`);
+                }}
+                className="hidden md:block flex-1 max-w-xl mx-6"
+              >
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    value={headerSearch}
+                    onChange={(e) => setHeaderSearch(e.target.value)}
+                    placeholder="What service are you looking for today?"
+                    className="w-full pl-9 pr-10 py-2 rounded-md bg-gray-900/70 border border-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                  />
                   <button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50"
-                    title="Profile Menu"
+                    type="submit"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700"
+                    aria-label="Search"
                   >
-                    <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                      {user?.profile?.profileImage ? (
-                        <Image
-                          src={user.profile.profileImage}
-                          alt="Profile"
-                          width={32}
-                          height={32}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <UserIcon className="h-5 w-5 text-gray-400" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/70 text-sm">Welcome,</span>
-                      <span className="text-white text-sm font-medium">
-                        {user?.callingName || user?.firstName}
-                      </span>
-                      {user?.userType === 'tasker' && user?.isVerified && (
-                        <VerifiedBadge size="sm" showText={false} />
-                      )}
-                    </div>
+                    <Search className="h-4 w-4" />
                   </button>
+                </div>
+              </form>
+            )}
 
-                  {/* Profile Dropdown Menu */}
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50">
-                      <div className="p-4 border-b border-gray-800">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                            {user?.profile?.profileImage ? (
-                              <Image
-                                src={user.profile.profileImage}
-                                alt="Profile"
-                                width={40}
-                                height={40}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <UserIcon className="h-6 w-6 text-gray-400" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-white font-medium">{user?.callingName || user?.firstName}</p>
-                            <p className="text-gray-400 text-sm">{user?.email}</p>
+            {/* Right side - Language switcher and auth buttons */}
+            <div className="flex items-center gap-3 ml-auto">
+              <LanguageSwitcher />
+
+              {isLoggedIn ? (
+                <div className="hidden md:flex items-center gap-3">
+                  {/* Profile Dropdown */}
+                  <div className="relative" ref={profileDropdownRef}>
+                    <button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50"
+                      title="Profile Menu"
+                    >
+                      <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                        {user?.profileImage ? (
+                          <Image
+                            src={user.profileImage}
+                            alt="Profile"
+                            width={32}
+                            height={32}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <UserIcon className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/70 text-sm">Welcome,</span>
+                        <span className="text-white text-sm font-medium">
+                          {user?.callingName || user?.firstName}
+                        </span>
+                        {user?.userType === 'tasker' && user?.isVerified && (
+                          <VerifiedBadge size="sm" showText={false} />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Profile Dropdown Menu */}
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-64 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50">
+                        <div className="p-4 border-b border-gray-800">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                              {user?.profileImage ? (
+                                <Image
+                                  src={user.profileImage}
+                                  alt="Profile"
+                                  width={40}
+                                  height={40}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <UserIcon className="h-6 w-6 text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{user?.callingName || user?.firstName}</p>
+                              <p className="text-gray-400 text-sm">{user?.email}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="p-2">
-                        {/* Mode Switch / Become a Seller */}
-                        {user?.hasTaskerAccount ? (
+
+                        <div className="p-2">
+                          {/* Mode Switch / Become a Seller */}
+                          {user?.hasTaskerAccount || user?.userType === 'tasker' ? (
+                            <button
+                              onClick={() => {
+                                handleToggleMode();
+                                setIsProfileDropdownOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
+                            >
+                              <ArrowLeftRight className="h-4 w-4" />
+                              {isSeller ? 'Switch to Customer Mode' : 'Switch to Seller Mode'}
+                            </button>
+                          ) : user?.hasCustomerAccount && !user?.hasTaskerAccount ? (
+                            <Link
+                              href={`/${locale}/become-tasker`}
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-brand-green hover:text-white hover:bg-brand-green/10 rounded-md transition-all duration-300 border border-brand-green/30"
+                            >
+                              <ArrowLeftRight className="h-4 w-4" />
+                              Become a Seller
+                            </Link>
+                          ) : null}
+
+                          {/* Logout Button */}
                           <button
                             onClick={() => {
-                              handleToggleMode();
+                              handleLogout();
                               setIsProfileDropdownOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-md transition-all duration-300"
                           >
-                            <ArrowLeftRight className="h-4 w-4" />
-                            {isSeller ? 'Switch to Customer Mode' : 'Switch to Seller Mode'}
+                            <LogOut className="h-4 w-4" />
+                            Logout
                           </button>
-                        ) : user?.hasCustomerAccount && !user?.hasTaskerAccount ? (
-                          <Link
-                            href="/become-tasker"
-                            onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-brand-green hover:text-white hover:bg-brand-green/10 rounded-md transition-all duration-300 border border-brand-green/30"
-                          >
-                            <ArrowLeftRight className="h-4 w-4" />
-                            Become a Seller
-                          </Link>
-                        ) : null}
-                        
-                        {/* Logout Button */}
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setIsProfileDropdownOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-md transition-all duration-300"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Logout
-                        </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+                  {/* District (Sri Lanka) map trigger - Hide for sellers */}
+                  {!isSeller && (
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                      onClick={() => {
+                        setIsMapMenuOpen(true);
+                        setIsCategoryMenuOpen(false);
+                        setIsQuickMenuOpen(false);
+                      }}
+                      aria-label="Choose district"
+                      title="Choose District"
+                    >
+                      <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
+                    </button>
+                  )}
+                  {/* Quick menu trigger (rightmost) - Hide for sellers */}
+                  {!isSeller && (
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                      onClick={() => {
+                        setIsQuickMenuOpen(true);
+                        setIsCategoryMenuOpen(false);
+                        setIsMapMenuOpen(false);
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      aria-label="Open quick menu"
+                    >
+                      <Grid3X3 className="h-4 w-4" />
+                    </button>
                   )}
                 </div>
-                {/* District (Sri Lanka) map trigger - Hide for sellers */}
-                {!isSeller && (
+              ) : (
+                <div className="hidden md:flex items-center gap-3">
+                  <Link
+                    href={`/${locale}/login`}
+                    className="text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                  >
+                    {t('login')}
+                  </Link>
+                  <Link
+                    href={`/${locale}/signup`}
+                    className="bg-brand-green text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
+                  >
+                    {t('signUp')}
+                  </Link>
+                  {/* District (Sri Lanka) map trigger */}
                   <button
                     type="button"
                     className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
@@ -468,15 +514,14 @@ export default function Header() {
                       setIsMapMenuOpen(true);
                       setIsCategoryMenuOpen(false);
                       setIsQuickMenuOpen(false);
+                      setIsProfileDropdownOpen(false);
                     }}
                     aria-label="Choose district"
                     title="Choose District"
                   >
                     <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
                   </button>
-                )}
-                {/* Quick menu trigger (rightmost) - Hide for sellers */}
-                {!isSeller && (
+                  {/* Quick menu trigger (rightmost) */}
                   <button
                     type="button"
                     className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
@@ -490,435 +535,388 @@ export default function Header() {
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </button>
-                )}
-              </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="text-white hover:text-brand-green px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  {t('login')}
-                </Link>
-                <Link
-                  href="/signup"
-                  className="bg-brand-green text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-brand-green/90 transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
-                >
-                  {t('signUp')}
-                </Link>
-                {/* District (Sri Lanka) map trigger */}
+                </div>
+              )}
+
+              {/* Quick menu button (mobile) - Hide for sellers */}
+              {!isSeller && (
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
-                  onClick={() => {
-                    setIsMapMenuOpen(true);
-                    setIsCategoryMenuOpen(false);
-                    setIsQuickMenuOpen(false);
-                    setIsProfileDropdownOpen(false);
-                  }}
-                  aria-label="Choose district"
-                  title="Choose District"
-                >
-                  <Image src="/images/SLIcon.png" alt="Sri Lanka" width={36} height={36} className="rounded-md" />
-                </button>
-                {/* Quick menu trigger (rightmost) */}
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center p-2 rounded-md border border-white/10 text-white hover:text-brand-green hover:border-brand-green/60 transition-all duration-300"
+                  className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
                   onClick={() => {
                     setIsQuickMenuOpen(true);
                     setIsCategoryMenuOpen(false);
-                    setIsMapMenuOpen(false);
                     setIsProfileDropdownOpen(false);
                   }}
                   aria-label="Open quick menu"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-5 w-5" />
                 </button>
-              </div>
-            )}
+              )}
 
-            {/* Quick menu button (mobile) - Hide for sellers */}
-            {!isSeller && (
+              {/* Mobile menu button */}
               <button
-                type="button"
-                className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
-                onClick={() => {
-                  setIsQuickMenuOpen(true);
-                  setIsCategoryMenuOpen(false);
-                  setIsProfileDropdownOpen(false);
-                }}
-                aria-label="Open quick menu"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300 hover:scale-110"
               >
-                <Grid3X3 className="h-5 w-5" />
+                <div className="relative">
+                  {isMobileMenuOpen ? (
+                    <X className="h-6 w-6 animate-fade-in" />
+                  ) : (
+                    <Menu className="h-6 w-6 animate-fade-in" />
+                  )}
+                </div>
               </button>
-            )}
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300 hover:scale-110"
-            >
-              <div className="relative">
-                {isMobileMenuOpen ? (
-                  <X className="h-6 w-6 animate-fade-in" />
-                ) : (
-                  <Menu className="h-6 w-6 animate-fade-in" />
-                )}
-              </div>
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden animate-slide-in-down">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-800">
-              {displayNavigation.map((item, index) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`block px-3 py-2 text-base font-medium transition-all duration-300 hover:scale-105 ${
-                    pathname === item.href
+          {/* Mobile Navigation */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden animate-slide-in-down">
+              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-800">
+                {displayNavigation.map((item, index) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`block px-3 py-2 text-base font-medium transition-all duration-300 hover:scale-105 ${pathname === item.href
                       ? 'text-brand-green bg-brand-green/10'
                       : 'text-white hover:text-brand-green hover:bg-gray-800'
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              {/* Hide Browse Tasks category menu for sellers in mobile */}
-              {!isSeller && (serviceGroups as any).length > 0 && (
-                <button
-                  type="button"
-                  className="block w-full text-left px-3 py-2 text-base font-medium text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
-                  onClick={() => {
-                    setIsCategoryMenuOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  {t('browseTasks')}
-                </button>
-              )}
-              {/* Mode Toggle button or Login as Tasker */}
-              {user?.originalUserType === 'tasker' ? (
-                <button
-                  onClick={() => {
-                    handleToggleMode();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
-                >
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  {isSeller ? 'Customer Mode' : 'Login as Tasker'}
-                </button>
-              ) : isLoggedIn && (
-                 <Link
-                    href="/login?type=tasker"
+                      }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                {/* Hide Browse Tasks category menu for sellers in mobile */}
+                {!isSeller && (serviceGroups as any).length > 0 && (
+                  <button
+                    type="button"
+                    className="block w-full text-left px-3 py-2 text-base font-medium text-white hover:text-brand-green hover:bg-gray-800 transition-all duration-300"
+                    onClick={() => {
+                      setIsCategoryMenuOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    {t('browseTasks')}
+                  </button>
+                )}
+                {/* Mode Toggle button or Login as Tasker */}
+                {user?.originalUserType === 'tasker' ? (
+                  <button
+                    onClick={() => {
+                      handleToggleMode();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    {isSeller ? 'Customer Mode' : 'Login as Tasker'}
+                  </button>
+                ) : isLoggedIn && (
+                  <Link
+                    href={`/${locale}/login?type=tasker`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="w-full text-left px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 flex items-center"
-                 >
+                  >
                     Login as Tasker
-                 </Link>
-              )}
-              <div className="pt-4 pb-3 border-t border-gray-800">
-                {isLoggedIn ? (
-                  <>
-                    <div className="px-3 py-2 text-base font-medium text-white flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                        {user?.profile?.profileImage ? (
-                          <Image src={user.profile.profileImage} alt="Profile" width={32} height={32} className="h-full w-full object-cover" />
-                        ) : (
-                          <UserIcon className="h-5 w-5 text-gray-400" />
+                  </Link>
+                )}
+                <div className="pt-4 pb-3 border-t border-gray-800">
+                  {isLoggedIn ? (
+                    <>
+                      <div className="px-3 py-2 text-base font-medium text-white flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                          {user?.profileImage ? (
+                            <Image src={user.profileImage} alt="Profile" width={32} height={32} className="h-full w-full object-cover" />
+                          ) : (
+                            <UserIcon className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+                        <span className="truncate max-w-[150px]">{user?.callingName || user?.firstName}</span>
+                        {user?.userType === 'tasker' && user?.isVerified && (
+                          <VerifiedBadge size="sm" showText={false} />
                         )}
                       </div>
-                      <span className="truncate max-w-[150px]">{user?.callingName || user?.firstName}</span>
-                      {user?.userType === 'tasker' && user?.isVerified && (
-                        <VerifiedBadge size="sm" showText={false} />
-                      )}
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 transition-all duration-300"
-                    >
-                      <LogOut className="h-4 w-4 inline mr-2" />
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="block px-3 py-2 text-base font-medium text-white hover:text-brand-green transition-all duration-300 hover:scale-105"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {t('login')}
-                    </Link>
-                    <Link
-                      href="/signup"
-                      className="block px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 hover:scale-105"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {t('signUp')}
-                    </Link>
-                  </>
-                )}
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 transition-all duration-300"
+                      >
+                        <LogOut className="h-4 w-4 inline mr-2" />
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/${locale}/login`}
+                        className="block px-3 py-2 text-base font-medium text-white hover:text-brand-green transition-all duration-300 hover:scale-105"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {t('login')}
+                      </Link>
+                      <Link
+                        href={`/${locale}/signup`}
+                        className="block px-3 py-2 text-base font-medium text-brand-green hover:text-brand-green/80 transition-all duration-300 hover:scale-105"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {t('signUp')}
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </header>
-    {isCategoryMenuOpen && activeGroup && !isSeller && (
-      <div
-        id="category-mega-menu"
-        className="fixed top-16 left-0 right-0 z-[55] bg-black/95 backdrop-blur-lg border-t border-b border-gray-800 shadow-2xl"
-        onMouseEnter={() => setIsCategoryMenuOpen(true)}
-        onMouseLeave={() => setIsCategoryMenuOpen(false)}
-      >
-        <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-8 py-3">
-          <div className="relative flex-1">
-            {/* Horizontal scroll container with hidden scrollbar */}
-            <div
-              ref={groupScrollRef}
-              onWheelCapture={(e) => {
-                if (!groupScrollRef.current) return;
-                e.preventDefault();
-                e.stopPropagation();
-                groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
-              }}
-              onWheel={(e) => {
-                if (!groupScrollRef.current) return;
-                e.preventDefault();
-                e.stopPropagation();
-                groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
-              }}
-              className="overflow-x-hidden overflow-y-hidden no-scrollbar"
-            >
-              <div className="flex items-center gap-2 min-w-max">
-                {combinedGroups.map((group: any) => {
-                const isActive = group.id === activeCategoryGroup;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    onMouseEnter={() => setActiveCategoryGroup(group.id)}
-                    onFocus={() => setActiveCategoryGroup(group.id)}
-                    onClick={() => setActiveCategoryGroup(group.id)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-                      isActive
-                        ? 'bg-brand-green text-black shadow-md'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="mr-2">{group.icon || ''}</span>
-                    {group.name}
-                  </button>
-                );
-                })}
-              </div>
-            </div>
-            {/* Left/Right scroll buttons */}
-            <button
-              type="button"
-              className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
-              onClick={() => groupScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
-              onClick={() => groupScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsCategoryMenuOpen(false)}
-            className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
-          >
-            <span className="sr-only">Close categories</span>
-            <X className="h-4 w-4" />
-          </button>
+          )}
         </div>
-        <div className="border-t border-gray-800 bg-[#060606] max-h-[70vh] overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p className="text-white/70 mb-4">{activeGroup.description}</p>
-            {activeGroup.sections && activeGroup.sections.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {activeGroup.sections.map((section: any) => (
-                  <div key={section.title}>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-brand-green mb-3">
-                      {section.title}
-                    </p>
-                    <ul className="space-y-2">
-                      {section.items.map((item: any) => {
-                        const label = typeof item === 'string' ? item : item.label;
-                        const badge = typeof item === 'string' ? undefined : item.badge;
-                        return (
-                          <li key={label} className="flex items-center justify-between gap-3">
-                            <button
-                              type="button"
-                              className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
-                              onClick={() => {
-                                setIsCategoryMenuOpen(false);
-                                router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(label)}`);
-                              }}
-                            >
-                              {label}
-                            </button>
-                            {badge === 'new' && (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-green/20 text-brand-green">
-                                NEW
-                              </span>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {activeGroup.services?.map((svc: string) => (
-                  <li key={svc}>
-                    <button
-                      type="button"
-                      className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
-                      onClick={() => {
-                        setIsCategoryMenuOpen(false);
-                        router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
-                      }}
-                    >
-                      {svc}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </div>
-    )}
-    {isQuickMenuOpen && (
-      <>
+      </header>
+      {isCategoryMenuOpen && activeGroup && !isSeller && (
         <div
-          className="fixed inset-0 bg-black/70 z-[70]"
-          onClick={() => setIsQuickMenuOpen(false)}
-          aria-hidden="true"
-        ></div>
-        <aside
-          className="fixed top-0 right-0 h-full w-full max-w-sm bg-gray-950 text-white z-[75] shadow-2xl animate-fade-in-right"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Quick menu"
+          id="category-mega-menu"
+          className="fixed top-16 left-0 right-0 z-[55] bg-black/95 backdrop-blur-lg border-t border-b border-gray-800 shadow-2xl"
+          onMouseEnter={() => setIsCategoryMenuOpen(true)}
+          onMouseLeave={() => setIsCategoryMenuOpen(false)}
         >
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
-            <div>
-              <p className="text-lg font-semibold">Quick Menu</p>
-              <p className="text-sm text-white/60">
-                Jump to helpful sections in a click.
-              </p>
+          <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-8 py-3">
+            <div className="relative flex-1">
+              {/* Horizontal scroll container with hidden scrollbar */}
+              <div
+                ref={groupScrollRef}
+                onWheelCapture={(e) => {
+                  if (!groupScrollRef.current) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
+                }}
+                onWheel={(e) => {
+                  if (!groupScrollRef.current) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  groupScrollRef.current.scrollBy({ left: e.deltaY, behavior: 'smooth' });
+                }}
+                className="overflow-x-hidden overflow-y-hidden no-scrollbar"
+              >
+                <div className="flex items-center gap-2 min-w-max">
+                  {combinedGroups.map((group: any) => {
+                    const isActive = group.id === activeCategoryGroup;
+                    return (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onMouseEnter={() => setActiveCategoryGroup(group.id)}
+                        onFocus={() => setActiveCategoryGroup(group.id)}
+                        onClick={() => setActiveCategoryGroup(group.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${isActive
+                          ? 'bg-brand-green text-black shadow-md'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                          }`}
+                      >
+                        <span className="mr-2">{group.icon || ''}</span>
+                        {group.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Left/Right scroll buttons */}
+              <button
+                type="button"
+                className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
+                onClick={() => groupScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/10"
+                onClick={() => groupScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
             <button
               type="button"
-              onClick={() => setIsQuickMenuOpen(false)}
+              onClick={() => setIsCategoryMenuOpen(false)}
               className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
             >
-              <span className="sr-only">Close quick menu</span>
+              <span className="sr-only">Close categories</span>
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="p-6 space-y-4">
-            {quickMenuItems.map((item) =>
-              item.disabled ? (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-xl border border-gray-800 bg-gray-900/60 text-white/50"
-                >
-                  <p className="text-base font-medium flex items-center gap-2">
-                    {item.label}
-                    <span className="text-[10px] uppercase tracking-widest bg-white/10 text-white/70 px-2 py-0.5 rounded-full">
-                      Coming soon
-                    </span>
-                  </p>
-                  <p className="text-sm mt-1">{item.description}</p>
+          <div className="border-t border-gray-800 bg-[#060606] max-h-[70vh] overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <p className="text-white/70 mb-4">{activeGroup.description}</p>
+              {activeGroup.sections && activeGroup.sections.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {activeGroup.sections.map((section: any) => (
+                    <div key={section.title}>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-brand-green mb-3">
+                        {section.title}
+                      </p>
+                      <ul className="space-y-2">
+                        {section.items.map((item: any) => {
+                          const label = typeof item === 'string' ? item : item.label;
+                          const badge = typeof item === 'string' ? undefined : item.badge;
+                          return (
+                            <li key={label} className="flex items-center justify-between gap-3">
+                              <button
+                                type="button"
+                                className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                                onClick={() => {
+                                  setIsCategoryMenuOpen(false);
+                                  router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(label)}`);
+                                }}
+                              >
+                                {label}
+                              </button>
+                              {badge === 'new' && (
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-green/20 text-brand-green">
+                                  NEW
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="flex items-center justify-between p-4 rounded-xl border border-gray-800 hover:border-brand-green/60 hover:bg-gray-900/60 transition-colors group"
-                  onClick={() => setIsQuickMenuOpen(false)}
-                >
-                  <div>
-                    <p className="text-base font-semibold text-white group-hover:text-brand-green">
-                      {item.label}
-                    </p>
-                    <p className="text-sm text-white/70 mt-1">
-                      {item.description}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-white/40 group-hover:text-brand-green" />
-                </Link>
-              )
-            )}
-          </div>
-        </aside>
-      </>
-    )}
-    {(isMapMenuOpen || isMapMenuClosing) && (
-      <>
-        <div
-          className={`fixed inset-0 bg-black/70 z-[70] ${isMapMenuClosing ? 'animate-fade-out-slow' : 'animate-fade-in'}`}
-          onClick={closeMapMenu}
-          aria-hidden="true"
-        ></div>
-        <aside
-          className={`fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 text-white z-[75] shadow-2xl ${isMapMenuClosing ? 'animate-slide-out-right-slow' : 'animate-slide-in-right-slow'}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="District selector"
-        >
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
-            <div>
-              <p className="text-lg font-semibold">Select Your District</p>
-              <p className="text-sm text-white/60">
-                Pick a district to filter services instantly.
-              </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {activeGroup.services?.map((svc: string) => (
+                    <li key={svc}>
+                      <button
+                        type="button"
+                        className="w-full text-left text-sm text-white/90 hover:text-brand-green transition-colors"
+                        onClick={() => {
+                          setIsCategoryMenuOpen(false);
+                          router.push(`/${locale}/browse-tasks?service=${encodeURIComponent(svc)}`);
+                        }}
+                      >
+                        {svc}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={closeMapMenu}
-              className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
-            >
-              <span className="sr-only">Close district selector</span>
-              <X className="h-4 w-4" />
-            </button>
           </div>
-          <div className="p-4">
-            <SriLankaMap
-              showLabels={true}
-              onDistrictSelect={(district) => {
-                setSelectedDistrict(district);
-                closeMapMenu();
-                router.push(`/browse-gigs?district=${district.name}`);
-              }}
-            />
-          </div>
-        </aside>
-      </>
-    )}
-  </>
+        </div>
+      )}
+      {isQuickMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 z-[70]"
+            onClick={() => setIsQuickMenuOpen(false)}
+            aria-hidden="true"
+          ></div>
+          <aside
+            className="fixed top-0 right-0 h-full w-full max-w-sm bg-gray-950 text-white z-[75] shadow-2xl animate-fade-in-right"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick menu"
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
+              <div>
+                <p className="text-lg font-semibold">Quick Menu</p>
+                <p className="text-sm text-white/60">
+                  Jump to helpful sections in a click.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQuickMenuOpen(false)}
+                className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
+              >
+                <span className="sr-only">Close quick menu</span>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {quickMenuItems.map((item) =>
+                item.disabled ? (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-xl border border-gray-800 bg-gray-900/60 text-white/50"
+                  >
+                    <p className="text-base font-medium flex items-center gap-2">
+                      {item.label}
+                      <span className="text-[10px] uppercase tracking-widest bg-white/10 text-white/70 px-2 py-0.5 rounded-full">
+                        Coming soon
+                      </span>
+                    </p>
+                    <p className="text-sm mt-1">{item.description}</p>
+                  </div>
+                ) : (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center justify-between p-4 rounded-xl border border-gray-800 hover:border-brand-green/60 hover:bg-gray-900/60 transition-colors group"
+                    onClick={() => setIsQuickMenuOpen(false)}
+                  >
+                    <div>
+                      <p className="text-base font-semibold text-white group-hover:text-brand-green">
+                        {item.label}
+                      </p>
+                      <p className="text-sm text-white/70 mt-1">
+                        {item.description}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-white/40 group-hover:text-brand-green" />
+                  </Link>
+                )
+              )}
+            </div>
+          </aside>
+        </>
+      )}
+      {(isMapMenuOpen || isMapMenuClosing) && (
+        <>
+          <div
+            className={`fixed inset-0 bg-black/70 z-[70] ${isMapMenuClosing ? 'animate-fade-out-slow' : 'animate-fade-in'}`}
+            onClick={closeMapMenu}
+            aria-hidden="true"
+          ></div>
+          <aside
+            className={`fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 text-white z-[75] shadow-2xl ${isMapMenuClosing ? 'animate-slide-out-right-slow' : 'animate-slide-in-right-slow'}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="District selector"
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
+              <div>
+                <p className="text-lg font-semibold">Select Your District</p>
+                <p className="text-sm text-white/60">
+                  Pick a district to filter services instantly.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeMapMenu}
+                className="p-2 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
+              >
+                <span className="sr-only">Close district selector</span>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              <SriLankaMap
+                showLabels={true}
+                onDistrictSelect={(district) => {
+                  setSelectedDistrict(district);
+                  closeMapMenu();
+                  router.push(`/browse-gigs?district=${district.name}`);
+                }}
+              />
+            </div>
+          </aside>
+        </>
+      )}
+    </>
   );
 }

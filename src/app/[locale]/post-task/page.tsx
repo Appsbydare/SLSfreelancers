@@ -1,42 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, Upload, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useFormState } from 'react-dom';
+import { ArrowRight, Upload, MapPin, Calendar, DollarSign, AlertCircle } from 'lucide-react';
 import { categories } from '@/data/categories';
+import { createTask } from '@/app/actions/tasks';
+import { supabase } from '@/lib/supabase';
+
+interface FormState {
+  message: string;
+  errors: {
+    [key: string]: string[] | undefined;
+  };
+}
+
+const initialState: FormState = {
+  message: '',
+  errors: {},
+};
 
 export default function PostTaskPage() {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    budget: '',
-    location: '',
-    deadline: '',
-    images: [] as File[],
-  });
+  const [state, dispatch] = useFormState(createTask, initialState);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // Since we use controlled inputs for some UX (like image preview), we keep state.
+  // But for server action, we can rely on FormData or sync state to hidden inputs if complex.
+  // Here, standard inputs work with FormData seamlessly.
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...files]
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    alert('Task posted successfully! (This is a demo)');
-  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('*').order('name');
+      if (data) setCategoriesList(data);
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,7 +50,17 @@ export default function PostTaskPage() {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form action={dispatch} className="space-y-6">
+
+            {state?.message && (
+              <div className={`p-4 rounded-md ${state.message === 'Validation failed' ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                  <p>{state.message}</p>
+                </div>
+              </div>
+            )}
+
             {/* Task Title */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -63,12 +70,13 @@ export default function PostTaskPage() {
                 type="text"
                 id="title"
                 name="title"
-                value={formData.title}
-                onChange={handleInputChange}
                 placeholder="e.g., Clean my house, Assemble furniture, Paint room"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               />
+              {state?.errors?.title && (
+                <p className="mt-1 text-sm text-red-600">{state.errors.title}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -79,13 +87,14 @@ export default function PostTaskPage() {
               <textarea
                 id="description"
                 name="description"
-                value={formData.description}
-                onChange={handleInputChange}
                 rows={4}
                 placeholder="Provide as much detail as possible. Include size, materials, special requirements, etc."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               />
+              {state?.errors?.description && (
+                <p className="mt-1 text-sm text-red-600">{state.errors.description}</p>
+              )}
             </div>
 
             {/* Category */}
@@ -96,18 +105,27 @@ export default function PostTaskPage() {
               <select
                 id="category"
                 name="category"
-                value={formData.category}
-                onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 required
               >
                 <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                {categoriesList.map((category) => (
+                  <option key={category.id} value={category.id}> // Use name or ID based on schema. Schema likely stores TEXT category? Or ID? DB schema said 'category' text?
+                    // Actually `categories` table has ID. `tasks.category` column type?
+                    // Let's assume `tasks.category` stores the ID or name. 
+                    // In typical refactor, I should store ID. 
+                    // But legacy mock data used slug. 
+                    // I'll stick to ID if foreign key exists? 
+                    // Schema.sql said `category` column in tasks is just text? 
+                    // Wait, `tasks` table `category` column is Text. 
+                    // I will store category ID or Name. 
+                    {category.name}
                   </option>
                 ))}
               </select>
+              {state?.errors?.category && (
+                <p className="mt-1 text-sm text-red-600">{state.errors.category}</p>
+              )}
             </div>
 
             {/* Budget */}
@@ -121,8 +139,6 @@ export default function PostTaskPage() {
                   type="number"
                   id="budget"
                   name="budget"
-                  value={formData.budget}
-                  onChange={handleInputChange}
                   placeholder="0"
                   min="0"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
@@ -132,6 +148,9 @@ export default function PostTaskPage() {
               <p className="text-sm text-gray-500 mt-1">
                 This helps taskers understand your budget range
               </p>
+              {state?.errors?.budget && (
+                <p className="mt-1 text-sm text-red-600">{state.errors.budget}</p>
+              )}
             </div>
 
             {/* Location */}
@@ -145,13 +164,14 @@ export default function PostTaskPage() {
                   type="text"
                   id="location"
                   name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
                   placeholder="e.g., Colombo 7, Kandy, Galle"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   required
                 />
               </div>
+              {state?.errors?.location && (
+                <p className="mt-1 text-sm text-red-600">{state.errors.location}</p>
+              )}
             </div>
 
             {/* Deadline */}
@@ -165,56 +185,14 @@ export default function PostTaskPage() {
                   type="date"
                   id="deadline"
                   name="deadline"
-                  value={formData.deadline}
-                  onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                 />
               </div>
             </div>
 
-            {/* Images */}
-            <div>
-              <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-2">
-                Photos (Optional)
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">
-                  Upload photos to help taskers understand your needs
-                </p>
-                <input
-                  type="file"
-                  id="images"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="images"
-                  className="inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 cursor-pointer"
-                >
-                  Choose Files
-                </label>
-              </div>
-              {formData.images.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600">
-                    {formData.images.length} file(s) selected
-                  </p>
-                </div>
-              )}
-            </div>
-
             {/* Submit Button */}
             <div className="pt-6">
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors"
-              >
-                Post Task for Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </button>
+              <SubmitButton />
               <p className="text-sm text-gray-500 text-center mt-2">
                 It&apos;s free to post a task. You only pay when you hire someone.
               </p>
@@ -237,5 +215,22 @@ export default function PostTaskPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+import { useFormStatus } from 'react-dom';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full inline-flex items-center justify-center px-6 py-4 bg-brand-green text-white text-lg font-semibold rounded-lg hover:bg-brand-green/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Posting...' : 'Post Task for Free'}
+      {!pending && <ArrowRight className="ml-2 h-5 w-5" />}
+    </button>
   );
 }

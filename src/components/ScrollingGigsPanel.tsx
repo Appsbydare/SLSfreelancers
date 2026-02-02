@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Award, ChevronLeft, ChevronRight, Clock, Star } from 'lucide-react';
@@ -8,16 +8,19 @@ import SellerLevelBadge from './SellerLevelBadge';
 import VerifiedBadge from './VerifiedBadge';
 
 interface ScrollingGigsPanelProps {
+  gigs: any[];
   autoScroll?: boolean;
   scrollSpeed?: number; // legacy prop (kept for compatibility)
 }
 
-export default function ScrollingGigsPanel({ 
+export default function ScrollingGigsPanel({
+  gigs = [],
   autoScroll = false,
   scrollSpeed = 30 // legacy prop (kept for compatibility)
 }: ScrollingGigsPanelProps) {
-  const [gigs, setGigs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [gigs, setGigs] = useState<any[]>([]); // Removed local state
+  // const [loading, setLoading] = useState(true); // Removed local state
+  const loading = false; // Always loaded since data passed as prop
   const [isPaused, setIsPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollIntervalRef = useRef<number | null>(null);
@@ -25,44 +28,11 @@ export default function ScrollingGigsPanel({
   // Use scrollSpeed to avoid unused var warning
   const scrollInterval = scrollSpeed ? 3500 : 3500;
 
-  useEffect(() => {
-    fetchFeaturedGigs();
-  }, []);
+  // useEffect(() => {
+  //   fetchFeaturedGigs();
+  // }, []);
 
-  useEffect(() => {
-    if (!autoScroll || gigs.length === 0 || isPaused) {
-      stopAutoScroll();
-      return;
-    }
-
-    startAutoScroll();
-    return () => stopAutoScroll();
-  }, [autoScroll, gigs.length, isPaused]);
-
-  const fetchFeaturedGigs = async () => {
-    try {
-      const response = await fetch('/api/gigs?limit=20&sortBy=popular');
-      const data = await response.json();
-      const gigsData = data.gigs || [];
-      
-      // If we have gigs, use them (prioritize featured, then top rated)
-      if (gigsData.length > 0) {
-        const featuredGigs = gigsData
-          .filter((gig: any) => gig.is_featured || (gig.rating && gig.rating >= 4.5))
-          .slice(0, 20);
-        setGigs(featuredGigs.length > 0 ? featuredGigs : gigsData.slice(0, 20));
-      } else {
-        // If no gigs, still set empty array (fallback should be handled by API)
-        setGigs([]);
-      }
-    } catch (error) {
-      console.error('Error fetching featured gigs:', error);
-      // On error, try to show sample data as last resort
-      setGigs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // fetchFeaturedGigs removed
 
   const getScrollStep = () => {
     const container = scrollContainerRef.current;
@@ -75,7 +45,7 @@ export default function ScrollingGigsPanel({
     return cardWidth + gap;
   };
 
-  const scrollByCard = (direction: 1 | -1) => {
+  const scrollByCard = useCallback((direction: 1 | -1) => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -95,22 +65,32 @@ export default function ScrollingGigsPanel({
     }
 
     container.scrollBy({ left: direction * step, behavior: 'smooth' });
-  };
+  }, []);
 
-  const startAutoScroll = () => {
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollIntervalRef.current) {
+      window.clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
+    }
+  }, []);
+
+  const startAutoScroll = useCallback(() => {
     stopAutoScroll();
     autoScrollIntervalRef.current = window.setInterval(() => {
       if (isPaused) return;
       scrollByCard(1);
     }, scrollInterval);
-  };
+  }, [isPaused, scrollInterval, stopAutoScroll, scrollByCard]);
 
-  const stopAutoScroll = () => {
-    if (autoScrollIntervalRef.current) {
-      window.clearInterval(autoScrollIntervalRef.current);
-      autoScrollIntervalRef.current = null;
+  useEffect(() => {
+    if (!autoScroll || gigs.length === 0 || isPaused) {
+      stopAutoScroll();
+      return;
     }
-  };
+
+    startAutoScroll();
+    return () => stopAutoScroll();
+  }, [autoScroll, gigs.length, isPaused, startAutoScroll, stopAutoScroll]);
 
   if (loading) {
     return (
@@ -179,9 +159,9 @@ export default function ScrollingGigsPanel({
             }}
           >
             {gigs.map((gig, index) => (
-              <GigCard 
-                key={`${gig.id}-${index}`} 
-                gig={gig} 
+              <GigCard
+                key={`${gig.id}-${index}`}
+                gig={gig}
                 onCardHover={(isHovering) => setIsPaused(isHovering)}
               />
             ))}
@@ -219,7 +199,7 @@ function GigCard({ gig, onCardHover }: { gig: any; onCardHover?: (isHovering: bo
   const ordersCount = gig.ordersCount || gig.orders_count || 0;
 
   return (
-    <Link 
+    <Link
       href={`/gigs/${gig.slug}`}
       className="flex-shrink-0 w-80 snap-start bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
       style={{ scrollSnapStop: 'always' }}

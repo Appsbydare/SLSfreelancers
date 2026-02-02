@@ -4,7 +4,8 @@ import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
     try {
-        const { email } = await request.json();
+        const { email, locale } = await request.json();
+        const safeLocale = locale || 'en';
 
         if (!email) {
             return NextResponse.json(
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
         // Construct reset link
         const origin = request.nextUrl.origin;
-        const resetLink = `${origin}/reset-password?token=${token}`;
+        const resetLink = `${origin}/${safeLocale}/reset-password?token=${token}`;
 
         // Simulate sending email (Log to console)
         console.log('========================================================');

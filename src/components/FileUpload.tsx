@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Upload, X, FileText, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface FileUploadProps {
@@ -85,7 +86,7 @@ export default function FileUpload({
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
     } else if (e.type === 'dragleave') {
@@ -111,7 +112,7 @@ export default function FileUpload({
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
     onChange(updatedFiles.map(f => f.file));
-    
+
     // Revoke object URL to prevent memory leaks
     if (files[index].preview) {
       URL.revokeObjectURL(files[index].preview!);
@@ -138,13 +139,12 @@ export default function FileUpload({
 
       {/* Drop Zone */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
-          dragActive
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${dragActive
             ? 'border-brand-green bg-brand-green/5'
             : error || uploadError
-            ? 'border-red-300 bg-red-50'
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -175,8 +175,8 @@ export default function FileUpload({
             {accept.includes('image') && accept.includes('pdf')
               ? 'PDF, PNG, JPG, WEBP'
               : accept.includes('image')
-              ? 'PNG, JPG, WEBP'
-              : 'PDF only'}{' '}
+                ? 'PNG, JPG, WEBP'
+                : 'PDF only'}{' '}
             (max {maxSizeMB}MB)
           </p>
         </div>
@@ -205,11 +205,14 @@ export default function FileUpload({
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 {fileWithPreview.preview ? (
-                  <img
-                    src={fileWithPreview.preview}
-                    alt="Preview"
-                    className="h-10 w-10 rounded object-cover flex-shrink-0"
-                  />
+                  <div className="relative h-10 w-10 rounded flex-shrink-0">
+                    <Image
+                      src={fileWithPreview.preview}
+                      alt="Preview"
+                      fill
+                      className="rounded object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="h-10 w-10 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
                     {fileWithPreview.file.type === 'application/pdf' ? (

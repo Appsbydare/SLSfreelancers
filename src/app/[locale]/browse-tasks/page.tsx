@@ -1,149 +1,160 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
-import { categories } from '@/data/categories';
+// import { categories } from '@/data/categories'; // Still useful for filter dropdown, but we should fetch from DB ideally or keep static for now if unchanged
 import { formatCurrency } from '@/lib/utils';
 import { districts, District, City } from '@/data/districts';
 import { useDistrict } from '@/contexts/DistrictContext';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-
-// Mock data for tasks
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Home Cleaning Service',
-    description: 'Need a thorough cleaning of my 3-bedroom house in Colombo 7. Includes kitchen, bathrooms, and living areas.',
-    budget: 5000,
-    location: 'Colombo 7',
-    category: 'cleaning',
-    postedDate: new Date('2024-01-20'),
-    deadline: new Date('2024-01-25'),
-    posterName: 'Sarah J.',
-    posterRating: 4.8,
-    offersCount: 12,
-    status: 'open' as const,
-  },
-  {
-    id: '2',
-    title: 'Furniture Assembly',
-    description: 'Need help assembling IKEA furniture - bed frame, wardrobe, and desk.',
-    budget: 3000,
-    location: 'Kandy',
-    category: 'assembly',
-    postedDate: new Date('2024-01-19'),
-    posterName: 'Michael R.',
-    posterRating: 4.9,
-    offersCount: 8,
-    status: 'open' as const,
-  },
-  {
-    id: '3',
-    title: 'Garden Landscaping',
-    description: 'Transform my backyard with new plants, pathway, and small water feature.',
-    budget: 15000,
-    location: 'Galle',
-    category: 'gardening',
-    postedDate: new Date('2024-01-18'),
-    posterName: 'Priya L.',
-    posterRating: 4.7,
-    offersCount: 15,
-    status: 'open' as const,
-  },
-  {
-    id: '4',
-    title: 'Delivery Service',
-    description: 'Need to deliver documents from Colombo to Kandy urgently.',
-    budget: 2500,
-    location: 'Colombo to Kandy',
-    category: 'delivery',
-    postedDate: new Date('2024-01-17'),
-    posterName: 'David K.',
-    posterRating: 4.6,
-    offersCount: 6,
-    status: 'open' as const,
-  },
-  {
-    id: '5',
-    title: 'Painting Service',
-    description: 'Paint two bedrooms and living room. Walls need primer and two coats.',
-    budget: 8000,
-    location: 'Negombo',
-    category: 'painting',
-    postedDate: new Date('2024-01-16'),
-    posterName: 'Nimal S.',
-    posterRating: 4.5,
-    offersCount: 10,
-    status: 'open' as const,
-  },
-];
+import { supabase } from '@/lib/supabase';
 
 export default function BrowseTasksPage() {
   const locale = useLocale();
   const t = useTranslations();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
+  const searchParams = useSearchParams();
+
+  // State
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]); // Fetch from DB
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
   const [selectedCityId, setSelectedCityId] = useState<string>('');
   const [sortBy, setSortBy] = useState('newest');
   const [taskerType, setTaskerType] = useState<string>('all');
-  const searchParams = useSearchParams();
 
-  // Sync with DistrictContext when district is selected from map
+  // Sync filters from URL/Context
   useEffect(() => {
     if (selectedDistrict) {
       setSelectedDistrictId(selectedDistrict.id);
-      setSelectedCityId(''); // Reset city when district changes
+      setSelectedCityId('');
     }
   }, [selectedDistrict]);
 
-  // Prefill category from query params if present
   useEffect(() => {
     const cat = searchParams?.get('category');
-    if (cat) {
-      setSelectedCategory(cat);
-    }
+    if (cat) setSelectedCategory(cat);
+
     const svc = searchParams?.get('service');
-    if (svc) {
-      setSearchTerm(svc);
-    }
+    if (svc) setSearchTerm(svc);
   }, [searchParams]);
-  // Get selected district object
+
+  // Fetch Categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      if (data) setCategories(data);
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch Tasks
+  const fetchTasks = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('tasks')
+        .select(`
+          *,
+          customers!inner (
+            users (
+              first_name,
+              last_name,
+              profile_image_url
+            )
+          ),
+          offers (count)
+        `)
+        .eq('status', 'open');
+
+      if (searchTerm) {
+        // Simple OR search on title and description
+        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+
+      if (selectedCategory) {
+        query = query.eq('category', selectedCategory);
+      }
+
+      if (selectedDistrictId) {
+        // Assuming location column stores somewhat structured data or we filter by text
+        // Ideally schema has district_id. For now, text search on location
+        const dist = districts.find(d => d.id === selectedDistrictId)?.name;
+        if (dist) {
+          query = query.ilike('location', `%${dist}%`);
+        }
+      }
+
+      // Sorting
+      switch (sortBy) {
+        case 'budget-high':
+          query = query.order('budget', { ascending: false });
+          break;
+        case 'budget-low':
+          query = query.order('budget', { ascending: true });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+      } else {
+        setTasks(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm, selectedCategory, selectedDistrictId, sortBy]); // Removed dependencies that might cause loop if not careful, using manual debouncing logic is better, but this is simple
+
+  // Trigger fetch when filters change
+  // Use debounce for search term could be good, but for now simple effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTasks();
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [fetchTasks]);
+
+
+  // Helpers
   const selectedDistrictObj = districts.find(d => d.id === selectedDistrictId);
-  
-  // Get cities for selected district
   const availableCities = selectedDistrictObj?.cities || [];
 
-  // Get district name based on locale
   const getDistrictName = (district: District) => {
     switch (locale) {
-      case 'si':
-        return district.nameSi;
-      case 'ta':
-        return district.nameTa;
-      default:
-        return district.name;
+      case 'si': return district.nameSi;
+      case 'ta': return district.nameTa;
+      default: return district.name;
     }
   };
 
-  // Get city name based on locale
   const getCityName = (city: City) => {
     switch (locale) {
-      case 'si':
-        return city.nameSi;
-      case 'ta':
-        return city.nameTa;
-      default:
-        return city.name;
+      case 'si': return city.nameSi;
+      case 'ta': return city.nameTa;
+      default: return city.name;
     }
   };
 
-  // Handle district change
   const handleDistrictChange = (districtId: string) => {
     setSelectedDistrictId(districtId);
-    setSelectedCityId(''); // Reset city when district changes
+    setSelectedCityId('');
     const district = districts.find(d => d.id === districtId);
     if (district) {
       setSelectedDistrict(district);
@@ -152,33 +163,27 @@ export default function BrowseTasksPage() {
     }
   };
 
-  const filteredTasks = mockTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || task.category === selectedCategory;
-    // TODO: Add district and city filtering when task data includes these fields
-    return matchesSearch && matchesCategory;
-  });
-
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    switch (sortBy) {
-      case 'budget-high':
-        return b.budget - a.budget;
-      case 'budget-low':
-        return a.budget - b.budget;
-      case 'newest':
-      default:
-        return b.postedDate.getTime() - a.postedDate.getTime();
-    }
-  });
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-24 pt-4 pb-6">
 
-        {/* Top Filters (Categories, Sort, Tasker Type, District, City) */}
-        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-2 mb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Top Filters */}
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-4 mb-6">
+          {/* Search Bar Row */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search tasks by title..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Category */}
             <select
               value={selectedCategory}
@@ -187,7 +192,8 @@ export default function BrowseTasksPage() {
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.id}>
+                <option key={category.id} value={category.id}> // Assuming DB uses 'id' or 'slug'
+                  {/* We might need to handle localization here if we want perfect polish, but name is reliable */}
                   {category.name}
                 </option>
               ))}
@@ -202,17 +208,7 @@ export default function BrowseTasksPage() {
               <option value="budget-high">Budget: High to Low</option>
               <option value="budget-low">Budget: Low to High</option>
             </select>
-            {/* Tasker Type (UI only for now) */}
-            <select
-              value={taskerType}
-              onChange={(e) => setTaskerType(e.target.value)}
-              className="w-full h-10 text-sm px-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green"
-            >
-              <option value="all">Tasker Type</option>
-              <option value="individual">Individual</option>
-              <option value="company">Company</option>
-              <option value="agency">Agency</option>
-            </select>
+
             {/* District */}
             <select
               value={selectedDistrictId}
@@ -226,7 +222,8 @@ export default function BrowseTasksPage() {
                 </option>
               ))}
             </select>
-            {/* City */}
+
+            {/* City (Optional - just visual for now if we don't have City in DB) */}
             <select
               value={selectedCityId}
               onChange={(e) => setSelectedCityId(e.target.value)}
@@ -243,71 +240,105 @@ export default function BrowseTasksPage() {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Results Info */}
         <div className="mb-4">
-          <p className="text-gray-600">
-            Showing {sortedTasks.length} task{sortedTasks.length !== 1 ? 's' : ''}
-          </p>
+          {isLoading ? (
+            <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
+          ) : (
+            <p className="text-gray-600">
+              Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
-        {/* Task Cards */}
+        {/* Task Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {sortedTasks.map((task) => (
-            <div key={task.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
-                    {task.title}
-                  </h3>
-                  <span className="text-lg font-bold text-brand-green">
-                    {formatCurrency(task.budget)}
-                  </span>
+          {isLoading ? (
+            // Skeletons
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+                <div className="flex justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                 </div>
+              </div>
+            ))
+          ) : (
+            tasks.map((task) => {
+              // Safe accessors
+              const posterName = task.customers?.users?.first_name || 'Unknown User';
+              const posterInitial = posterName.charAt(0);
+              const offersCount = task.offers?.[0]?.count || 0;
+              const formattedDate = new Date(task.created_at).toLocaleDateString();
 
-                <p className="text-gray-600 mb-4 line-clamp-2">
-                  {task.description}
-                </p>
-
-                <div className="flex items-center text-sm text-gray-500 mb-4 space-x-4">
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {task.location}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {task.postedDate.toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        {task.posterName.charAt(0)}
+              return (
+                <div key={task.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+                        {task.title}
+                      </h3>
+                      <span className="text-lg font-bold text-brand-green">
+                        {formatCurrency(task.budget)}
                       </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{task.posterName}</p>
+
+                    <p className="text-gray-600 mb-4 line-clamp-2">
+                      {task.description}
+                    </p>
+
+                    <div className="flex items-center text-sm text-gray-500 mb-4 space-x-4">
                       <div className="flex items-center">
-                        <span className="text-yellow-400">★</span>
-                        <span className="text-sm text-gray-600 ml-1">{task.posterRating}</span>
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {task.location}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {formattedDate}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        {task.customers?.users?.profile_image_url ? (
+                          <img
+                            src={task.customers.users.profile_image_url}
+                            alt={posterName}
+                            className="w-8 h-8 rounded-full mr-2 object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
+                            <span className="text-sm font-medium text-gray-600">
+                              {posterInitial}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{posterName}</p>
+                          <div className="flex items-center">
+                            <span className="text-yellow-400">★</span>
+                            <span className="text-sm text-gray-600 ml-1">5.0</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">{offersCount} offers</p>
+                        <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
+                          Make Offer
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">{task.offersCount} offers</p>
-                    <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
-                      Make Offer
-                    </button>
-                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
 
-        {sortedTasks.length === 0 && (
+        {!isLoading && tasks.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />

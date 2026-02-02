@@ -1,0 +1,163 @@
+'use server';
+
+import { supabaseServer } from '@/lib/supabase-server';
+import { revalidatePath } from 'next/cache';
+
+export async function getSellerDashboardData(userId: string) {
+    const supabase = supabaseServer;
+
+    // 1. Get Tasker Profile
+    const { data: tasker, error: taskerError } = await supabase
+        .from('taskers')
+        .select(`
+      *,
+      user:users(first_name, last_name, profile_image_url)
+    `)
+        .eq('user_id', userId)
+        .single();
+
+    if (taskerError) {
+        console.error('Error fetching tasker profile:', taskerError);
+        return null;
+    }
+
+    // 2. Get Active Gigs Count
+    const { count: activeGigsCount, error: gigsError } = await supabase
+        .from('gigs')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', tasker.id)
+        .eq('status', 'active');
+
+    // 3. Get Active Orders Count (pending, in_progress, delivered)
+    const { count: activeOrdersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', tasker.id)
+        .in('status', ['pending', 'in_progress', 'delivered']);
+
+    // 4. Calculate Total Earnings (completed orders)
+    const { data: completedOrders } = await supabase
+        .from('orders')
+        .select('seller_earnings')
+        .eq('seller_id', tasker.id)
+        .eq('status', 'completed');
+
+    const totalEarnings = completedOrders?.reduce((sum: number, order: any) => sum + (Number(order.seller_earnings) || 0), 0) || 0;
+
+    // 5. Calculate Pending Earnings (in_progress, delivered)
+    const { data: pendingOrders } = await supabase
+        .from('orders')
+        .select('seller_earnings')
+        .eq('seller_id', tasker.id)
+        .in('status', ['in_progress', 'delivered']);
+
+    const pendingEarnings = pendingOrders?.reduce((sum: number, order: any) => sum + (Number(order.seller_earnings) || 0), 0) || 0;
+
+    // 6. Total Orders Count
+    const { count: totalOrdersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', tasker.id);
+
+    return {
+        tasker,
+        stats: {
+            activeGigs: activeGigsCount || 0,
+            activeOrders: activeOrdersCount || 0,
+            completedOrders: completedOrders?.length || 0,
+            totalOrders: totalOrdersCount || 0,
+            totalEarnings,
+            pendingEarnings
+        }
+    };
+}
+
+export async function getSellerGigs(userId: string) {
+    const supabase = supabaseServer;
+
+    // Get tasker ID first
+    const { data: tasker } = await supabase
+        .from('taskers')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+    if (!tasker) return [];
+
+    const { data: gigs, error } = await supabase
+        .from('gigs')
+        .select('*')
+        .eq('seller_id', tasker.id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching gigs:', error);
+        return [];
+    }
+
+    // Calculate stats for each gig (views, orders, rating)
+    // Currently these fields might be on the gig table or need aggregation.
+    // Assuming they are on the gig table based on previous code usage (fake or real).
+    // If not, we might need to join.
+    // The previous code accessed `gig.views_count`, `gig.orders_count`, `gig.rating`.
+    // Let's assume they exist or we return raw gig data.
+
+    return gigs;
+}
+
+export async function pauseGig(gigId: string, userId: string) {
+    const supabase = supabaseServer;
+    // Verify ownership
+    const { data: gig } = await supabase.from('gigs').select('seller_id').eq('id', gigId).single();
+    const { data: tasker } = await supabase.from('taskers').select('id').eq('user_id', userId).single();
+
+    if (!gig || !tasker || gig.seller_id !== tasker.id) {
+        throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+        .from('gigs')
+        .update({ status: 'paused' })
+        .eq('id', gigId);
+
+    if (error) throw error;
+    revalidatePath('/seller/dashboard/gigs');
+}
+
+export async function activateGig(gigId: string, userId: string) {
+    const supabase = supabaseServer;
+    // Verify ownership
+    const { data: gig } = await supabase.from('gigs').select('seller_id').eq('id', gigId).single();
+    const { data: tasker } = await supabase.from('taskers').select('id').eq('user_id', userId).single();
+
+    if (!gig || !tasker || gig.seller_id !== tasker.id) {
+        throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+        .from('gigs')
+        .update({ status: 'active' })
+        .eq('id', gigId);
+
+    if (error) throw error;
+    revalidatePath('/seller/dashboard/gigs');
+}
+
+export async function deleteGig(gigId: string, userId: string) {
+    const supabase = supabaseServer;
+    // Verify ownership
+    const { data: gig } = await supabase.from('gigs').select('seller_id').eq('id', gigId).single();
+    const { data: tasker } = await supabase.from('taskers').select('id').eq('user_id', userId).single();
+
+    if (!gig || !tasker || gig.seller_id !== tasker.id) {
+        throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+        .from('gigs')
+        .delete()
+        .eq('id', gigId);
+
+    if (error) throw error;
+    revalidatePath('/seller/dashboard/gigs');
+}

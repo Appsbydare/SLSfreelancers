@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface AdCarouselProps {
   images: string[];
@@ -33,18 +34,20 @@ export default function AdCarousel({ images, interval = 10000 }: AdCarouselProps
         {images.map((image, index) => (
           <div
             key={index}
-            className={`w-full transition-all duration-1000 ease-in-out ${
-              index === currentIndex
+            className={`w-full transition-all duration-1000 ease-in-out ${index === currentIndex
                 ? 'opacity-100 scale-100 relative'
                 : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'
-            }`}
+              }`}
           >
-            <img
-              src={image}
-              alt={`Advertisement ${index + 1}`}
-              className="w-full h-auto object-contain block"
-              loading={index === 0 ? 'eager' : 'lazy'}
-            />
+            <div className="relative w-full" style={{ minHeight: '200px' }}>
+              <Image
+                src={image}
+                alt={`Advertisement ${index + 1}`}
+                fill
+                className="object-contain"
+                priority={index === 0}
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -62,11 +65,10 @@ export default function AdCarousel({ images, interval = 10000 }: AdCarouselProps
                   setIsTransitioning(false);
                 }, 500);
               }}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
                   ? 'bg-brand-green w-8'
                   : 'bg-gray-400 hover:bg-gray-300'
-              }`}
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

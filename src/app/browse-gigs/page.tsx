@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import GigCard from '@/components/GigCard';
@@ -12,7 +12,7 @@ export default function BrowseGigsPage() {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -22,16 +22,12 @@ export default function BrowseGigsPage() {
   const [deliveryTime, setDeliveryTime] = useState('');
   const [sellerLevel, setSellerLevel] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
-  
+
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchGigs();
-  }, [page, sortBy, selectedCategory, selectedDistrict, sellerLevel]);
-
-  const fetchGigs = async () => {
+  const fetchGigs = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -49,7 +45,7 @@ export default function BrowseGigsPage() {
       if (sellerLevel) params.append('sellerLevel', sellerLevel);
 
       const response = await fetch(`/api/gigs?${params.toString()}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setGigs(data.gigs || []);
@@ -60,7 +56,11 @@ export default function BrowseGigsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, sortBy, searchQuery, selectedCategory, selectedDistrict, minPrice, maxPrice, deliveryTime, sellerLevel]);
+
+  useEffect(() => {
+    fetchGigs();
+  }, [fetchGigs]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +87,7 @@ export default function BrowseGigsPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Browse Gigs</h1>
-          
+
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
@@ -335,7 +335,7 @@ export default function BrowseGigsPage() {
                 )}
               </div>
             )}
-            
+
             {/* Post a Custom Task Section */}
             <div className="mt-12 mb-8 bg-gradient-to-r from-brand-green/10 to-brand-green/5 rounded-lg border border-brand-green/20 p-8 text-center">
               <h3 className="text-2xl font-bold text-gray-900 mb-3 font-geom">

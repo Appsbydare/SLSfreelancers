@@ -15,6 +15,7 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = '', s
   const countRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = countRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !hasStarted) {
@@ -25,33 +26,33 @@ function useCountUp(end: number, duration: number = 2000, suffix: string = '', s
           const animate = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
             const progress = Math.min((currentTime - startTime) / duration, 1);
-            
+
             // Easing function for smooth animation
             const easeOutQuart = 1 - Math.pow(1 - progress, 4);
             const current = Math.floor(startValue + (end - startValue) * easeOutQuart);
-            
+
             setCount(current);
-            
+
             if (progress < 1) {
               requestAnimationFrame(animate);
             } else {
               setCount(end);
             }
           };
-          
+
           requestAnimationFrame(animate);
         }
       },
       { threshold: 0.5 }
     );
 
-    if (countRef.current) {
-      observer.observe(countRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (countRef.current) {
-        observer.unobserve(countRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [end, duration, hasStarted, start]);
@@ -66,6 +67,7 @@ function useCountUpRange(min: number, max: number, duration: number = 2000) {
   const countRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = countRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !hasStarted) {
@@ -76,33 +78,33 @@ function useCountUpRange(min: number, max: number, duration: number = 2000) {
           const animate = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
             const progress = Math.min((currentTime - startTime) / duration, 1);
-            
+
             // Easing function for smooth animation
             const easeOutQuart = 1 - Math.pow(1 - progress, 4);
             const current = Math.floor(startValue + (max - startValue) * easeOutQuart);
-            
+
             setCount(current);
-            
+
             if (progress < 1) {
               requestAnimationFrame(animate);
             } else {
               setCount(max);
             }
           };
-          
+
           requestAnimationFrame(animate);
         }
       },
       { threshold: 0.5 }
     );
 
-    if (countRef.current) {
-      observer.observe(countRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (countRef.current) {
-        observer.unobserve(countRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [min, max, duration, hasStarted]);
@@ -118,6 +120,7 @@ function useDualCounter(hoursEnd: number, daysEnd: number, hoursStart: number = 
   const countRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = countRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !hasStarted) {
@@ -127,16 +130,16 @@ function useDualCounter(hoursEnd: number, daysEnd: number, hoursStart: number = 
           const animate = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
             const progress = Math.min((currentTime - startTime) / duration, 1);
-            
+
             // Easing function for smooth animation
             const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-            
+
             const currentHours = Math.floor(hoursStart + (hoursEnd - hoursStart) * easeOutQuart);
             const currentDays = Math.floor(daysStart + (daysEnd - daysStart) * easeOutQuart);
-            
+
             setHours(currentHours);
             setDays(currentDays);
-            
+
             if (progress < 1) {
               requestAnimationFrame(animate);
             } else {
@@ -144,20 +147,20 @@ function useDualCounter(hoursEnd: number, daysEnd: number, hoursStart: number = 
               setDays(daysEnd);
             }
           };
-          
+
           requestAnimationFrame(animate);
         }
       },
       { threshold: 0.5 }
     );
 
-    if (countRef.current) {
-      observer.observe(countRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (countRef.current) {
-        observer.unobserve(countRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [hoursEnd, daysEnd, hoursStart, daysStart, duration, hasStarted]);
@@ -170,7 +173,7 @@ export default function HeroBanner() {
   const locale = useLocale();
   const { selectedDistrict, setSelectedDistrict } = useDistrict();
   const router = useRouter();
-  
+
   // Animated counters
   const tasksCounter = useCountUp(500, 2000, '+');
   const successCounter = useCountUpRange(97, 99, 2000);
@@ -258,7 +261,7 @@ export default function HeroBanner() {
               <div className="mt-auto pt-8">
                 <div className="grid grid-cols-3 gap-4">
                   {/* Tasks Stat Box */}
-                  <div 
+                  <div
                     ref={tasksCounter.countRef}
                     className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
                     style={{ animationDelay: '600ms' }}
@@ -270,9 +273,9 @@ export default function HeroBanner() {
                       <p className="text-sm font-medium text-gray-600">{t('stats.tasks')}</p>
                     </div>
                   </div>
-                  
+
                   {/* Success Stat Box */}
-                  <div 
+                  <div
                     ref={successCounter.countRef}
                     className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
                     style={{ animationDelay: '700ms' }}
@@ -284,9 +287,9 @@ export default function HeroBanner() {
                       <p className="text-sm font-medium text-gray-600">{t('stats.success')}</p>
                     </div>
                   </div>
-                  
+
                   {/* Support Stat Box */}
-                  <div 
+                  <div
                     ref={supportCounter.countRef}
                     className="bg-white rounded-xl p-6 shadow-lg border border-brand-green/20 hover:shadow-xl hover:border-brand-green/40 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
                     style={{ animationDelay: '800ms' }}
@@ -312,7 +315,7 @@ export default function HeroBanner() {
                   Select your district to find service providers near you
                 </p>
               </div>
-              
+
               <div className="w-full">
                 <SriLankaMap
                   onDistrictSelect={handleDistrictSelect}
@@ -331,7 +334,7 @@ export default function HeroBanner() {
                     </div>
                     <div className="text-center sm:text-right">
                       <p className="text-sm text-brand-green/80 mb-2">{selectedDistrict.services.length} Services</p>
-                      <Link 
+                      <Link
                         href={`/${locale}/browse-tasks?district=${selectedDistrict.id}`}
                         className="inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors"
                       >

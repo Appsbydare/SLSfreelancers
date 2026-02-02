@@ -2,19 +2,22 @@
 
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
-import { categories } from '@/data/categories';
+// import { categories } from '@/data/categories'; // Removed static import
 import { Search } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { Category } from '@/types'; // Ensure Category type is imported
 
 interface CategoryGridProps {
+  categories: Category[];
   autoScroll?: boolean;
   scrollSpeed?: number; // pixels per second
 }
 
-export default function CategoryGrid({ 
-  autoScroll = true, 
-  scrollSpeed = 25 
-}: CategoryGridProps = {}) {
+export default function CategoryGrid({
+  categories,
+  autoScroll = true,
+  scrollSpeed = 25
+}: CategoryGridProps) {
   const t = useTranslations('homepage.popularCategories');
   const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,17 +29,17 @@ export default function CategoryGrid({
   const getCategoryName = (category: typeof categories[0]) => {
     switch (locale) {
       case 'si':
-        return category.nameSi;
+        return category.nameSi || category.name;
       case 'ta':
-        return category.nameTa;
+        return category.nameTa || category.name;
       default:
         return category.name;
     }
   };
 
   const filteredCategories = categories.filter(category => {
-    const name = getCategoryName(category).toLowerCase();
-    const description = category.description.toLowerCase();
+    const name = (getCategoryName(category) || '').toLowerCase();
+    const description = (category.description || '').toLowerCase();
     const query = searchQuery.toLowerCase();
     return name.includes(query) || description.includes(query);
   });
@@ -48,7 +51,7 @@ export default function CategoryGrid({
       const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
       scrollContainerRef.current.scrollLeft = maxScroll;
     }
-    
+
     if (autoScroll && filteredCategories.length > 0 && !isPaused) {
       startAutoScroll();
     } else {
@@ -95,8 +98,8 @@ export default function CategoryGrid({
   };
 
   return (
-    <div 
-      id="popular-categories" 
+    <div
+      id="popular-categories"
       className="py-12 scroll-mt-20 bg-gradient-to-b from-white to-gray-50"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

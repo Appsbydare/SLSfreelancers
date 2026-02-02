@@ -109,16 +109,18 @@ export async function POST(request: NextRequest) {
       throw new Error(insertError?.message || 'Failed to create user');
     }
 
-    if (payload.userType === 'customer') {
-      const { error: customerError } = await supabaseServer.from('customers').insert({
-        user_id: insertedUser.id,
-        address_line1: payload.location?.trim() || null,
-      });
+    // Always create customer record
+    const { error: customerError } = await supabaseServer.from('customers').insert({
+      user_id: insertedUser.id,
+      address_line1: payload.location?.trim() || null,
+    });
 
-      if (customerError) {
-        throw new Error(customerError.message);
-      }
-    } else if (payload.userType === 'tasker') {
+    if (customerError) {
+      throw new Error(customerError.message);
+    }
+
+    // If tasker, also create tasker record
+    if (payload.userType === 'tasker') {
       const { error: taskerError } = await supabaseServer.from('taskers').insert({
         user_id: insertedUser.id,
         bio: payload.bio?.trim() || '',

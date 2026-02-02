@@ -2,16 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { ArrowRight, CheckCircle, Star, DollarSign, Clock, Users, Shield, X, Upload, CheckCircle2 } from 'lucide-react';
 import { getAllCitiesWithDistricts, getDistrictsForCity } from '@/lib/city-district-helper';
 import { District } from '@/data/districts';
 
 export default function BecomeTaskerPage() {
+  const locale = useLocale();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [availableDistricts, setAvailableDistricts] = useState<District[]>([]);
-  
+
   const [quickSignupData, setQuickSignupData] = useState({
     callingName: '',
     phone: '',
@@ -106,7 +108,7 @@ export default function BecomeTaskerPage() {
 
   const handleVerificationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, files } = e.target as HTMLInputElement;
-    
+
     if (files && files[0]) {
       setVerificationData(prev => ({ ...prev, [name]: files[0] }));
     } else if (name === 'city') {
@@ -402,7 +404,7 @@ export default function BecomeTaskerPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link href="/login" className="text-brand-green hover:text-brand-green/80 font-medium">
+                <Link href={`/${locale}/login`} className="text-brand-green hover:text-brand-green/80 font-medium">
                   Sign in here
                 </Link>
               </p>
@@ -537,11 +539,11 @@ export default function BecomeTaskerPage() {
                     disabled={availableDistricts.length === 0}
                   >
                     <option value="">
-                      {availableDistricts.length === 0 
-                        ? 'Select City first' 
-                        : availableDistricts.length > 1 
-                        ? 'Select District' 
-                        : availableDistricts[0]?.name}
+                      {availableDistricts.length === 0
+                        ? 'Select City first'
+                        : availableDistricts.length > 1
+                          ? 'Select District'
+                          : availableDistricts[0]?.name}
                     </option>
                     {availableDistricts.map((district) => (
                       <option key={district.id} value={district.id}>

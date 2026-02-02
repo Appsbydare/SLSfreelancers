@@ -6,159 +6,22 @@ import { MapPin, Clock, DollarSign, Users } from 'lucide-react';
 import { Task } from '@/types';
 
 interface ScrollingTasksPanelProps {
+  tasks: Task[];
   autoScroll?: boolean;
   scrollSpeed?: number; // pixels per second
 }
 
 // Sample task data
-const sampleTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Need Home Cleaning Service',
-    description: 'Looking for professional home cleaning service for a 3-bedroom house in Colombo. Need deep cleaning including kitchen and bathrooms.',
-    budget: 5000,
-    location: 'Colombo',
-    category: 'cleaning',
-    postedDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    posterId: 'user-1',
-    posterName: 'Sarah M.',
-    posterRating: 4.8,
-    offersCount: 5,
-    status: 'open',
-  },
-  {
-    id: '2',
-    title: 'Furniture Assembly Required',
-    description: 'Need help assembling IKEA furniture - 2 wardrobes and a dining table. Tools provided. Urgent completion needed.',
-    budget: 3000,
-    location: 'Kandy',
-    category: 'assembly',
-    postedDate: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-    posterId: 'user-2',
-    posterName: 'John D.',
-    posterRating: 4.9,
-    offersCount: 8,
-    status: 'open',
-  },
-  {
-    id: '3',
-    title: 'Garden Landscaping Project',
-    description: 'Looking for a skilled gardener to redesign my front garden. Need design ideas and implementation. Medium-sized garden.',
-    budget: 15000,
-    location: 'Galle',
-    category: 'gardening',
-    postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    posterId: 'user-3',
-    posterName: 'Priya K.',
-    posterRating: 4.7,
-    offersCount: 3,
-    status: 'open',
-  },
-  {
-    id: '4',
-    title: 'Delivery Service Needed',
-    description: 'Need to deliver packages from Colombo to Kandy. 5 medium-sized boxes. Flexible timing preferred.',
-    budget: 4000,
-    location: 'Colombo',
-    category: 'delivery',
-    postedDate: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-    posterId: 'user-4',
-    posterName: 'Michael R.',
-    posterRating: 4.6,
-    offersCount: 12,
-    status: 'open',
-  },
-  {
-    id: '5',
-    title: 'Handyman for Home Repairs',
-    description: 'Multiple small repairs needed: fix leaking tap, repair door handle, install curtain rods. All materials provided.',
-    budget: 6000,
-    location: 'Negombo',
-    category: 'handyman',
-    postedDate: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-    posterId: 'user-5',
-    posterName: 'David L.',
-    posterRating: 5.0,
-    offersCount: 7,
-    status: 'open',
-  },
-  {
-    id: '6',
-    title: 'Interior Painting Service',
-    description: 'Need to paint 2 bedrooms and living room. Walls need preparation and 2 coats of paint. Color already selected.',
-    budget: 25000,
-    location: 'Colombo',
-    category: 'painting',
-    postedDate: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-    posterId: 'user-6',
-    posterName: 'Emma W.',
-    posterRating: 4.8,
-    offersCount: 6,
-    status: 'open',
-  },
-  {
-    id: '7',
-    title: 'Math Tutoring for Grade 10',
-    description: 'Looking for an experienced tutor for my son. Need help with algebra and geometry. 2 sessions per week.',
-    budget: 2000,
-    location: 'Kandy',
-    category: 'tuition',
-    postedDate: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-    posterId: 'user-7',
-    posterName: 'Nimal S.',
-    posterRating: 4.9,
-    offersCount: 4,
-    status: 'open',
-  },
-  {
-    id: '8',
-    title: 'Moving Service Required',
-    description: 'Need help moving furniture and boxes from Colombo to Galle. 2-bedroom apartment. Truck and helpers needed.',
-    budget: 12000,
-    location: 'Colombo',
-    category: 'removals',
-    postedDate: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-    posterId: 'user-8',
-    posterName: 'Lisa T.',
-    posterRating: 4.7,
-    offersCount: 9,
-    status: 'open',
-  },
-  {
-    id: '9',
-    title: 'Mobile Phone Screen Repair',
-    description: 'Samsung phone screen cracked. Need professional repair service. Original parts preferred if available.',
-    budget: 8000,
-    location: 'Colombo',
-    category: 'mobile-repair',
-    postedDate: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-    posterId: 'user-9',
-    posterName: 'Ravi P.',
-    posterRating: 4.6,
-    offersCount: 11,
-    status: 'open',
-  },
-  {
-    id: '10',
-    title: 'Wedding Photography Needed',
-    description: 'Looking for a professional wedding photographer for an outdoor ceremony. Date: Next month. Full day coverage required.',
-    budget: 35000,
-    location: 'Galle',
-    category: 'wedding',
-    postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    posterId: 'user-10',
-    posterName: 'Anjali N.',
-    posterRating: 4.9,
-    offersCount: 5,
-    status: 'open',
-  },
-];
+// Sample task data removed
 
-export default function ScrollingTasksPanel({ 
-  autoScroll = true, 
-  scrollSpeed = 30 
+
+export default function ScrollingTasksPanel({
+  tasks,
+  autoScroll = true,
+  scrollSpeed = 30
 }: ScrollingTasksPanelProps) {
-  const [tasks] = useState<Task[]>(sampleTasks);
+  // tasks are passed via props
+
   const [isPaused, setIsPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
@@ -248,9 +111,9 @@ export default function ScrollingTasksPanel({
           >
             {/* Duplicate tasks multiple times for seamless infinite loop */}
             {[...tasks, ...tasks, ...tasks].map((task, index) => (
-              <TaskCard 
-                key={`${task.id}-${index}`} 
-                task={task} 
+              <TaskCard
+                key={`${task.id}-${index}`}
+                task={task}
                 getTimeAgo={getTimeAgo}
                 onCardHover={(isHovering) => setIsPaused(isHovering)}
               />
@@ -274,7 +137,7 @@ export default function ScrollingTasksPanel({
 
 function TaskCard({ task, getTimeAgo, onCardHover }: { task: Task; getTimeAgo: (date: Date) => string; onCardHover?: (isHovering: boolean) => void }) {
   return (
-    <Link 
+    <Link
       href={`/browse-tasks?task=${task.id}`}
       className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
       onMouseEnter={() => onCardHover?.(true)}
