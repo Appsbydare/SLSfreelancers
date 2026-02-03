@@ -84,7 +84,7 @@ export default function LoginPage() {
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Login request timed out after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Login request timed out after 30 seconds')), 30000)
       );
 
       const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
