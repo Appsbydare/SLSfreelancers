@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -78,7 +79,18 @@ export default function LoginPage() {
       console.log('[LOGIN] Starting login attempt...');
 
       // Add timeout to detect if Supabase is hanging
-      const authPromise = supabase.auth.signInWithPassword({
+      console.log('[LOGIN] Environment Check:', {
+        urlConfigured: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        keyConfigured: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      });
+
+      // Create a fresh client for this specific action to avoid any singleton state issues
+      const localSupabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const authPromise = localSupabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
