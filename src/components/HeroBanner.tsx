@@ -187,7 +187,7 @@ export default function HeroBanner() {
       const params = new URLSearchParams();
       params.append('district', districtName);
       const response = await fetch(`/api/gigs?${params.toString()}`);
-      
+
       if (response.ok) {
         const result = await response.json();
         setDistrictServiceCount(result.gigs?.length || 0);
@@ -346,7 +346,7 @@ export default function HeroBanner() {
 
             {/* Right Column - Map (Compact) */}
             <div className="flex flex-col animate-fade-in-up items-center justify-center lg:block" style={{ animationDelay: '400ms' }}>
-              
+
               <div className="w-full max-w-[420px] mx-auto relative">
                 {/* Desktop: Title floating inside map area */}
                 <div className="hidden lg:block absolute top-12 right-6 max-w-[180px] text-right z-10 pointer-events-none">
@@ -377,20 +377,25 @@ export default function HeroBanner() {
                 />
 
                 {/* Selected District Info - Expanded Version */}
-                {selectedDistrict && (
-                  <div className="mt-5 p-5 bg-gradient-to-br from-brand-green to-brand-green/80 rounded-2xl shadow-xl border border-white/20 animate-fade-in-up w-[110%] -ml-[5%] relative z-20 transform hover:scale-[1.02] transition-transform duration-300">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="pl-2">
-                        <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">Selected District</p>
-                        <p className="text-2xl font-bold text-white drop-shadow-md leading-tight">{selectedDistrict.name}</p>
-                      </div>
-                      
+                {/* Selected District Info - Expanded Version */}
+                <div className="mt-5 p-5 bg-gradient-to-br from-brand-green to-brand-green/80 rounded-2xl shadow-xl border border-white/20 animate-fade-in-up w-[110%] -ml-[5%] relative z-20 transform hover:scale-[1.02] transition-transform duration-300">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="pl-2">
+                      <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">
+                        {selectedDistrict ? 'Selected District' : 'Explore'}
+                      </p>
+                      <p className="text-2xl font-bold text-white drop-shadow-md leading-tight">
+                        {selectedDistrict ? selectedDistrict.name : 'Select a District'}
+                      </p>
+                    </div>
+
+                    {selectedDistrict ? (
                       <div className="flex items-center gap-4">
                         <div className="text-right border-r border-white/20 pr-4">
                           <p className="text-3xl font-bold text-white leading-none">{districtServiceCount}</p>
                           <p className="text-xs text-white/90 font-medium mt-1">Services</p>
                         </div>
-                        
+
                         <Link
                           href={`/${locale}/browse-services?district=${selectedDistrict.id}`}
                           className="inline-flex items-center px-4 py-2.5 bg-white text-brand-green text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -399,9 +404,15 @@ export default function HeroBanner() {
                           <ChevronRight className="ml-1 h-4 w-4" />
                         </Link>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <p className="text-sm font-medium text-white/90 italic">
+                          Click on the map to find providers
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

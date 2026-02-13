@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast';
+import reactHotToast from 'react-hot-toast';
 
 /**
  * Toast notification utility wrapper for react-hot-toast
@@ -10,7 +10,7 @@ export const showToast = {
    * Show a success toast notification
    */
   success: (message: string) => {
-    return toast.success(message, {
+    return reactHotToast.success(message, {
       duration: 3000,
       position: 'top-center',
       style: {
@@ -29,7 +29,7 @@ export const showToast = {
    * Show an error toast notification
    */
   error: (message: string) => {
-    return toast.error(message, {
+    return reactHotToast.error(message, {
       duration: 4000,
       position: 'top-center',
       style: {
@@ -48,7 +48,7 @@ export const showToast = {
    * Show a loading toast notification
    */
   loading: (message: string) => {
-    return toast.loading(message, {
+    return reactHotToast.loading(message, {
       position: 'top-center',
       style: {
         background: '#3B82F6',
@@ -65,7 +65,7 @@ export const showToast = {
    * Show an info toast notification
    */
   info: (message: string) => {
-    return toast(message, {
+    return reactHotToast(message, {
       duration: 3000,
       position: 'top-center',
       style: {
@@ -91,7 +91,7 @@ export const showToast = {
       error: string;
     }
   ) => {
-    return toast.promise(
+    return reactHotToast.promise(
       promise,
       {
         loading: messages.loading,
@@ -114,7 +114,9 @@ export const showToast = {
    * Dismiss a specific toast or all toasts
    */
   dismiss: (toastId?: string) => {
-    toast.dismiss(toastId);
+    reactHotToast.dismiss(toastId);
   },
 };
 
+// Export as 'toast' for convenience
+export const toast = showToast;

@@ -220,12 +220,20 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      // Signup page is for customers only - taskers use "Become a Tasker" page
-      const googleAuthUrl = `/api/auth/google?userType=customer`;
-      window.location.href = googleAuthUrl;
-    } catch (error) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
       console.error('Google sign in error:', error);
-      setErrors({ submit: 'Google sign in failed. Please try again.' });
+      setErrors({ submit: error.message || 'Google sign in failed. Please try again.' });
       setIsGoogleLoading(false);
     }
   };

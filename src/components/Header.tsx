@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -124,7 +124,7 @@ export default function Header() {
       localStorage.setItem('userPreferredMode', 'customer');
       setPreferredMode('customer');
       switchRole('customer');
-      router.push(`/${locale}`);
+      router.push(`/${locale}/customer/dashboard`);
     } else {
       // Currently in customer mode, switch to seller mode
       localStorage.setItem('userPreferredMode', 'seller');
@@ -438,6 +438,18 @@ export default function Header() {
                         </div>
 
                         <div className="p-2">
+                          {/* Dashboard Link for Customers/Sellers */}
+                          {(!isSeller) && (
+                            <Link
+                              href={`/${locale}/customer/dashboard`}
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
+                            >
+                              <LayoutDashboard className="h-4 w-4" />
+                              Dashboard
+                            </Link>
+                          )}
+
                           {/* Mode Switch / Become a Seller */}
                           {user?.hasTaskerAccount || user?.userType === 'tasker' ? (
                             <button
