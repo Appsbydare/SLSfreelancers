@@ -5,6 +5,7 @@ import { useLocale } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import CustomerSidebar from '@/components/CustomerSidebar';
+import { getConversations } from '@/app/actions/messages';
 
 export default function CustomerDashboardLayout({
     children,
@@ -22,6 +23,23 @@ export default function CustomerDashboardLayout({
             router.push(`/${locale}/login`);
         }
     }, [isLoading, session, router, locale]);
+
+    // Load unread messages count
+    useEffect(() => {
+        const loadUnreadCount = async () => {
+            if (!user || !session?.user) return;
+
+            try {
+                const conversations = await getConversations(session.user.id, 'customer');
+                const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+                setUnreadMessages(totalUnread);
+            } catch (error) {
+                console.error('Error loading unread messages:', error);
+            }
+        };
+
+        loadUnreadCount();
+    }, [user, session]);
 
     if (isLoading) {
         return (

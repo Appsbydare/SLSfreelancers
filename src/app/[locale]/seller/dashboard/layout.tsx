@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getConversations } from '@/app/actions/messages';
 
 export default function SellerDashboardLayout({
   children,
@@ -49,10 +50,10 @@ export default function SellerDashboardLayout({
   */
 
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && session) {
       loadBadgeCounts();
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, session]);
 
 
   // Removed problematic redirect logic that was preventing access to valid dashboard sub-pages
@@ -77,7 +78,7 @@ export default function SellerDashboardLayout({
   */
 
   const loadBadgeCounts = async () => {
-    if (!user) return;
+    if (!user || !session?.user) return;
 
     try {
       // Fetch active orders count
@@ -86,6 +87,11 @@ export default function SellerDashboardLayout({
         const ordersData = await ordersResponse.json();
         setActiveOrders(ordersData.orders?.length || 0);
       }
+
+      // Fetch unread messages count using server action
+      const conversations = await getConversations(session.user.id, 'tasker');
+      const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+      setUnreadMessages(totalUnread);
     } catch (error) {
       console.error('Error loading badge counts:', error);
     }

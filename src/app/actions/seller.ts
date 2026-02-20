@@ -86,7 +86,10 @@ export async function getSellerGigs(userId: string) {
 
     const { data: gigs, error } = await supabase
         .from('gigs')
-        .select('*')
+        .select(`
+            *,
+            packages:gig_packages(price)
+        `)
         .eq('seller_id', tasker.id)
         .order('created_at', { ascending: false });
 
@@ -95,14 +98,21 @@ export async function getSellerGigs(userId: string) {
         return [];
     }
 
-    // Calculate stats for each gig (views, orders, rating)
-    // Currently these fields might be on the gig table or need aggregation.
-    // Assuming they are on the gig table based on previous code usage (fake or real).
-    // If not, we might need to join.
-    // The previous code accessed `gig.views_count`, `gig.orders_count`, `gig.rating`.
-    // Let's assume they exist or we return raw gig data.
+    // Calculate starting price for each gig
+    const gigsWithPrice = gigs.map((gig: any) => {
+        let startingPrice = 0;
+        if (gig.packages && gig.packages.length > 0) {
+            const prices = gig.packages.map((p: any) => Number(p.price));
+            const minPrice = Math.min(...prices);
+            startingPrice = isFinite(minPrice) ? minPrice : 0;
+        }
+        return {
+            ...gig,
+            startingPrice
+        };
+    });
 
-    return gigs;
+    return gigsWithPrice;
 }
 
 export async function pauseGig(gigId: string, userId: string) {

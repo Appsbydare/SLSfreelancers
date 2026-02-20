@@ -4,6 +4,7 @@ import { MapPin, Calendar, Clock, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import TaskOffersList from './TaskOffersList';
+import DeleteTaskButton from './DeleteTaskButton';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -133,12 +134,13 @@ export default async function CustomerTaskPage({ params }: { params: Promise<{ t
                                 </dl>
                             </div>
 
-                            <button className="w-full bg-gray-100 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-200 transition-colors">
+                            <Link
+                                href={`/${locale}/customer/dashboard/tasks/${taskId}/edit`}
+                                className="block w-full text-center bg-gray-100 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                            >
                                 Edit Request
-                            </button>
-                            <button className="w-full border border-red-200 text-red-600 py-2 rounded-md font-medium hover:bg-red-50 transition-colors">
-                                Delete Request
-                            </button>
+                            </Link>
+                            <DeleteTaskButton taskId={taskId} />
                         </div>
                     </div>
                 </div>

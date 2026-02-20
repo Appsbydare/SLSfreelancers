@@ -6,7 +6,10 @@ import ScrollingTasksPanel from '@/components/ScrollingTasksPanel';
 import PostRequestSection from '@/components/PostRequestSection';
 import TopSellers from '@/components/TopSellers';
 import Link from 'next/link';
+import { getOpenTasks } from '@/app/actions/tasks';
 import { supabaseServer } from '@/lib/supabase-server';
+
+export const dynamic = 'force-dynamic';
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -21,23 +24,8 @@ export default async function HomePage({ params }: HomePageProps) {
     .select('*')
     .order('popular', { ascending: false });
 
-  // Fetch tasks
-  const { data: tasksData } = await supabaseServer
-    .from('tasks')
-    .select(`
-      *,
-      customers!inner (
-        id,
-        user:users!customers_user_id_fkey (
-          first_name,
-          last_name
-        )
-      ),
-      offers!offers_task_id_fkey (count)
-    `)
-    .eq('status', 'open')
-    .order('created_at', { ascending: false })
-    .limit(10);
+  // Fetch tasks using action (excludes own tasks)
+  const tasksData = await getOpenTasks(10);
 
   // Transform to Task type
   const tasks = tasksData?.map((t: any) => ({
@@ -49,9 +37,9 @@ export default async function HomePage({ params }: HomePageProps) {
     category: t.category,
     postedDate: new Date(t.created_at),
     posterId: t.customer_id,
-    posterName: t.customers?.user?.first_name || 'Unknown',
+    posterName: t.customer?.user?.first_name || 'Unknown',
     posterRating: 5.0, // Placeholder
-    offersCount: t.offers?.[0]?.count || 0,
+    offersCount: 0,
     status: t.status,
   })) || [];
 

@@ -4,7 +4,16 @@ const withNextIntl = require('next-intl/plugin')(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App directory is now stable in Next.js 16, no experimental flag needed
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lmpaqwdaqwlogdsnhrtr.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 };
 
 module.exports = withNextIntl(nextConfig);

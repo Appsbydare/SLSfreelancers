@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import TaskBiddingForm from './TaskBiddingForm';
 import TaskOffersList from './TaskOffersList';
-import { supabaseServer } from '@/lib/supabase-server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 // Simple Submit Button Component removed (moved to BiddingForm.tsx)
 
@@ -17,8 +18,21 @@ export default async function TaskPage({ params }: { params: Promise<{ taskId: s
         notFound();
     }
 
-    const { data: { user } } = await supabaseServer.auth.getUser();
-    const isOwner = user?.id === task.customer.user.id;
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    // Optional for read-only
+                },
+            },
+        }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    const isOwner = user?.id === task.customer.user.auth_user_id;
     const existingBid = await getTaskerBid(taskId);
     const offers = isOwner ? await getTaskOffers(taskId) : [];
 
@@ -92,7 +106,7 @@ export default async function TaskPage({ params }: { params: Promise<{ taskId: s
 
                         {/* Show Offers List ONLY if Owner */}
                         {isOwner && (
-                            <TaskOffersList offers={offers} />
+                            <TaskOffersList offers={offers} taskId={taskId} />
                         )}
                     </div>
 

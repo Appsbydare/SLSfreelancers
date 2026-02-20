@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { MapPin, Clock, DollarSign, Users } from 'lucide-react';
 import { Task } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ScrollingTasksPanelProps {
   tasks: Task[];
@@ -11,24 +13,23 @@ interface ScrollingTasksPanelProps {
   scrollSpeed?: number; // pixels per second
 }
 
-// Sample task data
-// Sample task data removed
-
-
 export default function ScrollingTasksPanel({
   tasks,
   autoScroll = true,
   scrollSpeed = 30
 }: ScrollingTasksPanelProps) {
-  // tasks are passed via props
-
   const [isPaused, setIsPaused] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
   const lastScrollTimeRef = useRef<number>(Date.now());
+  const router = useRouter();
+  const locale = useLocale();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (autoScroll && tasks.length > 0 && !isPaused) {
+    // Only auto-scroll if we have enough tasks to overflow (approx) or just generic check
+    // If we have few tasks, auto-scroll might look weird without duplication, but preserving user request to remove dups.
+    if (autoScroll && tasks.length > 3 && !isPaused) {
       startAutoScroll();
     } else {
       stopAutoScroll();
@@ -55,6 +56,7 @@ export default function ScrollingTasksPanel({
 
       const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
       if (scrollContainerRef.current.scrollLeft >= maxScroll) {
+        // Reset to start - this is jerky without duplication, but better than showing triple tasks
         scrollContainerRef.current.scrollLeft = 0;
       }
 
@@ -68,6 +70,14 @@ export default function ScrollingTasksPanel({
     if (scrollAnimationRef.current) {
       cancelAnimationFrame(scrollAnimationRef.current);
       scrollAnimationRef.current = null;
+    }
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    if (user?.userType === 'tasker' || user?.hasTaskerAccount) {
+      router.push(`/${locale}/seller/dashboard/tasks/${taskId}`);
+    } else {
+      router.push(`/${locale}/become-tasker`);
     }
   };
 
@@ -85,6 +95,8 @@ export default function ScrollingTasksPanel({
     }
     return 'Just now';
   };
+
+  if (!tasks || tasks.length === 0) return null;
 
   return (
     <div className="py-12 bg-gradient-to-b from-gray-50 to-white">
@@ -109,12 +121,12 @@ export default function ScrollingTasksPanel({
               msOverflowStyle: 'none',
             }}
           >
-            {/* Duplicate tasks multiple times for seamless infinite loop */}
-            {[...tasks, ...tasks, ...tasks].map((task, index) => (
+            {tasks.map((task) => (
               <TaskCard
-                key={`${task.id}-${index}`}
+                key={task.id}
                 task={task}
                 getTimeAgo={getTimeAgo}
+                onClick={() => handleTaskClick(task.id)}
                 onCardHover={(isHovering) => setIsPaused(isHovering)}
               />
             ))}
@@ -135,11 +147,21 @@ export default function ScrollingTasksPanel({
   );
 }
 
-function TaskCard({ task, getTimeAgo, onCardHover }: { task: Task; getTimeAgo: (date: Date) => string; onCardHover?: (isHovering: boolean) => void }) {
+function TaskCard({
+  task,
+  getTimeAgo,
+  onClick,
+  onCardHover
+}: {
+  task: Task;
+  getTimeAgo: (date: Date) => string;
+  onClick: () => void;
+  onCardHover?: (isHovering: boolean) => void
+}) {
   return (
-    <Link
-      href={`/browse-services?task=${task.id}`}
-      className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30"
+    <div
+      onClick={onClick}
+      className="flex-shrink-0 w-80 bg-white rounded-lg border-2 border-gray-200 shadow-lg hover:shadow-2xl hover:shadow-brand-green/20 transition-all duration-300 hover:-translate-y-1 overflow-hidden group hover:border-brand-green/50 hover:ring-2 hover:ring-brand-green/30 cursor-pointer"
       onMouseEnter={() => onCardHover?.(true)}
       onMouseLeave={() => onCardHover?.(false)}
     >
@@ -184,7 +206,7 @@ function TaskCard({ task, getTimeAgo, onCardHover }: { task: Task; getTimeAgo: (
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

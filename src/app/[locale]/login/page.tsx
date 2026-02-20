@@ -9,7 +9,6 @@ import Image from 'next/image';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { createBrowserClient } from '@supabase/ssr';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,13 +83,7 @@ export default function LoginPage() {
         keyConfigured: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       });
 
-      // Create a fresh client for this specific action to avoid any singleton state issues
-      const localSupabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
-      const authPromise = localSupabase.auth.signInWithPassword({
+      const authPromise = supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
@@ -102,6 +95,13 @@ export default function LoginPage() {
       const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
 
       console.log('[LOGIN] Auth response received:', { hasUser: !!data?.user, hasError: !!error });
+
+      if (!error && !data?.user) {
+        setErrors({ submit: 'Unexpected error: No user returned.' });
+        showToast.error('Unexpected error: No user returned.');
+        setIsLoading(false);
+        return;
+      }
 
       if (error) {
         console.error('[LOGIN] Auth error:', error);

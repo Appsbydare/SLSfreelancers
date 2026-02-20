@@ -389,6 +389,13 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
 
                             {/* Contact Seller Button */}
                             <button
+                                onClick={() => router.push(`/${locale}/customer/dashboard/messages?recipientId=${gig.seller.user.id}&gigId=${gig.id}`)}
+                                className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
+                            >
+                                Contact Seller
+                            </button>
+
+                            <button
                                 onClick={() => router.push(`/${locale}/seller/${gig.seller.user.id}`)}
                                 className="w-full px-4 py-3 border border-brand-green text-brand-green rounded-lg hover:bg-brand-green/5 font-semibold transition-colors"
                             >

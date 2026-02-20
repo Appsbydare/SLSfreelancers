@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -13,6 +13,35 @@ import Image from 'next/image';
 import serviceGroups from '@/data/service-groups.json';
 import { useDistrict } from '@/contexts/DistrictContext';
 import SriLankaMap from './SriLankaMap';
+import { supabase } from '@/lib/supabase';
+
+// Helper function to format relative time natively
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'just now';
+
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60
+  };
+
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    if (diffInSeconds >= secondsInUnit) {
+      const value = Math.floor(diffInSeconds / secondsInUnit);
+      return rtf.format(-value, unit as Intl.RelativeTimeFormatUnit);
+    }
+  }
+  return 'just now';
+}
 
 export default function Header() {
   const t = useTranslations('navigation');
@@ -32,8 +61,59 @@ export default function Header() {
   const [isMapMenuClosing, setIsMapMenuClosing] = useState(false);
   const [headerSearch, setHeaderSearch] = useState('');
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const groupScrollRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch and Subscribe to Notifications
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      const fetchNotifications = async () => {
+        const { data } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (data) {
+          setNotifications(data);
+          setUnreadCount(data.filter(n => !n.is_read).length);
+        }
+      };
+
+      fetchNotifications();
+
+      const channel = supabase.channel('header-notifications')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            setNotifications(prev => [payload.new, ...prev].slice(0, 10));
+            setUnreadCount(prev => prev + 1);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isLoggedIn, user?.id]);
+
+  const handleNotificationsOpen = async () => {
+    setIsNotificationMenuOpen(!isNotificationMenuOpen);
+    setIsProfileDropdownOpen(false);
+
+    // Mark as read when opening
+    if (!isNotificationMenuOpen && unreadCount > 0 && user?.id) {
+      setUnreadCount(0);
+      await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -53,6 +133,7 @@ export default function Header() {
     setIsQuickMenuOpen(false);
     setIsMobileMenuOpen(false);
     setIsProfileDropdownOpen(false);
+    setIsNotificationMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -61,12 +142,16 @@ export default function Header() {
         setIsCategoryMenuOpen(false);
         setIsQuickMenuOpen(false);
         setIsProfileDropdownOpen(false);
+        setIsNotificationMenuOpen(false);
       }
     };
 
     const handleClickOutside = (event: MouseEvent) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
+      }
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target as Node)) {
+        setIsNotificationMenuOpen(false);
       }
     };
 
@@ -88,15 +173,25 @@ export default function Header() {
   const [preferredMode, setPreferredMode] = useState<string | null>(null);
 
   useEffect(() => {
-    // Read preferred mode from localStorage on mount
-    const savedMode = localStorage.getItem('userPreferredMode');
-    setPreferredMode(savedMode);
-  }, [user?.userType, user?.id]); // Re-check when user type or user changes
+
+    if (user && isLoggedIn) {
+      const savedMode = localStorage.getItem('userPreferredMode');
+
+      // If we have a saved preference that differs from current auth state, sync it
+      if (savedMode === 'seller' && user.userType !== 'tasker' && (user.hasTaskerAccount || user.originalUserType === 'tasker')) {
+        switchRole('tasker');
+      } else if (savedMode === 'customer' && user.userType !== 'customer') {
+        switchRole('customer');
+      }
+
+      setPreferredMode(savedMode);
+    }
+  }, [user?.id, isLoggedIn]); // Only run when user session loads/changes
 
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
-  // Check if user is a tasker AND prefers seller mode (or hasn't set a preference)
-  const isSeller = user?.userType === 'tasker' && preferredMode !== 'customer';
+  // Trust user.userType as the source of truth for UI rendering
+  const isSeller = user?.userType === 'tasker';
 
   if (isSeller) {
     displayNavigation = [
@@ -115,18 +210,17 @@ export default function Header() {
 
     if (!canToggle) return;
 
-    // Check current mode from preferredMode, fallback to user.userType
-    const currentMode = preferredMode || (user.userType === 'tasker' ? 'seller' : 'customer');
+    // Determine current mode based on user.userType which is the source of truth in AuthContext
+    const currentMode = user?.userType === 'tasker' ? 'seller' : 'customer';
 
-    // Toggle between seller and customer mode
-    if (currentMode === 'seller' || (currentMode !== 'customer' && user.userType === 'tasker')) {
-      // Currently in seller mode, switch to customer mode
+    if (currentMode === 'seller') {
+      // Switch to customer
       localStorage.setItem('userPreferredMode', 'customer');
       setPreferredMode('customer');
       switchRole('customer');
       router.push(`/${locale}/customer/dashboard`);
     } else {
-      // Currently in customer mode, switch to seller mode
+      // Switch to seller
       localStorage.setItem('userPreferredMode', 'seller');
       setPreferredMode('seller');
       switchRole('tasker');
@@ -381,10 +475,76 @@ export default function Header() {
 
               {isLoggedIn ? (
                 <div className="hidden md:flex items-center gap-3">
+                  {/* Notification Bell */}
+                  <div className="relative" ref={notificationMenuRef}>
+                    <button
+                      onClick={handleNotificationsOpen}
+                      className="p-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50 relative"
+                      title="Notifications"
+                    >
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
+                      )}
+                    </button>
+
+                    {isNotificationMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-80 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+                          <h4 className="text-white font-medium">Notifications</h4>
+                          {unreadCount > 0 && (
+                            <span className="bg-brand-green/20 text-brand-green text-xs px-2 py-0.5 rounded-full">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
+                        <div className="max-h-[350px] overflow-y-auto">
+                          {notifications.length > 0 ? (
+                            <div className="divide-y divide-gray-800 flex flex-col">
+                              {notifications.map((notif: any) => (
+                                <div key={notif.id} className={`p-4 hover:bg-gray-900 transition-colors ${!notif.is_read ? 'bg-gray-900/50' : ''}`}>
+                                  <div className="flex gap-3">
+                                    <div className="mt-1 bg-brand-green/10 p-2 rounded-full h-fit flex-shrink-0">
+                                      <Bell className="h-4 w-4 text-brand-green" />
+                                    </div>
+                                    <div>
+                                      <h5 className="text-sm font-medium text-white mb-1">{notif.title}</h5>
+                                      <p className="text-xs text-gray-400 mb-2">{notif.message}</p>
+                                      <span className="text-[10px] text-gray-500">
+                                        {formatRelativeTime(notif.created_at)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-8 flex flex-col items-center justify-center text-center">
+                              <Bell className="h-8 w-8 text-gray-700 mb-3" />
+                              <p className="text-gray-400 text-sm">You are all caught up!</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 border-t border-gray-800 bg-gray-900/50 text-center">
+                          <Link
+                            href={isSeller ? `/${locale}/seller/dashboard` : `/${locale}/customer/dashboard/requests`}
+                            className="text-brand-green text-xs font-medium hover:underline inline-block"
+                            onClick={() => setIsNotificationMenuOpen(false)}
+                          >
+                            Go to Dashboard
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Profile Dropdown */}
                   <div className="relative" ref={profileDropdownRef}>
                     <button
-                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      onClick={() => {
+                        setIsProfileDropdownOpen(!isProfileDropdownOpen);
+                        setIsNotificationMenuOpen(false);
+                      }}
                       className="flex items-center gap-2 px-3 py-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50"
                       title="Profile Menu"
                     >

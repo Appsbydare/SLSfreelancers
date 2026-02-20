@@ -1,10 +1,20 @@
-import { getTranslations } from 'next-intl/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { MessageSquare } from 'lucide-react';
 import MessagesList from '@/app/[locale]/customer/dashboard/messages/MessagesList';
+import { getConversations } from '@/app/actions/messages';
 
-export default async function CustomerMessagesPage() {
+interface PageProps {
+    searchParams: Promise<{
+        taskId?: string;
+        recipientId?: string;
+        gigId?: string;
+    }>;
+}
+
+export default async function CustomerMessagesPage({ searchParams }: PageProps) {
+    const { taskId, recipientId, gigId } = await searchParams;
+
     // Create authenticated Supabase client
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -30,7 +40,7 @@ export default async function CustomerMessagesPage() {
         return null;
     }
 
-    // Fetch user data to get user_id
+    // Fetch user data to get user_id (public ID)
     const { data: userData } = await supabase
         .from('users')
         .select('id')
@@ -45,62 +55,75 @@ export default async function CustomerMessagesPage() {
         );
     }
 
-    // Fetch all messages where user is sender or recipient
-    const { data: messages } = await supabase
-        .from('messages')
-        .select(`
-            *,
-            task:tasks(id, title),
-            sender:users!messages_sender_id_fkey(id, first_name, last_name),
-            recipient:users!messages_recipient_id_fkey(id, first_name, last_name)
-        `)
-        .or(`sender_id.eq.${userData.id},recipient_id.eq.${userData.id}`)
-        .order('created_at', { ascending: false });
+    // Fetch conversations
+    const conversations = await getConversations(user.id, 'customer');
 
-    // Group messages by task_id
-    const conversationsMap = new Map();
+    // Fetch initial context data if provided
+    let initialRecipient = null;
+    let initialGigDetails = null;
+    let initialTaskTitle = 'Inquiry';
 
-    messages?.forEach((message: any) => {
-        const taskId = message.task_id;
-        if (!conversationsMap.has(taskId)) {
-            conversationsMap.set(taskId, {
-                task_id: taskId,
-                task_title: message.task?.title || 'Unknown Task',
-                messages: [],
-                last_message: message,
-                unread_count: 0,
-            });
+    if (recipientId) {
+        const { data } = await supabase
+            .from('users')
+            .select('first_name, last_name, profile_image_url')
+            .eq('id', recipientId)
+            .single();
+        if (data) initialRecipient = data;
+    }
+
+    if (gigId) {
+        const { data } = await supabase
+            .from('gigs')
+            .select('id, title, slug, images, packages:gig_packages(price)')
+            .eq('id', gigId)
+            .single();
+
+        if (data) {
+            let startingPrice = 0;
+            if (data.packages && data.packages.length > 0) {
+                const prices = data.packages.map((p: any) => Number(p.price));
+                const minPrice = Math.min(...prices);
+                startingPrice = isFinite(minPrice) ? minPrice : 0;
+            }
+            initialGigDetails = {
+                id: data.id,
+                title: data.title,
+                slug: data.slug,
+                images: data.images,
+                starting_price: startingPrice
+            };
         }
-        conversationsMap.get(taskId).messages.push(message);
+    }
 
-        // Count unread (messages sent to user that haven't been read)
-        if (message.recipient_id === userData.id && !message.read_at) {
-            conversationsMap.get(taskId).unread_count++;
-        }
-    });
-
-    const conversations = Array.from(conversationsMap.values());
+    if (taskId) {
+        const { data } = await supabase
+            .from('tasks')
+            .select('title')
+            .eq('id', taskId)
+            .single();
+        if (data) initialTaskTitle = data.title;
+    }
 
     return (
-        <div className="space-y-6">
-            <div>
+        <div className="h-[calc(100vh-100px)] flex flex-col">
+            <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-                <p className="text-gray-600 mt-1">Communicate with taskers about your requests</p>
+                <p className="text-gray-600">Communicate with taskers about your requests</p>
             </div>
 
-            {conversations.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
-                    <div className="mx-auto h-12 w-12 text-gray-400 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <MessageSquare className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">No messages yet</h3>
-                    <p className="mt-1 text-sm text-gray-500 max-w-sm mx-auto">
-                        When you receive offers on your requests, you can chat with taskers here.
-                    </p>
-                </div>
-            ) : (
-                <MessagesList conversations={conversations} currentUserId={userData.id} />
-            )}
+            <div className="flex-1 min-h-0">
+                <MessagesList
+                    conversations={conversations}
+                    currentUserId={userData.id}
+                    initialTaskId={taskId}
+                    initialGigId={gigId}
+                    initialRecipientId={recipientId}
+                    initialRecipient={initialRecipient}
+                    initialGigDetails={initialGigDetails}
+                    initialTaskTitle={initialTaskTitle}
+                />
+            </div>
         </div>
     );
 }

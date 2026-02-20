@@ -55,11 +55,22 @@ export async function createTask(prevState: any, formData: FormData) {
         };
     }
 
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) {
+        return { message: 'User profile not found.', errors: {} };
+    }
+
     // Get customer ID for the user
     const { data: customer } = await supabase
         .from('customers')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', publicUser.id)
         .single();
 
     if (!customer) {
@@ -82,15 +93,59 @@ export async function createTask(prevState: any, formData: FormData) {
         return { message: 'Database error: ' + error.message, errors: {} };
     }
 
-    revalidatePath('/browse-services');
-    redirect('/browse-services');
+    revalidatePath('/customer/dashboard/requests');
+    redirect('/customer/dashboard/requests');
 }
 
 export async function getOpenTasks(limit = 20) {
     // Import supabaseServer for server-side queries
+    // Import supabaseServer for server-side queries
     const { supabaseServer } = await import('@/lib/supabase-server');
+    const cookieStore = await cookies();
 
-    const { data: tasks, error } = await supabaseServer
+    // Create a client to check auth status (using user's cookies)
+    const supabaseAuth = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    // Get current user
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+
+    let excludedCustomerId: string | null = null;
+
+    if (user) {
+        // Resolve customer_id for the current user to exclude their own tasks
+        const { data: publicUser } = await supabaseServer
+            .from('users')
+            .select('id')
+            .eq('auth_user_id', user.id)
+            .single();
+
+        if (publicUser) {
+            const { data: customer } = await supabaseServer
+                .from('customers')
+                .select('id')
+                .eq('user_id', publicUser.id)
+                .single();
+
+            if (customer) {
+                excludedCustomerId = customer.id;
+            }
+        }
+    }
+
+    let query = supabaseServer
         .from('tasks')
         .select(`
             *,
@@ -99,6 +154,12 @@ export async function getOpenTasks(limit = 20) {
         .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(limit);
+
+    if (excludedCustomerId) {
+        query = query.neq('customer_id', excludedCustomerId);
+    }
+
+    const { data: tasks, error } = await query;
 
     if (error) {
         console.error('Error fetching open tasks:', error);
@@ -172,11 +233,22 @@ export async function placeBid(prevState: any, formData: FormData) {
         return { message: 'Unauthorized', errors: {} };
     }
 
-    // Get Tasker Profile
+    // Get Public User ID first
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) {
+        return { message: 'User profile not found.', errors: {} };
+    }
+
+    // Get Tasker Profile using Public User ID
     const { data: tasker } = await supabase
         .from('taskers')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', publicUser.id)
         .single();
 
     if (!tasker) {
@@ -218,8 +290,46 @@ export async function placeBid(prevState: any, formData: FormData) {
         return { message: 'Failed to place bid. Please try again.', errors: {} };
     }
 
+    // Fetch the task owner's user_id and task title to send a notification
+    const { data: taskData } = await supabase
+        .from('tasks')
+        .select('title, customer:customers(user_id)')
+        .eq('id', taskId)
+        .single();
+
+    if (taskData && taskData.customer) {
+        const customerUserId = (taskData.customer as any).user_id;
+        if (customerUserId) {
+            const { createClient } = await import('@supabase/supabase-js');
+            const adminClient = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!,
+                { auth: { autoRefreshToken: false, persistSession: false } }
+            );
+
+            // Direct insertion of a notification record
+            await adminClient.from('notifications').insert({
+                user_id: customerUserId,
+                notification_type: 'offer',
+                title: 'New Bid Received',
+                message: `You received a new bid of LKR ${amount.toLocaleString()} on "${taskData.title}".`,
+                data: { task_id: taskId, amount: amount, tasker_id: tasker.id }
+            });
+        }
+    }
+
     revalidatePath(`/seller/dashboard/tasks/${taskId}`);
-    return { message: 'Bid placed successfully!', success: true };
+    return {
+        message: 'Bid placed successfully!',
+        success: true,
+        bid: {
+            proposed_price: amount,
+            estimated_hours: estimatedHours,
+            message: message,
+            status: 'pending',
+            created_at: new Date().toISOString()
+        }
+    };
 }
 
 export async function getTaskOffers(taskId: string) {
@@ -243,6 +353,16 @@ export async function getTaskOffers(taskId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) return [];
+
+    // Verify task ownership
     const { data: task } = await supabase
         .from('tasks')
         .select('customer:customers(user_id)')
@@ -252,16 +372,22 @@ export async function getTaskOffers(taskId: string) {
     if (!task) return [];
 
     const customer = task.customer as any; // Type assertion since Supabase types might infer array
-    if (customer.user_id !== user.id) {
+    if (customer.user_id !== publicUser.id) {
         return [];
     }
 
-    const { data: offers, error } = await supabase
+    // Use admin client to fetch offers to bypass RLS for tasker name/details
+    const { supabaseServer } = await import('@/lib/supabase-server');
+
+    const { data: offers, error } = await supabaseServer
         .from('offers')
         .select(`
             *,
             tasker:taskers (
+                id,
+                user_id,
                 user:users (
+                    id,
                     first_name,
                     last_name,
                     profile_image_url
@@ -280,20 +406,44 @@ export async function getTaskOffers(taskId: string) {
 }
 
 export async function getTaskerBid(taskId: string) {
-    const { supabaseServer } = await import('@/lib/supabase-server');
-    const { data: { user } } = await supabaseServer.auth.getUser();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const { data: tasker } = await supabaseServer
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) return null;
+
+    const { data: tasker } = await supabase
         .from('taskers')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', publicUser.id)
         .single();
 
     if (!tasker) return null;
 
-    const { data: bid } = await supabaseServer
+    const { data: bid } = await supabase
         .from('offers')
         .select('*')
         .eq('task_id', taskId)
@@ -301,4 +451,415 @@ export async function getTaskerBid(taskId: string) {
         .single();
 
     return bid;
+}
+
+export async function updateTask(prevState: any, formData: FormData) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { message: 'Unauthorized', errors: {} };
+    }
+
+    const taskId = formData.get('taskId') as string;
+    if (!taskId) {
+        return { message: 'Task ID is required', errors: {} };
+    }
+
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) {
+        return { message: 'Unauthorized', errors: {} };
+    }
+
+    // Verify ownership
+    const { data: task } = await supabase
+        .from('tasks')
+        .select('customer:customers(user_id)')
+        .eq('id', taskId)
+        .single();
+
+    if (!task || (task.customer as any).user_id !== publicUser.id) {
+        return { message: 'Unauthorized', errors: {} };
+    }
+
+    const rawData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        budget: Number(formData.get('budget')),
+        location: formData.get('location'),
+        category: formData.get('category'),
+        deadline: formData.get('deadline'),
+    };
+
+    const validated = createTaskSchema.safeParse(rawData);
+
+    if (!validated.success) {
+        return {
+            message: 'Validation failed',
+            errors: validated.error.flatten().fieldErrors,
+        };
+    }
+
+    const { error } = await supabase
+        .from('tasks')
+        .update({
+            title: validated.data.title,
+            description: validated.data.description,
+            budget: validated.data.budget,
+            location: validated.data.location,
+            category: validated.data.category,
+            // deadline: validated.data.deadline ? new Date(validated.data.deadline).toISOString() : null,
+        })
+        .eq('id', taskId);
+
+    if (error) {
+        console.error('Error updating task:', error);
+        return { message: 'Database error: ' + error.message, errors: {} };
+    }
+
+    revalidatePath(`/customer/dashboard/tasks/${taskId}`);
+    redirect(`/customer/dashboard/tasks/${taskId}`);
+}
+
+export async function acceptOffer(taskId: string, offerId: string) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Verify task ownership
+    const { data: task } = await supabase
+        .from('tasks')
+        .select('customer:customers(user_id)')
+        .eq('id', taskId)
+        .single();
+
+    if (!task || (task.customer as any).user_id !== publicUser.id) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Direct instantiation of service client to bypass RLS securely
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseServiceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const adminClient = createClient(supabaseServiceUrl, supabaseServiceKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    // 1. Update Offer Status
+    const { data: updateData, error: offerError } = await adminClient
+        .from('offers')
+        .update({ status: 'accepted' })
+        .eq('id', offerId)
+        .select('id, status');
+
+    if (offerError || !updateData || updateData.length === 0) {
+        console.error('Error accepting offer:', offerError || 'No rows updated. Task ID or Offer ID is wrong.');
+        return { success: false, message: 'Failed to accept offer. Offer may not exist.' };
+    }
+
+    // 2. Update Task Status & Selected Offer
+    const { error: taskError } = await adminClient
+        .from('tasks')
+        .update({ status: 'assigned', selected_offer_id: offerId })
+        .eq('id', taskId);
+
+    if (taskError) {
+        console.error('Error updating task status:', taskError);
+        return { success: false, message: 'Failed to update task status' };
+    }
+
+    // 3. Reject other offers
+    await adminClient
+        .from('offers')
+        .update({ status: 'rejected' })
+        .eq('task_id', taskId)
+        .neq('id', offerId);
+
+    // 4. Send Notification to Tasker
+    const { data: offer } = await adminClient
+        .from('offers')
+        .select('tasker:taskers(user_id)')
+        .eq('id', offerId)
+        .single();
+
+    if (offer && offer.tasker && (offer.tasker as any).user_id) {
+        const taskerUserId = (offer.tasker as any).user_id;
+
+        // Fetch task title for the notification
+        const { data: taskData } = await adminClient.from('tasks').select('title').eq('id', taskId).single();
+
+        // Send notification directly using adminClient to bypass RLS
+        await adminClient.from('notifications').insert({
+            user_id: taskerUserId,
+            notification_type: 'offer',
+            title: 'Bid Accepted!',
+            message: taskData ? `Your bid for "${taskData.title}" was accepted!` : 'Your bid was accepted!',
+            data: { task_id: taskId, offer_id: offerId, type: 'accepted' }
+        });
+    }
+
+    revalidatePath(`/customer/dashboard/tasks/${taskId}`);
+    return { success: true, message: 'Offer accepted successfully' };
+}
+
+export async function deleteTask(taskId: string) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Verify task ownership
+    const { data: task } = await supabase
+        .from('tasks')
+        .select('customer:customers(user_id)')
+        .eq('id', taskId)
+        .single();
+
+    if (!task || (task.customer as any).user_id !== publicUser.id) {
+        return { success: false, message: 'Unauthorized' };
+    }
+
+    // Delete the task
+    const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+    if (error) {
+        console.error('Error deleting task:', error);
+        return { success: false, message: 'Failed to delete task: ' + error.message };
+    }
+
+    revalidatePath('/customer/dashboard/requests');
+    return { success: true, message: 'Request deleted successfully' };
+}
+
+export async function updateOffer(prevState: any, formData: FormData) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { message: 'Unauthorized', errors: {} };
+    }
+
+    const taskId = formData.get('taskId') as string;
+    const offerId = formData.get('offerId') as string;
+    const amount = Number(formData.get('amount'));
+    const message = formData.get('message') as string;
+    const estimatedHours = Number(formData.get('estimatedHours'));
+
+    if (!offerId || !taskId || !amount || !message) {
+        return { message: 'Missing required fields.', errors: {} };
+    }
+
+    // Get Public User ID
+    const { data: publicUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+    if (!publicUser) return { message: 'User not found.', errors: {} };
+
+    // Get Tasker Profile
+    const { data: tasker } = await supabase
+        .from('taskers')
+        .select('id')
+        .eq('user_id', publicUser.id)
+        .single();
+
+    if (!tasker) return { message: 'Not a registered tasker.', errors: {} };
+
+    // Verify ownership and status of the offer
+    const { data: existingOffer } = await supabase
+        .from('offers')
+        .select('id, status')
+        .eq('id', offerId)
+        .eq('tasker_id', tasker.id)
+        .single();
+
+    if (!existingOffer) {
+        return { message: 'Offer not found or unauthorized.', errors: {} };
+    }
+
+    if (existingOffer.status !== 'pending') {
+        return { message: 'Cannot update an offer that has already been accepted or rejected.', errors: {} };
+    }
+
+    const { error: updateError } = await supabase
+        .from('offers')
+        .update({
+            proposed_price: amount,
+            message: message,
+            estimated_hours: estimatedHours,
+            // updated_at: new Date().toISOString() // Let DB handle if triggered, otherwise we should add it if column exists
+        })
+        .eq('id', offerId);
+
+    if (updateError) {
+        console.error('Error updating offer:', updateError);
+        return { message: 'Failed to update offer.', errors: {} };
+    }
+
+    revalidatePath(`/seller/dashboard/tasks/${taskId}`);
+
+    // Return structured success
+    return {
+        message: 'Bid updated successfully!',
+        success: true,
+        bid: {
+            id: offerId,
+            proposed_price: amount,
+            estimated_hours: estimatedHours,
+            message: message,
+            status: 'pending',
+            created_at: new Date().toISOString()
+        }
+    };
+}
+
+export async function deleteOffer(offerId: string, taskId: string) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        cookieStore.set(name, value, options);
+                    });
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, message: 'Unauthorized' };
+
+    const { data: publicUser, error: userError } = await supabase.from('users').select('id').eq('auth_user_id', user.id).maybeSingle();
+    if (userError || !publicUser) return { success: false, message: 'User not found' };
+
+    const { data: tasker, error: taskerError } = await supabase.from('taskers').select('id').eq('user_id', publicUser.id).maybeSingle();
+    if (taskerError || !tasker) return { success: false, message: 'Tasker profile not found' };
+
+    // Verify the offer can be deleted
+    const { data: existingOffer, error: offerError } = await supabase
+        .from('offers')
+        .select('status')
+        .eq('id', offerId)
+        .eq('tasker_id', tasker.id)
+        .maybeSingle();
+
+    if (offerError || !existingOffer) {
+        return { success: false, message: 'Offer not found or unauthorized.' };
+    }
+
+    if (existingOffer.status !== 'pending') {
+        return { success: false, message: 'Cannot retract an offer that has already been accepted or rejected.' };
+    }
+
+    const { error: deleteError } = await supabase
+        .from('offers')
+        .delete()
+        .eq('id', offerId)
+        .eq('tasker_id', tasker.id);
+
+    if (deleteError) {
+        console.error('Error deleting offer:', deleteError);
+        return { success: false, message: 'Failed to delete offer.' };
+    }
+
+    revalidatePath(`/seller/dashboard/tasks/${taskId}`);
+    return { success: true, message: 'Offer retracted successfully.' };
 }

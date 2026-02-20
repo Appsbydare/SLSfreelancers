@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware({
     defaultLocale: 'en'
 });
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -51,9 +51,8 @@ export async function middleware(request: NextRequest) {
 
     // Check if it's an auth page (login, signup, forgot-password, reset-password)
     // Matches /login, /en/login, /si/signup, etc.
-    const isAuthPage = /^\/(?:en|si|ta)?\/?(login|signup|forgot-password|reset-password)/.test(pathname)
+    const isAuthPage = /^\/(?:en|si|ta)?\/?(?:login|signup|forgot-password|reset-password)/.test(pathname)
 
-    // Protected routes that require authentication
     // Protected routes that require authentication
     const isProtectedSeller = pathname.includes('/seller')
     const isProtectedAdmin = pathname.includes('/project-status')
@@ -121,6 +120,6 @@ export const config = {
          * - api/ (API routes shouldn't trigger i18n but SHOULD trigger Supabase auth check? usually API is protected separately)
          * - public folder
          */
-        '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp3)$).*)',
     ],
 }

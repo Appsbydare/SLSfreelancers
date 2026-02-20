@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Check, Upload, X, AlertCircle } from 'lucide-react';
-import { categories } from '@/data/categories';
+import { supabase } from '@/lib/supabase';
 import { uploadFile } from '@/lib/supabase-storage';
 
 const STEPS = [
@@ -30,6 +30,24 @@ export default function CreateGigPage() {
   // const [user, setUser] = useState<any>(null); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (data) {
+        setCategories(data);
+      } else {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -289,8 +307,8 @@ export default function CreateGigPage() {
         }),
       });
 
-      // Redirect to gig page
-      router.push(`/${locale}/gigs/${gig.slug}?new=true`);
+      // Redirect to seller dashboard gigs page
+      router.push(`/${locale}/seller/dashboard/gigs`);
     } catch (err: any) {
       console.error('Publish error:', err);
       setError(err.message || 'Failed to publish gig');

@@ -75,7 +75,7 @@ export default async function CustomerRequestsPage({ params }: { params: Promise
         .from('tasks')
         .select(`
             *,
-            offers!offers_task_id_fkey(count)
+            offers:offers!offers_task_id_fkey (count)
         `)
         .eq('customer_id', customer.id)
         .order('created_at', { ascending: false });
@@ -116,55 +116,58 @@ export default async function CustomerRequestsPage({ params }: { params: Promise
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                    {requests.map((request: any) => (
-                        <Link
-                            key={request.id}
-                            href={`/${locale}/customer/dashboard/tasks/${request.id}`}
-                            className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100 hover:border-brand-green/30 group"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-brand-green transition-colors">
-                                            {request.title}
-                                        </h3>
-                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'open' ? 'bg-green-100 text-green-800' :
-                                            request.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                                                request.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    {requests.map((request: any) => {
+                        const bidsCount = request.offers?.[0]?.count || 0;
+                        return (
+                            <Link
+                                key={request.id}
+                                href={`/${locale}/customer/dashboard/tasks/${request.id}`}
+                                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100 hover:border-brand-green/30 group"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-brand-green transition-colors">
+                                                {request.title}
+                                            </h3>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === 'open' ? 'bg-green-100 text-green-800' :
+                                                request.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                                                    request.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-600 line-clamp-2 mb-4 text-sm">
+                                            {request.description}
+                                        </p>
+                                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                                            <div className="flex items-center">
+                                                <MapPin className="h-3.5 w-3.5 mr-1" />
+                                                {request.location}
+                                            </div>
+                                            <div className="flex items-center">
+                                                <Calendar className="h-3.5 w-3.5 mr-1" />
+                                                {new Date(request.created_at).toLocaleDateString()}
+                                            </div>
+                                            <div className="flex items-center font-medium text-brand-green bg-brand-green/5 px-2 py-1 rounded">
+                                                LKR {request.budget?.toLocaleString() || 'Negotiable'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-row md:flex-col items-center justify-between md:justify-center gap-4 min-w-[120px]">
+                                        <div className="text-center">
+                                            <p className="text-2xl font-bold text-gray-900">{bidsCount}</p>
+                                            <p className="text-xs text-gray-500">Bids Received</p>
+                                        </div>
+                                        <span className="text-sm font-medium text-brand-green flex items-center md:hidden">
+                                            View Details <ChevronRight className="h-4 w-4 ml-1" />
                                         </span>
                                     </div>
-                                    <p className="text-gray-600 line-clamp-2 mb-4 text-sm">
-                                        {request.description}
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                                        <div className="flex items-center">
-                                            <MapPin className="h-3.5 w-3.5 mr-1" />
-                                            {request.location}
-                                        </div>
-                                        <div className="flex items-center">
-                                            <Calendar className="h-3.5 w-3.5 mr-1" />
-                                            {new Date(request.created_at).toLocaleDateString()}
-                                        </div>
-                                        <div className="flex items-center font-medium text-brand-green bg-brand-green/5 px-2 py-1 rounded">
-                                            LKR {request.budget?.toLocaleString() || 'Negotiable'}
-                                        </div>
-                                    </div>
                                 </div>
-                                <div className="border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-row md:flex-col items-center justify-between md:justify-center gap-4 min-w-[120px]">
-                                    <div className="text-center">
-                                        <p className="text-2xl font-bold text-gray-900">{request.offers?.[0]?.count || 0}</p>
-                                        <p className="text-xs text-gray-500">Bids Received</p>
-                                    </div>
-                                    <span className="text-sm font-medium text-brand-green flex items-center md:hidden">
-                                        View Details <ChevronRight className="h-4 w-4 ml-1" />
-                                    </span>
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             )}
         </div>

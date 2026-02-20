@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { DistrictProvider } from '@/contexts/DistrictContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import NotificationListener from '@/components/NotificationListener';
+import ToasterProvider from '@/components/ToasterProvider';
+import { supabaseServer } from '@/lib/supabase-server';
 
 const locales = ['en', 'si', 'ta'];
 
@@ -15,8 +18,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
-  // Validate that the incoming `locale` parameter is valid
+
   if (!locales.includes(locale)) {
     notFound();
   }
@@ -32,6 +34,8 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
         <DistrictProvider>
+          <ToasterProvider />
+          <NotificationListener />
           <Layout>
             {children}
           </Layout>

@@ -12,10 +12,12 @@ import {
     X,
     PlusCircle
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CustomerSidebarProps {
-    unreadMessages?: number;
+    unreadMessages?: number; // Kept for backward compat but overriden by realtime
 }
 
 export default function CustomerSidebar({
@@ -24,6 +26,66 @@ export default function CustomerSidebar({
     const pathname = usePathname();
     const locale = useLocale();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const { user } = useAuth();
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        if (!user) return;
+
+        let publicUserId: string | null = null;
+
+        const fetchUnreadCount = async () => {
+            if (!publicUserId) return;
+            const { count } = await supabase
+                .from('messages')
+                .select('*', { count: 'exact', head: true })
+                .eq('recipient_id', publicUserId)
+                .is('read_at', null);
+
+            setUnreadCount(count || 0);
+        };
+
+        const init = async () => {
+            // Get Public User ID
+            const { data } = await supabase
+                .from('users')
+                .select('id')
+                .eq('auth_user_id', user.id)
+                .single();
+
+            if (data) {
+                publicUserId = data.id;
+                fetchUnreadCount();
+
+                // Subscribe to changes
+                const channel = supabase.channel('sidebar-badges')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'messages',
+                            filter: `recipient_id=eq.${publicUserId}`
+                        },
+                        () => {
+                            // On any change (new message or read status update), refresh count
+                            fetchUnreadCount();
+                        }
+                    )
+                    .subscribe();
+
+                return () => {
+                    supabase.removeChannel(channel);
+                };
+            }
+        };
+
+        const cleanupPromise = init();
+
+        return () => {
+            cleanupPromise.then(cleanup => cleanup && cleanup());
+        };
+    }, [user]);
 
     const menuItems = [
         {
@@ -45,7 +107,7 @@ export default function CustomerSidebar({
             label: 'Messages',
             icon: MessageSquare,
             href: '/customer/dashboard/messages',
-            badge: unreadMessages > 0 ? unreadMessages : null,
+            badge: unreadCount > 0 ? unreadCount : null,
         },
         {
             id: 'profile',
@@ -86,7 +148,10 @@ export default function CustomerSidebar({
                 <div className="flex flex-col h-full">
                     {/* Logo/Header */}
                     <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-xl font-bold text-gray-900">Customer Portal</h2>
+                        <Link href={`/${locale}`} className="flex items-center gap-2">
+                            {/* You can add logo here if needed */}
+                            <h2 className="text-xl font-bold text-gray-900">Customer Portal</h2>
+                        </Link>
                         <p className="text-sm text-gray-500 mt-1">Manage your requests</p>
                     </div>
 

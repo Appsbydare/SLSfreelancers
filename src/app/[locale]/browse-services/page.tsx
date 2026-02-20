@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Search, Filter, MapPin, Clock, DollarSign } from 'lucide-react';
 // import { categories } from '@/data/categories'; // Still useful for filter dropdown, but we should fetch from DB ideally or keep static for now if unchanged
 import { formatCurrency } from '@/lib/utils';
@@ -65,7 +66,7 @@ export default function BrowseTasksPage() {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
-      
+
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
       if (selectedDistrictId) {
@@ -78,7 +79,7 @@ export default function BrowseTasksPage() {
       params.append('sortBy', sortBy);
 
       const response = await fetch(`/api/gigs?${params.toString()}`);
-      
+
       if (response.ok) {
         const result = await response.json();
         setTasks(result.gigs || []);
@@ -334,9 +335,12 @@ export default function BrowseTasksPage() {
                         <p className="text-lg font-bold text-brand-green">
                           {formatCurrency(startingPrice)}
                         </p>
-                        <button className="mt-2 px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors">
+                        <Link
+                          href={`/${locale}/gigs/${gig.slug}`}
+                          className="mt-2 inline-flex items-center px-4 py-2 bg-brand-green text-white text-sm font-medium rounded-lg hover:bg-brand-green/90 transition-colors"
+                        >
                           View Details
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>

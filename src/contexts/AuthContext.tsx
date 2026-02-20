@@ -56,10 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('users')
         .select('*')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('[AuthContext] Error fetching user profile:', error);
+        return null;
+      }
+
+      if (!profile) {
+        console.error('[AuthContext] No user profile found for auth_user_id:', authUser.id);
         return null;
       }
 
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('taskers')
         .select('id, onboarding_completed')
         .eq('user_id', profile.id)
-        .single();
+        .maybeSingle();
 
       // Map DB fields to Context User type
       const mappedUser: User = {
@@ -103,13 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 1. Check active session
     const initAuth = async () => {
+      console.log('[AuthContext] Initializing auth...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('[AuthContext] Session:', session?.user?.id || 'No session');
 
       if (mounted) {
         setSession(session);
         if (session?.user) {
+          console.log('[AuthContext] Fetching profile for user:', session.user.id);
           const profile = await fetchUserProfile(session.user);
+          console.log('[AuthContext] Profile fetched:', profile?.id || 'No profile');
           setUser(profile);
+        } else {
+          console.log('[AuthContext] No session user');
         }
         setIsLoading(false);
       }

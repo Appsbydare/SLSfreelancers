@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         .from('tasker_service_areas')
         .select('tasker_id')
         .ilike('district', district);
-      
+
       if (serviceAreaData && serviceAreaData.length > 0) {
         const taskerIds = serviceAreaData.map((area: any) => area.tasker_id);
         query = query.in('seller_id', taskerIds);
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         .from('taskers')
         .select('id')
         .eq('level_code', sellerLevel);
-      
+
       if (taskerData && taskerData.length > 0) {
         const taskerIds = taskerData.map((t: any) => t.id);
         query = query.in('seller_id', taskerIds);
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
         break;
       default: // relevance
         query = query.order('is_featured', { ascending: false })
-                     .order('rating', { ascending: false })
-                     .order('orders_count', { ascending: false });
+          .order('rating', { ascending: false })
+          .order('orders_count', { ascending: false });
     }
 
     // Pagination
@@ -138,17 +138,9 @@ export async function GET(request: NextRequest) {
     // Post-process results for price filtering and sorting
     let gigs = data || [];
 
-    // If there's an error or no data, use sample data as fallback
-    if (error || gigs.length === 0) {
-      if (error) {
-        console.log('Error fetching gigs from database, using sample data as fallback:', error.message);
-      } else {
-        console.log('No gigs found in database, using sample data as fallback');
-      }
-      // Only use fallback if no specific filters are applied
-      if (!category && !search && !district) {
-        gigs = generateSampleGigsFromJSON(sampleGigsData, limit);
-      }
+    // If there's an error or no data
+    if (error) {
+      console.log('Error fetching gigs from database:', error.message);
     }
 
     // Apply price filters if provided
@@ -196,7 +188,7 @@ export async function GET(request: NextRequest) {
 
     // Determine if we're using sample data
     const isUsingSampleData = gigs.length > 0 && gigs[0]?.id?.startsWith('sample-gig-');
-    
+
     return NextResponse.json({
       gigs,
       pagination: {
@@ -346,20 +338,20 @@ function getGigImagePath(sellerName: string): string | null {
     // Construct the image filename
     const imageFileName = `${sellerName}.jpeg`;
     const publicImagesPath = path.join(process.cwd(), 'public', 'images', imageFileName);
-    
+
     // Check if file exists
     if (fs.existsSync(publicImagesPath)) {
       // Return the public URL path (Next.js serves public folder at root)
       return `/images/${imageFileName}`;
     }
-    
+
     // Also check for .jpg extension
     const imageFileNameJpg = `${sellerName}.jpg`;
     const publicImagesPathJpg = path.join(process.cwd(), 'public', 'images', imageFileNameJpg);
     if (fs.existsSync(publicImagesPathJpg)) {
       return `/images/${imageFileNameJpg}`;
     }
-    
+
     return null;
   } catch (error) {
     console.error(`Error checking image for ${sellerName}:`, error);
@@ -375,12 +367,12 @@ function generateSampleGigsFromJSON(sampleData: any[], limit: number) {
     const sellerLevel = getSellerLevel(gigData.rating || 4.5, gigData.isFeatured || false, index);
     const isVerified = shouldBeVerified(index);
     const hasEasyFindersChoice = shouldHaveEasyFindersChoice(index);
-    
+
     // Get image path based on seller name
     const gigImagePath = getGigImagePath(sellerName);
     // Use seller-specific image if available, otherwise use original images or empty array
     const images = gigImagePath ? [gigImagePath] : (gigData.images || []);
-    
+
     return {
       id: `sample-gig-${index + 1}`,
       seller_id: `sample-seller-${index + 1}`,

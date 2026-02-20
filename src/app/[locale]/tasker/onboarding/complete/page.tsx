@@ -6,17 +6,30 @@ import Link from 'next/link';
 import { CheckCircle, Home, User } from 'lucide-react';
 import Image from 'next/image';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function OnboardingCompletePage() {
   const router = useRouter();
+  const { refreshProfile, switchRole } = useAuth();
 
   useEffect(() => {
     // Check if onboarding was actually completed
     const isComplete = sessionStorage.getItem('onboardingComplete');
-    
+
     if (!isComplete) {
       router.push('/tasker/onboarding/stage-1');
+      return;
     }
-  }, [router]);
+
+    // Refresh profile to update user status and switch to seller mode
+    const updateProfile = async () => {
+      await refreshProfile();
+      switchRole('tasker');
+      localStorage.setItem('userPreferredMode', 'seller');
+    };
+
+    updateProfile();
+  }, [router, refreshProfile, switchRole]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -32,7 +45,7 @@ export default function OnboardingCompletePage() {
               priority
             />
           </div>
-          
+
           {/* Success Icon */}
           <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-6">
             <CheckCircle className="h-16 w-16 text-green-600" />
@@ -48,7 +61,7 @@ export default function OnboardingCompletePage() {
 
         <div className="bg-white shadow sm:rounded-lg p-8 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">What happens next?</h2>
-          
+
           <div className="space-y-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -59,7 +72,7 @@ export default function OnboardingCompletePage() {
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Document Verification</h3>
                 <p className="mt-1 text-gray-600">
-                  Our team will review your submitted documents within 1-2 business days. 
+                  Our team will review your submitted documents within 1-2 business days.
                   You&apos;ll receive an email notification once the verification is complete.
                 </p>
               </div>
@@ -74,7 +87,7 @@ export default function OnboardingCompletePage() {
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Profile Activation</h3>
                 <p className="mt-1 text-gray-600">
-                  Once verified, your profile will be activated and visible to customers. 
+                  Once verified, your profile will be activated and visible to customers.
                   You can start browsing and bidding on tasks immediately.
                 </p>
               </div>
@@ -89,7 +102,7 @@ export default function OnboardingCompletePage() {
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Start Earning</h3>
                 <p className="mt-1 text-gray-600">
-                  Browse available tasks, submit offers, and start building your reputation 
+                  Browse available tasks, submit offers, and start building your reputation
                   on the platform. The more tasks you complete, the higher your rating!
                 </p>
               </div>
