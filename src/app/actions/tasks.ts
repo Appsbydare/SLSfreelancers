@@ -236,12 +236,16 @@ export async function placeBid(prevState: any, formData: FormData) {
     // Get Public User ID first
     const { data: publicUser } = await supabase
         .from('users')
-        .select('id')
+        .select('id, is_verified')
         .eq('auth_user_id', user.id)
         .single();
 
     if (!publicUser) {
         return { message: 'User profile not found.', errors: {} };
+    }
+
+    if (!publicUser.is_verified) {
+        return { message: 'Your account is pending verification. You cannot place bids until approved by an administrator.', errors: {} };
     }
 
     // Get Tasker Profile using Public User ID

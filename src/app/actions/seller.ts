@@ -59,8 +59,16 @@ export async function getSellerDashboardData(userId: string) {
         .select('*', { count: 'exact', head: true })
         .eq('seller_id', tasker.id);
 
+    // 7. Get Verification Status
+    const { data: verifications } = await supabase
+        .from('verifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('submitted_at', { ascending: false });
+
     return {
         tasker,
+        verifications: verifications || [],
         stats: {
             activeGigs: activeGigsCount || 0,
             activeOrders: activeOrdersCount || 0,

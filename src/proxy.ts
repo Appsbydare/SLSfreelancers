@@ -38,16 +38,22 @@ export async function proxy(request: NextRequest) {
         }
     )
 
-    // Get the session to check authentication
+    // Get the user to check authentication (getUser is more secure than getSession)
     const {
-        data: { session },
-    } = await supabase.auth.getSession()
-
-    const user = session?.user
+        data: { user },
+    } = await supabase.auth.getUser()
 
     // Route protection logic
     const url = request.nextUrl
     const pathname = url.pathname
+
+    // Log all protected route access for debugging
+    const isProtectedAdmin = pathname.includes('/admin')
+
+    if (isProtectedAdmin) {
+        console.log(`[Proxy] Requesting Admin Route: ${pathname}`);
+        console.log(`[Proxy] User identified: ${user?.email || 'None'} (${user?.id || 'None'})`);
+    }
 
     // Check if it's an auth page (login, signup, forgot-password, reset-password)
     // Matches /login, /en/login, /si/signup, etc.
@@ -55,22 +61,19 @@ export async function proxy(request: NextRequest) {
 
     // Protected routes that require authentication
     const isProtectedSeller = pathname.includes('/seller')
-    const isProtectedAdmin = pathname.includes('/project-status')
+    const isProtectedProjectStatus = pathname.includes('/project-status')
     const isProtectedTasker = pathname.includes('/tasker/onboarding')
     const isProtectedOrders = pathname.includes('/orders')
     const isProtectedCheckout = pathname.includes('/checkout')
 
-    const isProtected = isProtectedSeller || isProtectedAdmin || isProtectedTasker ||
+    const isProtected = isProtectedSeller || isProtectedAdmin || isProtectedProjectStatus || isProtectedTasker ||
         isProtectedOrders || isProtectedCheckout
 
     // 1. Redirect logged-in users away from auth pages to home or dashboard
     if (user && isAuthPage) {
-        // Extract locale from path
         const localeMatch = pathname.match(/^\/(en|si|ta)/);
-        // If no locale in path, try cookie, else default to 'en'
         const localeCookie = request.cookies.get('NEXT_LOCALE')?.value;
         const locale = localeMatch ? localeMatch[1] : (localeCookie || 'en');
-
         return NextResponse.redirect(new URL(`/${locale}`, request.url))
     }
 
@@ -81,6 +84,43 @@ export async function proxy(request: NextRequest) {
         const redirectUrl = new URL(`/${locale}/login`, request.url)
         redirectUrl.searchParams.set('next', pathname)
         return NextResponse.redirect(redirectUrl)
+    }
+
+    // 3. Admin Security: If accessing /admin, verify super_admin role in DB
+    if (user && isProtectedAdmin) {
+        // Use service role to bypass RLS for admin check
+        const adminSupabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                cookies: {
+                    getAll: () => request.cookies.getAll(),
+                    setAll: () => { }
+                }
+            }
+        )
+
+        const { data: profile, error } = await adminSupabase
+            .from('users')
+            .select('is_super_admin')
+            .eq('auth_user_id', user.id)
+            .single();
+
+        if (error) {
+            console.error('[Proxy] Admin lookup error:', error.message);
+        }
+
+        console.log(`[Proxy] Profile is_super_admin:`, profile?.is_super_admin);
+
+        if (!profile || !profile.is_super_admin) {
+            console.warn(`[Proxy] Access Denied: User ${user.email} is not a super admin.`);
+            // User is not an admin, deny access
+            const localeMatch = pathname.match(/^\/(en|si|ta)/);
+            const locale = localeMatch ? localeMatch[1] : 'en';
+            return NextResponse.redirect(new URL(`/${locale}`, request.url));
+        } else {
+            console.log(`[Proxy] Access Granted: User ${user.email} is a super admin.`);
+        }
     }
 
     // Chain: Supabase response -> i18n response

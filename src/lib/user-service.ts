@@ -15,6 +15,7 @@ export const USER_BASE_SELECT = `
   user_type,
   preferred_language,
   is_verified,
+  is_super_admin,
   created_at
 `;
 
@@ -31,6 +32,7 @@ export interface DbUserRow {
   user_type: UserType;
   preferred_language: string | null;
   is_verified: boolean;
+  is_super_admin: boolean;
   created_at: string;
 }
 
@@ -58,6 +60,7 @@ export interface ClientUser {
   hasTaskerAccount?: boolean; // User has tasker record
   createdAt: string;
   isVerified: boolean;
+  isSuperAdmin: boolean;
   profile: {
     bio: string;
     skills: string[];
@@ -99,7 +102,7 @@ export async function checkDualRoles(userId: string) {
 export async function buildClientUser(user: DbUserRow, taskerProfile?: TaskerProfileRow | null): Promise<ClientUser> {
   // Check if user has both roles
   const dualRoles = await checkDualRoles(user.id);
-  
+
   // Determine original user type
   let originalUserType = user.user_type;
   if (dualRoles.hasCustomerAccount && dualRoles.hasTaskerAccount) {
@@ -123,6 +126,7 @@ export async function buildClientUser(user: DbUserRow, taskerProfile?: TaskerPro
     hasTaskerAccount: dualRoles.hasTaskerAccount,
     createdAt: user.created_at,
     isVerified: user.is_verified,
+    isSuperAdmin: user.is_super_admin,
     profile: {
       bio: taskerProfile?.bio ?? '',
       skills: taskerProfile?.skills ?? [],

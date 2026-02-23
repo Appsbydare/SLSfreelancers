@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell, ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -200,8 +200,6 @@ export default function Header() {
       { name: 'Orders', href: `/${locale}/seller/dashboard/orders` },
       { name: 'Earnings', href: `/${locale}/seller/dashboard/earnings` },
     ];
-  } else if (user?.userType === 'admin') {
-    displayNavigation = [...navigation, { name: 'Project Status', href: `/${locale}/project-status` }];
   }
 
   const handleToggleMode = () => {
@@ -598,6 +596,18 @@ export default function Header() {
                         </div>
 
                         <div className="p-2">
+                          {/* Admin Portal Link */}
+                          {user?.userType === 'admin' && (
+                            <Link
+                              href={`/${locale}/admin`}
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-brand-green hover:text-brand-green hover:bg-brand-green/10 rounded-md transition-all duration-300 mb-1 font-medium"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                              Admin Portal
+                            </Link>
+                          )}
+
                           {/* Dashboard Link for Customers/Sellers */}
                           {(!isSeller) && (
                             <Link

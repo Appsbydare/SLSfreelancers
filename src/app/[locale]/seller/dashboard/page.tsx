@@ -10,7 +10,8 @@ import {
   DollarSign,
   Package,
   TrendingUp,
-  Edit
+  Edit,
+  ShieldCheck
 } from 'lucide-react';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +75,23 @@ export default function SellerDashboardPage() {
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-1">Welcome back! Here&apos;s your business overview</p>
       </div>
+
+      {/* Pending Verification Banner */}
+      {user && !user.isVerified && (
+        <div className="mb-8 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-md shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <ShieldCheck className="h-5 w-5 text-orange-500" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-orange-800">Pending Verification</h3>
+              <div className="mt-2 text-sm text-orange-700">
+                <p>Your account is currently under review by our moderation team. You cannot place bids or accept new orders until an administrator verifies your identity documents.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

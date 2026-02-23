@@ -44,13 +44,15 @@ export default function Layout({ children }: LayoutProps) {
     // If userType is 'customer', they can view customer pages freely (no redirect)
   }, [user, isLoggedIn, isLoading, pathname, router]);
 
+  const isAdminPage = pathname?.includes('/admin');
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 pt-16">
+      {!isAdminPage && <Header />}
+      <main className={`flex-1 ${isAdminPage ? '' : 'pt-16'}`}>
         {children}
       </main>
-      <Footer />
+      {!isAdminPage && <Footer />}
     </div>
   );
 }
