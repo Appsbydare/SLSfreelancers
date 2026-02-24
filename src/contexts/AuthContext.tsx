@@ -39,15 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserProfile = async (authUser: SupabaseUser) => {
+  const fetchUserProfile = async (authUser: SupabaseUser, forceRefresh = false) => {
     try {
       // Check cache first for faster loads
-      const cachedProfile = sessionStorage.getItem(`user_profile_${authUser.id}`);
-      if (cachedProfile) {
-        try {
-          return JSON.parse(cachedProfile) as User;
-        } catch (e) {
-          sessionStorage.removeItem(`user_profile_${authUser.id}`);
+      const cacheKey = `user_profile_${authUser.id}`;
+      if (!forceRefresh) {
+        const cachedProfile = sessionStorage.getItem(cacheKey);
+        if (cachedProfile) {
+          try {
+            return JSON.parse(cachedProfile) as User;
+          } catch (e) {
+            sessionStorage.removeItem(cacheKey);
+          }
         }
       }
 
@@ -90,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileImage: profile.profile_image,
         hasTaskerAccount: !!taskerProfile,
         hasCustomerAccount: true, // Assuming all users have a customer account
-        isVerified: taskerProfile?.onboarding_completed || false,
+        isVerified: profile.is_verified || false,
       };
 
       // Cache for faster subsequent loads
@@ -138,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If we just logged in or signed up, fetch/refresh profile
           // But careful not to overwrite if we only refreshed token
           // For simplicity we refresh profile
-          if (!user || user.id !== session.user.id) {
+          if (!user || user.email !== session.user.email) {
             // Don't set isLoading(true) here - it causes login button to hang
             // The profile fetch is fast enough and login page handles its own loading state
             const profile = await fetchUserProfile(session.user);
@@ -158,9 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     // Clear cache on logout
-    if (user?.id) {
-      sessionStorage.removeItem(`user_profile_${user.id}`);
+    if (session?.user?.id) {
+      sessionStorage.removeItem(`user_profile_${session.user.id}`);
     }
+    // Deep wipe to ensure no stale sessions
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('user_profile_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -170,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session?.user) {
       // Clear cache to force fresh data
       sessionStorage.removeItem(`user_profile_${session.user.id}`);
-      const profile = await fetchUserProfile(session.user);
+      const profile = await fetchUserProfile(session.user, true);
       setUser(profile);
     }
   };

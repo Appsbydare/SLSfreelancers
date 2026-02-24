@@ -115,6 +115,17 @@ export default function Header() {
     }
   };
 
+  const handleClearNotifications = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user?.id) return;
+
+    // Optimistic UI update
+    setNotifications([]);
+    setUnreadCount(0);
+
+    await supabase.from('notifications').delete().eq('user_id', user.id);
+  };
+
   const handleLogout = async () => {
     await logout();
     router.push('/en');
@@ -487,16 +498,26 @@ export default function Header() {
                     </button>
 
                     {isNotificationMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-80 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
-                          <h4 className="text-white font-medium">Notifications</h4>
-                          {unreadCount > 0 && (
-                            <span className="bg-brand-green/20 text-brand-green text-xs px-2 py-0.5 rounded-full">
-                              {unreadCount} new
-                            </span>
+                      <div className="absolute right-0 top-full mt-2 w-96 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/40">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-white font-medium">Notifications</h4>
+                            {unreadCount > 0 && (
+                              <span className="bg-brand-green/20 text-brand-green text-xs px-2 py-0.5 rounded-full">
+                                {unreadCount} new
+                              </span>
+                            )}
+                          </div>
+                          {notifications.length > 0 && (
+                            <button
+                              onClick={handleClearNotifications}
+                              className="text-xs font-medium text-gray-400 hover:text-red-400 transition-colors"
+                            >
+                              Clear All
+                            </button>
                           )}
                         </div>
-                        <div className="max-h-[350px] overflow-y-auto">
+                        <div className="max-h-[450px] overflow-y-auto">
                           {notifications.length > 0 ? (
                             <div className="divide-y divide-gray-800 flex flex-col">
                               {notifications.map((notif: any) => (
@@ -505,10 +526,10 @@ export default function Header() {
                                     <div className="mt-1 bg-brand-green/10 p-2 rounded-full h-fit flex-shrink-0">
                                       <Bell className="h-4 w-4 text-brand-green" />
                                     </div>
-                                    <div>
-                                      <h5 className="text-sm font-medium text-white mb-1">{notif.title}</h5>
-                                      <p className="text-xs text-gray-400 mb-2">{notif.message}</p>
-                                      <span className="text-[10px] text-gray-500">
+                                    <div className="flex-1 min-w-0">
+                                      <h5 className="text-sm font-medium text-white mb-1 whitespace-normal break-words leading-snug">{notif.title}</h5>
+                                      <p className="text-xs text-gray-400 mb-2 whitespace-normal break-words leading-relaxed">{notif.message}</p>
+                                      <span className="text-[10px] text-gray-500 font-medium">
                                         {formatRelativeTime(notif.created_at)}
                                       </span>
                                     </div>

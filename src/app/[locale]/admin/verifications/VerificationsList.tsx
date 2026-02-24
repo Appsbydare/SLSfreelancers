@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, FileText, User, RefreshCw, ShieldCheck, X, ChevronDown, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import VerificationActions from '@/app/[locale]/admin/verifications/VerificationActions';
+import { approveSellerVerification } from '@/app/actions/admin';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 type Verification = {
     id: string;
@@ -16,10 +19,13 @@ type Verification = {
         first_name: string;
         last_name: string;
         email: string;
+        is_verified: boolean;
     };
 };
 
 export default function VerificationsList({ verifications }: { verifications: Verification[] }) {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
     const [viewerUrl, setViewerUrl] = useState<string | null>(null);
     const [zoom, setZoom] = useState<number>(1);
     const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
@@ -61,26 +67,81 @@ export default function VerificationsList({ verifications }: { verifications: Ve
                     <div key={group.user_id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         {/* User Header */}
                         <div
-                            className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors"
-                            onClick={() => toggleUser(group.user_id)}
+                            className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors relative"
                         >
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                                    <User className="h-5 w-5 text-gray-500" />
+                            <div className="flex items-center flex-1 cursor-pointer" onClick={() => toggleUser(group.user_id)}>
+                                <div className="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                    <User className="h-6 w-6 text-gray-500" />
                                 </div>
                                 <div className="ml-4">
-                                    <div className="text-sm font-bold text-gray-900">
+                                    <div className="text-base font-bold text-gray-900 flex items-center gap-2">
                                         {(group.user as any)?.first_name} {(group.user as any)?.last_name}
+                                        {(group.user as any)?.is_verified && (
+                                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-green-200">
+                                                <CheckCircle className="w-3 h-3" /> VERIFIED
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="text-sm text-gray-500">{(group.user as any)?.email}</div>
-                                    <div className="text-xs text-gray-400 mt-0.5" title={group.user_id}>User ID: {group.user_id}</div>
+                                    <div className="text-xs text-gray-400 mt-1 font-mono" title={group.user_id}>ID: {group.user_id}</div>
                                 </div>
                             </div>
-                            <div className="text-gray-400">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-500">{group.documents.length} Document(s)</span>
+
+                            <div className="flex items-center gap-4">
+                                {/* The Master Approve Button */}
+                                {(() => {
+                                    const isAlreadyVerified = (group.user as any)?.is_verified;
+                                    const hasApprovedNic = group.documents.some(d => d.verification_type === 'nic' && d.status === 'approved');
+                                    const hasApprovedAddress = group.documents.some(d => d.verification_type === 'address_proof' && d.status === 'approved');
+                                    const canApprove = hasApprovedNic && hasApprovedAddress && !isAlreadyVerified;
+
+                                    const handleMasterApprove = () => {
+                                        startTransition(async () => {
+                                            const res = await approveSellerVerification(group.user_id);
+                                            if (res.success) {
+                                                toast.success('Seller account fully verified!');
+                                                router.refresh();
+                                            } else {
+                                                toast.error(res.message || 'Failed to verify seller account');
+                                            }
+                                        });
+                                    };
+
+                                    return (
+                                        <button
+                                            onClick={handleMasterApprove}
+                                            disabled={isPending || !canApprove || isAlreadyVerified}
+                                            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 flex items-center gap-2
+                                                ${isAlreadyVerified
+                                                    ? 'bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed hidden md:flex'
+                                                    : canApprove
+                                                        ? 'bg-brand-green text-white hover:bg-brand-green/90 shadow-sm focus:ring-brand-green'
+                                                        : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                                                }`}
+                                            title={
+                                                isAlreadyVerified ? "Account is already fully verified"
+                                                    : canApprove ? "Click to fully verify this seller's account"
+                                                        : "Seller needs both approved NIC and Address Proof to unlock account"
+                                            }
+                                        >
+                                            {isPending ? (
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                            ) : (
+                                                <CheckCircle className="w-4 h-4" />
+                                            )}
+                                            {isAlreadyVerified ? 'Account Verified' : canApprove ? 'Approve Seller Account' : 'Awaiting Documents'}
+                                        </button>
+                                    );
+                                })()}
+
+                                {/* Toggle documents button */}
+                                <button
+                                    onClick={() => toggleUser(group.user_id)}
+                                    className="flex items-center justify-center gap-2 p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors bg-white border border-gray-200 shadow-sm"
+                                >
+                                    <span className="text-sm font-medium hidden sm:inline">{group.documents.length} Docs</span>
                                     {expandedUsers.has(group.user_id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                                </div>
+                                </button>
                             </div>
                         </div>
 

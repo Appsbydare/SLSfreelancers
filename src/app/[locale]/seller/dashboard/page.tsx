@@ -13,16 +13,18 @@ import {
   Edit,
   ShieldCheck
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSellerDashboardData } from '@/app/actions/seller';
 
 export default function SellerDashboardPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshProfile } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [taskerData, setTaskerData] = useState<any>(null);
+  const [verifications, setVerifications] = useState<any[]>([]);
   const [stats, setStats] = useState({
     activeGigs: 0,
     activeOrders: 0,
@@ -47,6 +49,7 @@ export default function SellerDashboardPage() {
 
       if (data) {
         setTaskerData(data.tasker);
+        setVerifications(data.verifications || []);
         setStats(data.stats);
       }
     } catch (error) {
@@ -59,6 +62,30 @@ export default function SellerDashboardPage() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // Filter to only the latest document for each type
+  const getLatestVerifications = (verifs: any[]) => {
+    const latest: Record<string, any> = {};
+    // They are ordered by submitted_at DESC, so the first one we see is the latest
+    for (const v of verifs) {
+      if (!latest[v.verification_type]) {
+        latest[v.verification_type] = v;
+      }
+    }
+    return Object.values(latest);
+  };
+
+  const latestVerifications = getLatestVerifications(verifications);
+  const hasRejectedDocs = latestVerifications.some((v: any) => v.status === 'rejected');
+
+  const isActuallyVerified = user?.isVerified || taskerData?.user?.is_verified;
+
+  useEffect(() => {
+    // Sync cache if backend says verified but context doesn't
+    if (taskerData?.user?.is_verified && !user?.isVerified && refreshProfile) {
+      refreshProfile();
+    }
+  }, [taskerData?.user?.is_verified, user?.isVerified, refreshProfile]);
 
   if (authLoading || loading) {
     return (
@@ -76,18 +103,50 @@ export default function SellerDashboardPage() {
         <p className="text-gray-600 mt-1">Welcome back! Here&apos;s your business overview</p>
       </div>
 
-      {/* Pending Verification Banner */}
-      {user && !user.isVerified && (
-        <div className="mb-8 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-md shadow-sm">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <ShieldCheck className="h-5 w-5 text-orange-500" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-orange-800">Pending Verification</h3>
-              <div className="mt-2 text-sm text-orange-700">
-                <p>Your account is currently under review by our moderation team. You cannot place bids or accept new orders until an administrator verifies your identity documents.</p>
+      {/* Pending Verification Banner & Progress */}
+      {user && !isActuallyVerified && (
+        <div className={`mb-8 bg-white border rounded-lg shadow-sm overflow-hidden ${hasRejectedDocs ? 'border-red-200' : 'border-orange-200'}`}>
+          <div className={`border-b p-4 ${hasRejectedDocs ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <ShieldCheck className={`h-5 w-5 ${hasRejectedDocs ? 'text-red-500' : 'text-orange-500'}`} />
               </div>
+              <div className="ml-3 flex-1">
+                <h3 className={`text-sm font-medium ${hasRejectedDocs ? 'text-red-800' : 'text-orange-800'}`}>
+                  {hasRejectedDocs ? 'Action Required: Document Rejected' : 'Verification Pending or Action Required'}
+                </h3>
+                <div className={`mt-2 text-sm ${hasRejectedDocs ? 'text-red-700' : 'text-orange-700'}`}>
+                  <p>
+                    {hasRejectedDocs
+                      ? "One or more of your submitted documents were rejected. Please review the reason and re-submit a valid document to unlock your account."
+                      : "Your account must be fully verified (NIC and Address Proof approved) before you can place bids or accept new orders. Please review your document status."}
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/seller/dashboard/verifications"
+                    className={`inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-md transition ${hasRejectedDocs ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
+                      }`}
+                  >
+                    Review Verification Status
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Progress Tracker Strip */}
+          <div className="p-4 bg-white flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex-1 w-full flex items-center">
+              <div className="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center font-bold text-sm shrink-0">1</div>
+              <div className="h-1 bg-brand-green w-full mx-2"></div>
+              <div className="text-xs font-semibold text-brand-green whitespace-nowrap hidden md:block mr-2">Documents Uploaded</div>
+
+              <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shrink-0">2</div>
+              <div className="h-1 bg-gray-200 w-full mx-2 border-t border-dashed border-gray-300"></div>
+              <div className="text-xs font-semibold text-orange-600 whitespace-nowrap hidden md:block mr-2">In Review</div>
+
+              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+              <div className="text-xs font-semibold text-gray-500 whitespace-nowrap hidden md:block ml-2">Verified</div>
             </div>
           </div>
         </div>
@@ -195,8 +254,14 @@ export default function SellerDashboardPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link
-          href="/seller/dashboard/gigs"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          href={isActuallyVerified ? "/seller/dashboard/gigs" : "#"}
+          onClick={(e) => {
+            if (!isActuallyVerified) {
+              e.preventDefault();
+              toast.error("Please complete verification to manage gigs.");
+            }
+          }}
+          className={`bg-white rounded-lg shadow p-6 transition-shadow ${user?.isVerified ? 'hover:shadow-lg' : 'opacity-70 cursor-not-allowed'}`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -208,8 +273,14 @@ export default function SellerDashboardPage() {
         </Link>
 
         <Link
-          href="/seller/dashboard/orders"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          href={isActuallyVerified ? "/seller/dashboard/orders" : "#"}
+          onClick={(e) => {
+            if (!isActuallyVerified) {
+              e.preventDefault();
+              toast.error("Please complete verification to manage orders.");
+            }
+          }}
+          className={`bg-white rounded-lg shadow p-6 transition-shadow ${user?.isVerified ? 'hover:shadow-lg' : 'opacity-70 cursor-not-allowed'}`}
         >
           <div className="flex items-center justify-between">
             <div>

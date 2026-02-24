@@ -143,35 +143,65 @@ export async function approveVerification(verificationId: string, userId: string
         }
     );
 
-    // 1. Update the verification status
-    const { error: verifyError } = await adminClient
+    // 1. Update the verification status and get the type
+    const { data: verif, error: verifyError } = await adminClient
         .from('verifications')
         .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-        .eq('id', verificationId);
+        .eq('id', verificationId)
+        .select('verification_type')
+        .single();
 
     if (verifyError) return { success: false, message: 'Failed to update verification record' };
 
-    // 2. Unlock the user account (is_verified = true)
+    // 2. Log the action
+    await logAdminAction('APPROVED_VERIFICATION', 'verifications', verificationId, { user_id: userId });
+
+    return { success: true, message: 'Document approved successfully' };
+}
+
+/**
+ * Explicitly approve a seller account (grants is_verified = true)
+ */
+export async function approveSellerVerification(userId: string) {
+    const isUserAdmin = await isAdmin();
+    if (!isUserAdmin) return { success: false, message: 'Unauthorized' };
+
+    const cookieStore = await cookies();
+    const adminClient = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            cookies: {
+                getAll: () => cookieStore.getAll(),
+                setAll: () => { },
+            },
+        }
+    );
+
+    // Lock the account open (is_verified = true)
     const { error: userError } = await adminClient
         .from('users')
         .update({ is_verified: true })
         .eq('id', userId);
 
-    if (userError) return { success: false, message: 'Failed to unlock user account' };
+    if (userError) {
+        console.error("Failed to unlock user account:", userError);
+        return { success: false, message: 'Failed to fully verify user account' };
+    }
 
-    // 3. Log the action
-    await logAdminAction('APPROVED_VERIFICATION', 'verifications', verificationId, { user_id: userId });
+    // Log the action
+    await logAdminAction('APPROVED_SELLER_ACCOUNT', 'users', userId, {});
 
-    // 4. Notify the user
+    // Notify the user of FULL verification
     await adminClient.from('notifications').insert({
         user_id: userId,
         notification_type: 'system',
-        title: 'Account Verified!',
-        message: 'Your identity documents have been approved. You can now place bids and accept work.',
-        data: { verification_id: verificationId }
+        title: 'Account Fully Verified!',
+        message: 'All your documents have been reviewed and your account is now fully verified. You can now place bids and create gigs!',
+        data: {}
     });
 
-    return { success: true, message: 'Tasker approved successfully' };
+    return { success: true, message: 'Seller account fully verified!' };
 }
 
 /**
@@ -193,27 +223,37 @@ export async function rejectVerification(verificationId: string, userId: string,
         }
     );
 
-    // 1. Update the verification status
-    const { error: verifyError } = await adminClient
+    // 1. Update the verification status and get type
+    const { data: verif, error: verifyError } = await adminClient
         .from('verifications')
         .update({
             status: 'rejected',
             reviewed_at: new Date().toISOString(),
             admin_notes: reason
         })
-        .eq('id', verificationId);
+        .eq('id', verificationId)
+        .select('verification_type')
+        .single();
 
     if (verifyError) return { success: false, message: 'Failed to update verification record' };
 
     // 2. Log the action
     await logAdminAction('REJECTED_VERIFICATION', 'verifications', verificationId, { user_id: userId, reason });
 
-    // 3. Notify the user
+    // 3. Format document name
+    const docNameMap: Record<string, string> = {
+        'nic': 'NIC (National Identity Card)',
+        'address_proof': 'Proof of Address',
+        'police_report': 'Police Clearance Report'
+    };
+    const docName = verif?.verification_type ? (docNameMap[verif.verification_type] || 'Document') : 'Document';
+
+    // 4. Notify the user
     await adminClient.from('notifications').insert({
         user_id: userId,
         notification_type: 'alert',
-        title: 'Verification Rejected',
-        message: `Your document verification was rejected. Reason: ${reason}. Please submit a valid document.`,
+        title: `${docName} Rejected`,
+        message: `Your submitted ${docName} was rejected. Reason: ${reason}. Please correct this and re-submit.`,
         data: { verification_id: verificationId }
     });
 

@@ -80,7 +80,7 @@ export async function GET(request: Request) {
                         phone: '', // Placeholder, should be updated by user
                         password_hash: 'google-oauth', // Placeholder
                         user_type: userType,
-                        is_verified: true, // Email is verified by Google
+                        is_verified: false, // Must be verified by admin via documents
                         email_verified: true,
                     })
                     .select('id')

@@ -11,7 +11,7 @@ export async function getSellerDashboardData(userId: string) {
         .from('taskers')
         .select(`
       *,
-      user:users(first_name, last_name, profile_image_url)
+      user:users(first_name, last_name, profile_image_url, is_verified)
     `)
         .eq('user_id', userId)
         .single();
