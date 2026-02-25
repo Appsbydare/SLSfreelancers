@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell, ShieldCheck } from 'lucide-react';
+import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell, ShieldCheck, MessageCircle } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
@@ -64,6 +64,7 @@ export default function Header() {
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const groupScrollRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,21 @@ export default function Header() {
     setIsNotificationMenuOpen(false);
 
     // 2. Route based on type and payload
+    if (notif.notification_type === 'message') {
+      const { sender_id, task_id, gig_id } = notif.data || {};
+      // Build query params so the messages page opens the right conversation
+      const params = new URLSearchParams();
+      if (sender_id) params.set('recipientId', sender_id);
+      if (task_id) params.set('taskId', task_id);
+      if (gig_id) params.set('gigId', gig_id);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      // Route to the correct dashboard messages page based on current mode
+      const base = isSeller
+        ? `/${locale}/seller/dashboard/messages`
+        : `/${locale}/customer/dashboard/messages`;
+      return router.push(`${base}${query}`);
+    }
+
     if (notif.notification_type === 'verification') {
       // Switch to seller to view verification issues
       if (user?.userType !== 'tasker') {
@@ -281,19 +297,24 @@ export default function Header() {
     // Determine current mode based on user.userType which is the source of truth in AuthContext
     const currentMode = user?.userType === 'tasker' ? 'seller' : 'customer';
 
-    if (currentMode === 'seller') {
-      // Switch to customer
-      localStorage.setItem('userPreferredMode', 'customer');
-      setPreferredMode('customer');
-      switchRole('customer');
-      router.push(`/${locale}/customer/dashboard`);
-    } else {
-      // Switch to seller
-      localStorage.setItem('userPreferredMode', 'seller');
-      setPreferredMode('seller');
-      switchRole('tasker');
-      router.push(`/${locale}/seller/dashboard`);
-    }
+    setIsSwitchingMode(true);
+    setIsProfileDropdownOpen(false); // Close dropdown immediately
+
+    const newMode = currentMode === 'seller' ? 'customer' : 'seller';
+    const newRole = newMode === 'seller' ? 'tasker' : 'customer';
+    const targetPath = newMode === 'seller' ? `/${locale}/seller/dashboard` : `/${locale}/customer/dashboard`;
+
+    // Persist and Apply local state
+    localStorage.setItem('userPreferredMode', newMode);
+    setPreferredMode(newMode);
+    switchRole(newRole);
+
+    setTimeout(() => {
+      router.push(targetPath);
+      setTimeout(() => {
+        setIsSwitchingMode(false);
+      }, 500); // fade out duration allowance
+    }, 1200);
   };
 
 
@@ -587,11 +608,19 @@ export default function Header() {
                                   className={`p-4 hover:bg-gray-900 transition-colors text-left w-full ${!notif.is_read ? 'bg-gray-900/50' : ''}`}
                                 >
                                   <div className="flex gap-3">
-                                    <div className="mt-1 bg-brand-green/10 p-2 rounded-full h-fit flex-shrink-0">
-                                      <Bell className="h-4 w-4 text-brand-green" />
+                                    <div className={`mt-1 p-2 rounded-full h-fit flex-shrink-0 ${notif.notification_type === 'message' ? 'bg-blue-500/10' : 'bg-brand-green/10'}`}>
+                                      {notif.notification_type === 'message'
+                                        ? <MessageCircle className="h-4 w-4 text-blue-400" />
+                                        : <Bell className="h-4 w-4 text-brand-green" />
+                                      }
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h5 className="text-sm font-medium text-white mb-1 whitespace-normal break-words leading-snug">{notif.title}</h5>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h5 className="text-sm font-medium text-white whitespace-normal break-words leading-snug">{notif.title}</h5>
+                                        {notif.notification_type === 'message' && (
+                                          <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wide">Msg</span>
+                                        )}
+                                      </div>
                                       <p className="text-xs text-gray-400 mb-2 whitespace-normal break-words leading-relaxed">{notif.message}</p>
                                       <span className="text-[10px] text-gray-500 font-medium">
                                         {formatRelativeTime(notif.created_at)}
@@ -682,7 +711,7 @@ export default function Header() {
 
                         <div className="p-2">
                           {/* Admin Portal Link */}
-                          {user?.userType === 'admin' && (
+                          {(user?.userType === 'admin' || user?.originalUserType === 'admin') && (
                             <Link
                               href={`/${locale}/admin`}
                               onClick={() => setIsProfileDropdownOpen(false)}
@@ -708,10 +737,7 @@ export default function Header() {
                           {/* Mode Switch / Become a Seller */}
                           {user?.hasTaskerAccount || user?.userType === 'tasker' ? (
                             <button
-                              onClick={() => {
-                                handleToggleMode();
-                                setIsProfileDropdownOpen(false);
-                              }}
+                              onClick={handleToggleMode}
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
                             >
                               <ArrowLeftRight className="h-4 w-4" />
@@ -957,6 +983,19 @@ export default function Header() {
           )}
         </div>
       </header>
+
+      {/* Mode Switch Animation Overlay */}
+      {isSwitchingMode && (
+        <div className="fixed inset-0 z-[100] bg-black/85 flex flex-col items-center justify-center backdrop-blur-md animate-fadeIn">
+          <div className="w-16 h-16 border-4 border-brand-green border-t-transparent flex items-center justify-center rounded-full animate-spin mb-6">
+            <div className="w-8 h-8 bg-brand-green rounded-full opacity-30"></div>
+          </div>
+          <h2 className="text-white text-2xl font-bold animate-pulse tracking-wide">
+            Switching to {preferredMode === 'seller' ? 'Seller' : 'Customer'} Mode...
+          </h2>
+          <p className="text-gray-400 mt-2 text-sm italic">Configuring your dashboard workspace</p>
+        </div>
+      )}
       {isCategoryMenuOpen && activeGroup && !isSeller && (
         <div
           id="category-mega-menu"

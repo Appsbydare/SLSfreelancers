@@ -2,9 +2,10 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { placeBid, updateOffer, deleteOffer } from '@/app/actions/tasks';
-import { CheckCircle, AlertCircle, Trash2, Edit2, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Trash2, Edit2, X, Upload, File, Paperclip } from 'lucide-react';
 import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { uploadFile } from '@/lib/supabase-storage';
 
 // Types
 type BidData = {
@@ -15,6 +16,7 @@ type BidData = {
     status: string;
     created_at: string;
     updated_at?: string;
+    file_url?: string;
 };
 
 type State = {
@@ -120,6 +122,21 @@ function BidSuccessView({ bid, onEdit, onDelete }: { bid: BidData, onEdit: () =>
                         {bid.message}
                     </p>
                 </div>
+
+                {bid.file_url && (
+                    <div className="pt-2 border-t border-green-100/50 mt-3">
+                        <span className="block text-green-800 font-medium text-xs mb-2 uppercase tracking-wide">Attachment</span>
+                        <a
+                            href={bid.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm font-medium text-brand-green bg-green-100 hover:bg-green-200 px-3 py-2 rounded-md transition-colors shadow-sm"
+                        >
+                            <Paperclip className="h-4 w-4 mr-2" />
+                            View Attached File
+                        </a>
+                    </div>
+                )}
             </div>
 
             <div className="mt-4 flex items-center justify-between">
@@ -133,6 +150,10 @@ function BidSuccessView({ bid, onEdit, onDelete }: { bid: BidData, onEdit: () =>
 
 function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid: BidData, onCancel: () => void, onSuccess: (bid: BidData) => void }) {
     const [state, formAction] = useFormState(updateOffer, initialState);
+    const [file, setFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const [localPending, startTransition] = useTransition();
 
     useEffect(() => {
         if (state?.success && state.bid) {
@@ -140,8 +161,46 @@ function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid
         }
     }, [state, onSuccess]);
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+            setUploadError('');
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setUploadError('');
+        const formData = new FormData(e.currentTarget);
+
+        let finalFileUrl = bid.file_url || null;
+
+        if (file) {
+            setIsUploading(true);
+            const result = await uploadFile(file, 'proposals', `bids/${taskId}`);
+            setIsUploading(false);
+
+            if (result.success && result.url) {
+                finalFileUrl = result.url;
+            } else {
+                setUploadError(result.error || 'Failed to upload file');
+                return;
+            }
+        }
+
+        if (finalFileUrl) {
+            formData.set('fileUrl', finalFileUrl);
+        }
+
+        startTransition(() => {
+            formAction(formData);
+        });
+    };
+
+    const isPending = localPending || isUploading;
+
     return (
-        <form action={formAction} className="space-y-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm animate-fadeIn">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm animate-fadeIn">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-gray-900">Edit Your Proposal</h3>
                 <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -153,6 +212,13 @@ function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid
                 <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
                     <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
                     <p className="text-sm text-red-700">{state.message}</p>
+                </div>
+            )}
+
+            {uploadError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
+                    <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                    <p className="text-sm text-red-700">{uploadError}</p>
                 </div>
             )}
 
@@ -211,6 +277,62 @@ function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid
                 ></textarea>
             </div>
 
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Attachment (Optional)
+                </label>
+                {!file && !bid.file_url ? (
+                    <div className="border border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            accept=".pdf,.txt,.png,.jpg,.jpeg"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="h-6 w-6 text-gray-400 mb-2" />
+                        <p className="text-xs text-gray-500">Click or drag file to upload (.pdf, .txt, .png, .jpeg)</p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {bid.file_url && !file && (
+                            <div className="flex items-center justify-between border border-gray-200 bg-gray-50 rounded-md p-3">
+                                <div className="flex items-center truncate max-w-[85%]">
+                                    <Paperclip className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0" />
+                                    <span className="text-sm text-gray-700 truncate">Existing Attachment</span>
+                                </div>
+                                <div className="relative overflow-hidden inline-block border border-gray-300 bg-white rounded-md text-sm px-2 py-1 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                                    Replace File
+                                    <input
+                                        type="file"
+                                        onChange={handleFileChange}
+                                        accept=".pdf,.txt,.png,.jpg,.jpeg"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {file && (
+                            <div className="flex items-center justify-between border border-brand-green/30 bg-green-50 rounded-md p-3">
+                                <div className="flex items-center truncate max-w-[85%]">
+                                    <File className="h-5 w-5 text-brand-green mr-2 flex-shrink-0" />
+                                    <span className="text-sm text-green-800 truncate">{file.name}</span>
+                                    <span className="text-xs text-green-600 ml-2 flex-shrink-0">
+                                        ({(file.size / 1024).toFixed(1)} KB)
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setFile(null)}
+                                    className="text-green-600 hover:text-red-500 transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
             <div className="flex gap-3 pt-2">
                 <button
                     type="button"
@@ -220,7 +342,13 @@ function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid
                     Cancel
                 </button>
                 <div className="flex-1">
-                    <SubmitButton label="Update Bid" loadingLabel="Updating..." />
+                    <button
+                        type="submit"
+                        disabled={isPending}
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 transition-colors"
+                    >
+                        {isUploading ? 'Uploading...' : localPending ? 'Updating...' : 'Update Bid'}
+                    </button>
                 </div>
             </div>
         </form>
@@ -229,6 +357,10 @@ function EditBidForm({ taskId, bid, onCancel, onSuccess }: { taskId: string, bid
 
 function CreateBidForm({ taskId, onSuccess }: { taskId: string, onSuccess: (bid: BidData) => void }) {
     const [state, formAction] = useFormState(placeBid, initialState);
+    const [file, setFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const [localPending, startTransition] = useTransition();
 
     useEffect(() => {
         if (state?.success && state.bid) {
@@ -236,12 +368,51 @@ function CreateBidForm({ taskId, onSuccess }: { taskId: string, onSuccess: (bid:
         }
     }, [state, onSuccess]);
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+            setUploadError('');
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setUploadError('');
+        const formData = new FormData(e.currentTarget);
+
+        if (file) {
+            setIsUploading(true);
+            const result = await uploadFile(file, 'proposals', `bids/${taskId}`);
+            setIsUploading(false);
+
+            if (result.success && result.url) {
+                formData.set('fileUrl', result.url);
+            } else {
+                setUploadError(result.error || 'Failed to upload file');
+                return;
+            }
+        }
+
+        startTransition(() => {
+            formAction(formData);
+        });
+    };
+
+    const isPending = localPending || isUploading;
+
     return (
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             {state?.message && !state?.success && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
                     <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
                     <p className="text-sm text-red-700">{state.message}</p>
+                </div>
+            )}
+
+            {uploadError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
+                    <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                    <p className="text-sm text-red-700">{uploadError}</p>
                 </div>
             )}
 
@@ -296,7 +467,48 @@ function CreateBidForm({ taskId, onSuccess }: { taskId: string, onSuccess: (bid:
                 ></textarea>
             </div>
 
-            <SubmitButton label="Place Bid" loadingLabel="Placing Bid..." />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Attachment (Optional)
+                </label>
+                {!file ? (
+                    <div className="border border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            accept=".pdf,.txt,.png,.jpg,.jpeg"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="h-6 w-6 text-gray-400 mb-2" />
+                        <p className="text-xs text-gray-500">Click or drag file to upload (.pdf, .txt, .png, .jpeg)</p>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between border border-gray-200 bg-gray-50 rounded-md p-3">
+                        <div className="flex items-center truncate max-w-[85%]">
+                            <File className="h-5 w-5 text-brand-green mr-2 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                            <span className="text-xs text-gray-400 ml-2 flex-shrink-0">
+                                ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFile(null)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <button
+                type="submit"
+                disabled={isPending}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 transition-colors"
+            >
+                {isUploading ? 'Uploading file...' : localPending ? 'Placing Bid...' : 'Place Bid'}
+            </button>
 
             <p className="text-xs text-center text-gray-500 mt-3">
                 By placing a bid, you agree to our Terms of Service.

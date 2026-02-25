@@ -1,6 +1,6 @@
 'use client';
 
-import { User, Clock, MapPin, CheckCircle } from 'lucide-react';
+import { User, Clock, MapPin, CheckCircle, Paperclip } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,6 +12,7 @@ interface Offer {
     message: string;
     status: string;
     created_at: string;
+    file_url?: string | null;
     tasker: {
         user_id?: string;
         user: {
@@ -82,6 +83,20 @@ export default function TaskOffersList({ offers }: { offers: any[] }) {
 
                         <div className="bg-gray-50 rounded-md p-4 mb-4">
                             <p className="text-sm text-gray-700 whitespace-pre-wrap">{offer.message}</p>
+                            {offer.file_url && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <span className="block text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Attachment</span>
+                                    <a
+                                        href={offer.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-sm font-medium text-brand-green bg-white border border-gray-200 hover:border-brand-green/50 hover:bg-green-50 px-3 py-2 rounded-md transition-colors shadow-sm"
+                                    >
+                                        <Paperclip className="h-4 w-4 mr-2 text-brand-green" />
+                                        View Document
+                                    </a>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-end gap-3">

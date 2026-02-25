@@ -66,9 +66,39 @@ export async function getSellerDashboardData(userId: string) {
         .eq('user_id', userId)
         .order('submitted_at', { ascending: false });
 
+    // 8. Recent orders (for activity feed)
+    const { data: recentOrders } = await supabase
+        .from('orders')
+        .select(`
+            id, order_number, status, total_amount, seller_earnings, created_at, updated_at,
+            gig:gigs(title)
+        `)
+        .eq('seller_id', tasker.id)
+        .order('updated_at', { ascending: false })
+        .limit(6);
+
+    // 9. Recent notifications
+    const { data: recentNotifs } = await supabase
+        .from('notifications')
+        .select('id, title, message, notification_type, is_read, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+    // 10. Recent bids placed by this seller on tasks
+    const { data: recentBids } = await supabase
+        .from('offers')
+        .select('id, proposed_price, status, created_at, task:tasks(id, title)')
+        .eq('tasker_id', tasker.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
     return {
         tasker,
         verifications: verifications || [],
+        recentOrders: recentOrders || [],
+        recentNotifs: recentNotifs || [],
+        recentBids: recentBids || [],
         stats: {
             activeGigs: activeGigsCount || 0,
             activeOrders: activeOrdersCount || 0,

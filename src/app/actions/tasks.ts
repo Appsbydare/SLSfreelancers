@@ -263,6 +263,7 @@ export async function placeBid(prevState: any, formData: FormData) {
     const amount = Number(formData.get('amount'));
     const message = formData.get('message') as string;
     const estimatedHours = Number(formData.get('estimatedHours'));
+    const fileUrl = formData.get('fileUrl') as string | null;
 
     if (!taskId || !amount || !message) {
         return { message: 'Please fill in all required fields.', errors: {} };
@@ -280,14 +281,22 @@ export async function placeBid(prevState: any, formData: FormData) {
         return { message: 'You have already placed a bid on this task.', errors: {} };
     }
 
-    const { error } = await supabase.from('offers').insert({
+    const { createClient } = await import('@supabase/supabase-js');
+    const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { error } = await adminClient.from('offers').insert({
         task_id: taskId,
         tasker_id: tasker.id,
         proposed_price: amount,
         message: message,
         estimated_hours: estimatedHours,
-        status: 'pending'
-    });
+        status: 'pending',
+        file_url: fileUrl
+    } as any);
 
     if (error) {
         console.error('Error placing bid:', error);
@@ -304,13 +313,6 @@ export async function placeBid(prevState: any, formData: FormData) {
     if (taskData && taskData.customer) {
         const customerUserId = (taskData.customer as any).user_id;
         if (customerUserId) {
-            const { createClient } = await import('@supabase/supabase-js');
-            const adminClient = createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!,
-                { auth: { autoRefreshToken: false, persistSession: false } }
-            );
-
             // Direct insertion of a notification record
             await adminClient.from('notifications').insert({
                 user_id: customerUserId,
@@ -331,7 +333,8 @@ export async function placeBid(prevState: any, formData: FormData) {
             estimated_hours: estimatedHours,
             message: message,
             status: 'pending',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            file_url: fileUrl
         }
     };
 }
@@ -740,6 +743,7 @@ export async function updateOffer(prevState: any, formData: FormData) {
     const amount = Number(formData.get('amount'));
     const message = formData.get('message') as string;
     const estimatedHours = Number(formData.get('estimatedHours'));
+    const fileUrl = formData.get('fileUrl') as string | null;
 
     if (!offerId || !taskId || !amount || !message) {
         return { message: 'Missing required fields.', errors: {} };
@@ -779,14 +783,22 @@ export async function updateOffer(prevState: any, formData: FormData) {
         return { message: 'Cannot update an offer that has already been accepted or rejected.', errors: {} };
     }
 
-    const { error: updateError } = await supabase
+    const { createClient } = await import('@supabase/supabase-js');
+    const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { error: updateError } = await adminClient
         .from('offers')
         .update({
             proposed_price: amount,
             message: message,
             estimated_hours: estimatedHours,
+            file_url: fileUrl
             // updated_at: new Date().toISOString() // Let DB handle if triggered, otherwise we should add it if column exists
-        })
+        } as any)
         .eq('id', offerId);
 
     if (updateError) {

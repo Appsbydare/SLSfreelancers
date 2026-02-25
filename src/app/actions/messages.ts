@@ -40,7 +40,8 @@ export async function getConversations(userId: string, userType: 'customer' | 't
                 title,
                 slug,
                 images,
-                packages:gig_packages(price)
+                packages:gig_packages(price),
+                seller:taskers(user_id)
             )
         `)
         .or(`sender_id.eq.${profileId},recipient_id.eq.${profileId}`)
@@ -62,14 +63,18 @@ export async function getConversations(userId: string, userType: 'customer' | 't
 
         // Filter based on user type
         if (userType === 'customer') {
-            // For customers: only show conversations for tasks they own OR gigs they are inquiring about
-            // Note: For gigs, the customer is the one inquiring, so they are the SENDER usually.
-            // But if the seller replies, they are recipient.
-            // Simplified check: If it's a task, check ownership. If it's a gig, we assume it's relevant if they are involved.
+            // For customers: only show task conversations they own, and gig conversations where they are the buyer
             if (msg.task_id) {
                 const taskCustomerUserId = msg.task?.customer?.user_id;
                 if (taskCustomerUserId !== profileId) {
                     return; // Skip this message - not their task
+                }
+            }
+            // For gigs: only show if current user is NOT the gig seller (they are the inquiring customer)
+            if (msg.gig_id) {
+                const gigSellerUserId = msg.gig?.seller?.user_id;
+                if (gigSellerUserId === profileId) {
+                    return; // Skip - they are the seller of this gig, not a customer inquiring
                 }
             }
         } else if (userType === 'tasker') {
@@ -78,6 +83,14 @@ export async function getConversations(userId: string, userType: 'customer' | 't
                 const taskCustomerUserId = msg.task?.customer?.user_id;
                 if (taskCustomerUserId === profileId) {
                     return; // Skip this message - it's their own task
+                }
+            }
+            // For gigs: only show if the current user is the gig owner (seller)
+            // If the gig belongs to someone else, they are the customer inquiring — skip it
+            if (msg.gig_id) {
+                const gigSellerUserId = msg.gig?.seller?.user_id;
+                if (gigSellerUserId !== profileId) {
+                    return; // Skip this message - they are the customer, not the gig seller
                 }
             }
         }
@@ -178,9 +191,29 @@ export async function sendMessage(formData: FormData) {
     const gigId = formData.get('gigId') as string;
     const recipientId = formData.get('recipientId') as string;
     const content = formData.get('content') as string;
+    const files = formData.getAll('attachments') as File[];
 
-    if ((!taskId && !gigId) || !recipientId || !content) {
+    if ((!taskId && !gigId) || !recipientId || (!content && files.length === 0)) {
         return { success: false, message: 'Missing required fields' };
+    }
+
+    // Upload any attached files to Supabase Storage
+    const attachmentUrls: string[] = [];
+    if (files.length > 0) {
+        for (const file of files) {
+            if (!(file instanceof File) || file.size === 0) continue;
+            const ext = file.name.split('.').pop();
+            const path = `${userData.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+                .from('messages')
+                .upload(path, file, { contentType: file.type, upsert: false });
+            if (uploadError) {
+                console.error('Error uploading attachment:', uploadError);
+                continue;
+            }
+            const { data: urlData } = supabase.storage.from('messages').getPublicUrl(path);
+            if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl);
+        }
     }
 
     const { data: message, error } = await supabase
@@ -190,7 +223,8 @@ export async function sendMessage(formData: FormData) {
             gig_id: gigId || null,
             sender_id: userData.id,
             recipient_id: recipientId,
-            content,
+            content: content || '',
+            attachments: attachmentUrls.length > 0 ? attachmentUrls : null,
             created_at: new Date().toISOString(),
         })
         .select()

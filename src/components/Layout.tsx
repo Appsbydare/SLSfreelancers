@@ -46,6 +46,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [user, isLoggedIn, isLoading, pathname, router]);
 
   const isAdminPage = pathname?.includes('/admin');
+  const isDashboardPage = pathname?.includes('/dashboard');
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -53,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className={`flex-1 ${isAdminPage ? '' : 'pt-16'}`}>
         {children}
       </main>
-      {!isAdminPage && <Footer />}
+      {!isAdminPage && !isDashboardPage && <Footer />}
     </div>
   );
 }

@@ -103,30 +103,10 @@ export default function NotificationListener() {
                     const newMessage = payload.new;
                     console.log('[NotificationListener] New message received:', newMessage);
 
-                    // Only suppress if we are viewing THIS SPECIFIC conversation
+                    // Suppress all message notifications while the user is on any messages page
+                    // — they can already see incoming messages live in the chat
                     const isOnMessagesPage = pathname?.includes('/messages');
-                    const currentTaskId = searchParams.get('taskId');
-                    const currentRecipientId = searchParams.get('recipientId');
-
-                    const isViewingThisConversation =
-                        isOnMessagesPage &&
-                        currentTaskId === newMessage.task_id &&
-                        currentRecipientId === newMessage.sender_id;
-
-                    console.log('[NotificationListener] Check:', {
-                        pathname,
-                        isOnMessagesPage,
-                        currentTaskId,
-                        currentRecipientId,
-                        messageTaskId: newMessage.task_id,
-                        messageSenderId: newMessage.sender_id,
-                        isViewingThisConversation
-                    });
-
-                    if (isViewingThisConversation) {
-                        console.log('[NotificationListener] Suppressing - viewing this conversation');
-                        return; // Don't show notification for the active conversation
-                    }
+                    if (isOnMessagesPage) return;
 
                     // Fetch sender details using admin client to bypass RLS
                     const { data: sender, error: senderError } = await supabase
@@ -140,7 +120,12 @@ export default function NotificationListener() {
                     }
 
                     const senderName = sender?.first_name || 'Someone';
-                    const messagePreview = newMessage.content.substring(0, 60) + (newMessage.content.length > 60 ? '...' : '');
+                    const rawPreview = newMessage.content
+                        ? newMessage.content
+                        : newMessage.attachments?.length > 0
+                            ? `📎 Sent ${newMessage.attachments.length} attachment${newMessage.attachments.length > 1 ? 's' : ''}`
+                            : '';
+                    const messagePreview = rawPreview.substring(0, 60) + (rawPreview.length > 60 ? '...' : '');
 
                     console.log('[NotificationListener] Showing toast:', senderName, messagePreview);
 
@@ -249,6 +234,23 @@ export default function NotificationListener() {
                             icon: '/icon-192x192.png',
                         });
                     }
+
+                    // Save to notifications DB so it appears in the bell inbox
+                    supabase.from('notifications').insert({
+                        user_id: publicUserId,
+                        notification_type: 'message',
+                        title: `New message from ${senderName}`,
+                        message: messagePreview,
+                        data: {
+                            sender_id: newMessage.sender_id,
+                            sender_name: senderName,
+                            task_id: newMessage.task_id ?? null,
+                            gig_id: newMessage.gig_id ?? null,
+                        },
+                        is_read: false,
+                    }).then(({ error }) => {
+                        if (error) console.error('[NotificationListener] Failed to save notification:', error);
+                    });
                 }
             )
             .subscribe();
@@ -277,6 +279,10 @@ export default function NotificationListener() {
                 (payload) => {
                     const newNotif = payload.new;
                     console.log('[NotificationListener] New notification received:', newNotif);
+
+                    // Message notifications are already handled by the messages subscription above
+                    // (with proper "viewing this conversation" suppression). Skip toasting here.
+                    if (newNotif.notification_type === 'message') return;
 
                     // Show Toast
                     reactHotToast.custom(

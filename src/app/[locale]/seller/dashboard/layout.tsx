@@ -5,8 +5,6 @@ import { useLocale } from 'next-intl';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { getConversations } from '@/app/actions/messages';
 
 export default function SellerDashboardLayout({

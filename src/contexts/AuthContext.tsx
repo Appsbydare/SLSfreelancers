@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -38,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const userRef = useRef<User | null>(null);
+
+  // Keep ref up to date so event listeners don't use stale closures
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const fetchUserProfile = async (authUser: SupabaseUser, forceRefresh = false) => {
     try {
@@ -141,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If we just logged in or signed up, fetch/refresh profile
           // But careful not to overwrite if we only refreshed token
           // For simplicity we refresh profile
-          if (!user || user.email !== session.user.email) {
+          const currentUser = userRef.current;
+          if (!currentUser || currentUser.email !== session.user.email) {
             // Don't set isLoading(true) here - it causes login button to hang
             // The profile fetch is fast enough and login page handles its own loading state
             const profile = await fetchUserProfile(session.user);
@@ -193,12 +200,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const switchRole = (role: 'customer' | 'tasker') => {
     if (!user) return;
 
-    // Clear cache so next fetch gets fresh data with correct role
-    if (session?.user?.id) {
-      sessionStorage.removeItem(`user_profile_v2_${session.user.id}`);
-    }
+    // Update in-memory user
+    const updatedUser = { ...user, userType: role };
+    setUser(updatedUser);
 
-    setUser({ ...user, userType: role });
+    // Update session storage so refreshes persist the chosen role immediately instead of clearing it
+    if (session?.user?.id) {
+      sessionStorage.setItem(`user_profile_v2_${session.user.id}`, JSON.stringify(updatedUser));
+    }
   };
 
   const value = {

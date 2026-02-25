@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Clock, User, MoreVertical, Paperclip, Search, Circle } from 'lucide-react';
+import { MessageCircle, Send, Clock, User, MoreVertical, Paperclip, Search, Circle, ClipboardList, Tag, X, FileText, Image as ImageIcon, Download, Check, CheckCheck } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { sendMessage } from '@/app/actions/messages';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -12,6 +12,7 @@ import Link from 'next/link';
 interface Message {
     id: string;
     content: string;
+    attachments?: string[] | null;
     sender_id: string;
     recipient_id: string;
     created_at: string;
@@ -63,9 +64,11 @@ export default function MessagesList({
     const [messageText, setMessageText] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
     const router = useRouter();
     const searchParams = useSearchParams();
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const pathname = usePathname();
 
     // Scroll to bottom helper
@@ -101,6 +104,7 @@ export default function MessagesList({
         if (!currentUserId) return;
 
         const channel = supabase.channel('realtime:messages')
+            // New incoming messages
             .on(
                 'postgres_changes',
                 {
@@ -115,25 +119,23 @@ export default function MessagesList({
                     setSelectedConversation(prev => {
                         if (!prev) return null;
 
-                        // Check if this message belongs to the open conversation
                         const isRelevant =
                             ((prev.task_id && newMessageRaw.task_id === prev.task_id) ||
                                 (prev.gig_id && newMessageRaw.gig_id === prev.gig_id)) &&
                             (newMessageRaw.sender_id === prev.other_user_id);
 
                         if (!isRelevant) return prev;
-
-                        // Avoid duplicates
                         if (prev.messages.some(m => m.id === newMessageRaw.id)) return prev;
 
                         const constructedMessage: Message = {
                             id: newMessageRaw.id,
                             content: newMessageRaw.content,
+                            attachments: newMessageRaw.attachments,
                             sender_id: newMessageRaw.sender_id,
                             recipient_id: newMessageRaw.recipient_id,
                             created_at: newMessageRaw.created_at,
                             read_at: newMessageRaw.read_at,
-                            sender: prev.other_user, // Incoming message -> Sender is the other user
+                            sender: prev.other_user,
                             recipient: { first_name: 'Me', last_name: '' }
                         };
 
@@ -144,7 +146,31 @@ export default function MessagesList({
                         };
                     });
 
-                    router.refresh(); // Update sidebar counts
+                    router.refresh();
+                }
+            )
+            // read_at updates on messages we sent — flips single tick → double tick
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `sender_id=eq.${currentUserId}`
+                },
+                (payload) => {
+                    const updated = payload.new;
+                    if (!updated.read_at) return; // only care about read_at being set
+
+                    setSelectedConversation(prev => {
+                        if (!prev) return null;
+                        return {
+                            ...prev,
+                            messages: prev.messages.map(m =>
+                                m.id === updated.id ? { ...m, read_at: updated.read_at } : m
+                            )
+                        };
+                    });
                 }
             )
             .subscribe();
@@ -201,7 +227,9 @@ export default function MessagesList({
                 }
             );
             if (updatedConv) {
-                if (updatedConv.messages.length > selectedConversation.messages.length) {
+                // Replace if server has more messages, or if we still have a temp message pending
+                const hasTempMessage = selectedConversation.messages.some(m => m.id.startsWith('temp-'));
+                if (updatedConv.messages.length > selectedConversation.messages.length || hasTempMessage) {
                     setSelectedConversation(updatedConv);
                 }
             }
@@ -289,16 +317,22 @@ export default function MessagesList({
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!messageText.trim() || !selectedConversation) return;
+        if (!messageText.trim() && attachedFiles.length === 0) return;
+        if (!selectedConversation) return;
 
         setIsSending(true);
         const tempId = 'temp-' + Date.now();
         const content = messageText;
         const recipientId = selectedConversation.other_user_id;
+        const filesToSend = [...attachedFiles];
 
+        // Optimistic message with local file previews
         const optimisticMessage: Message = {
             id: tempId,
             content: content,
+            attachments: filesToSend.length > 0
+                ? filesToSend.map(f => URL.createObjectURL(f))
+                : null,
             sender_id: currentUserId,
             recipient_id: recipientId,
             created_at: new Date().toISOString(),
@@ -309,13 +343,11 @@ export default function MessagesList({
 
         setSelectedConversation(prev => {
             if (!prev) return null;
-            return {
-                ...prev,
-                messages: [...prev.messages, optimisticMessage]
-            };
+            return { ...prev, messages: [...prev.messages, optimisticMessage] };
         });
 
         setMessageText('');
+        setAttachedFiles([]);
 
         try {
             const formData = new FormData();
@@ -323,27 +355,68 @@ export default function MessagesList({
             if (selectedConversation.gig_id) formData.append('gigId', selectedConversation.gig_id);
             formData.append('recipientId', recipientId);
             formData.append('content', content);
+            filesToSend.forEach(f => formData.append('attachments', f));
 
             const result = await sendMessage(formData);
-
             if (!result.success) throw new Error(result.message);
 
-            router.refresh();
+            // Replace the optimistic temp message with the real one from the server
+            // so the tick immediately shows as sent (single tick) instead of clock
+            if (result.data) {
+                const realMessage: Message = {
+                    id: result.data.id,
+                    content: result.data.content,
+                    attachments: result.data.attachments ?? null,
+                    sender_id: result.data.sender_id,
+                    recipient_id: result.data.recipient_id,
+                    created_at: result.data.created_at,
+                    read_at: result.data.read_at ?? null,
+                    sender: { first_name: 'Me', last_name: '' },
+                    recipient: selectedConversation?.other_user ?? { first_name: '', last_name: '' }
+                };
+                setSelectedConversation(prev => {
+                    if (!prev) return null;
+                    return {
+                        ...prev,
+                        messages: prev.messages.map(m => m.id === tempId ? realMessage : m)
+                    };
+                });
+            }
 
+            router.refresh();
         } catch (error) {
             console.error('Error sending message:', error);
             toast.error('Failed to send message');
             setSelectedConversation(prev => {
                 if (!prev) return null;
-                return {
-                    ...prev,
-                    messages: prev.messages.filter(m => m.id !== tempId)
-                };
+                return { ...prev, messages: prev.messages.filter(m => m.id !== tempId) };
             });
             setMessageText(content);
+            setAttachedFiles(filesToSend);
         } finally {
             setIsSending(false);
         }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setAttachedFiles(prev => {
+            const combined = [...prev, ...files];
+            return combined.slice(0, 5); // max 5 files
+        });
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const removeAttachedFile = (index: number) => {
+        setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const isImageUrl = (url: string) =>
+        /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url) || url.startsWith('blob:');
+
+    const getFileName = (url: string) => {
+        try { return decodeURIComponent(url.split('/').pop()?.split('?')[0] || 'File'); }
+        catch { return 'File'; }
     };
 
     const filteredConversations = conversations.filter(c => {
@@ -517,42 +590,61 @@ export default function MessagesList({
                     <div className="flex-shrink-0">
                         {/* Task Context */}
                         {selectedConversation.task_id && (
-                            <div className="bg-gray-50 px-6 py-2 border-b border-gray-200 text-xs text-gray-500 flex justify-between items-center">
-                                <p>Regarding Task: <span className="font-semibold text-gray-700">{selectedConversation.task_title || 'Request'}</span></p>
-                                <Link href={`/customer/dashboard/tasks/${selectedConversation.task_id}`} className="text-brand-green hover:underline">View Order details</Link>
+                            <div className="bg-gradient-to-r from-brand-green/5 via-white to-white border-b border-brand-green/15 px-6 py-3 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-brand-green/10 flex items-center justify-center">
+                                        <ClipboardList className="h-4 w-4 text-brand-green" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-semibold text-brand-green uppercase tracking-widest leading-none mb-0.5">Regarding Task</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{selectedConversation.task_title || 'Request'}</p>
+                                    </div>
+                                </div>
+                                <Link
+                                    href={`${pathname.includes('/seller') ? '/seller' : '/customer'}/dashboard/tasks/${selectedConversation.task_id}`}
+                                    className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-brand-green border border-brand-green/30 bg-brand-green/5 hover:bg-brand-green hover:text-white px-3 py-1.5 rounded-lg transition-all duration-200"
+                                >
+                                    View Order
+                                    <Send className="h-3 w-3 -rotate-45" />
+                                </Link>
                             </div>
                         )}
                         {/* Gig Context Card */}
                         {selectedConversation.gig_details && (
-                            <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center gap-4">
-                                <div className="relative h-16 w-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
-                                    {selectedConversation.gig_details.images && selectedConversation.gig_details.images[0] ? (
-                                        <Image
-                                            src={selectedConversation.gig_details.images[0]}
-                                            alt={selectedConversation.gig_details.title}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full bg-gray-100 text-xs text-gray-400">No Img</div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="px-2 py-0.5 bg-brand-green/10 text-brand-green text-xs font-bold rounded uppercase">Gig</span>
-                                        <h4 className="font-semibold text-gray-900 truncate text-sm">{selectedConversation.gig_details.title}</h4>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                                        {selectedConversation.gig_details.starting_price ? (
-                                            <span>Starting at <span className="font-semibold text-gray-900">LKR {selectedConversation.gig_details.starting_price.toLocaleString()}</span></span>
+                            <div className="bg-gradient-to-r from-purple-50/60 via-white to-white border-b border-purple-100 px-6 py-3 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    {/* Thumbnail */}
+                                    <div className="relative flex-shrink-0 h-10 w-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                                        {selectedConversation.gig_details.images?.[0] ? (
+                                            <Image
+                                                src={selectedConversation.gig_details.images[0]}
+                                                alt={selectedConversation.gig_details.title}
+                                                fill
+                                                className="object-cover"
+                                            />
                                         ) : (
-                                            <span>View details for pricing</span>
+                                            <div className="h-full w-full flex items-center justify-center">
+                                                <Tag className="h-4 w-4 text-gray-400" />
+                                            </div>
                                         )}
-                                        <Link href={`/gigs/${selectedConversation.gig_details.slug}`} className="text-brand-green hover:underline font-medium flex items-center">
-                                            View Gig Service <Send className="h-3 w-3 ml-1 transform -rotate-45" />
-                                        </Link>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-semibold text-purple-600 uppercase tracking-widest leading-none mb-0.5">Gig Service</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{selectedConversation.gig_details.title}</p>
+                                        {selectedConversation.gig_details.starting_price ? (
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Starting at <span className="font-semibold text-gray-700">LKR {selectedConversation.gig_details.starting_price.toLocaleString()}</span>
+                                            </p>
+                                        ) : null}
                                     </div>
                                 </div>
+                                <Link
+                                    href={`/gigs/${selectedConversation.gig_details.slug}`}
+                                    className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-purple-600 border border-purple-200 bg-purple-50 hover:bg-purple-600 hover:text-white px-3 py-1.5 rounded-lg transition-all duration-200"
+                                >
+                                    View Gig
+                                    <Send className="h-3 w-3 -rotate-45" />
+                                </Link>
                             </div>
                         )}
                     </div>
@@ -592,24 +684,57 @@ export default function MessagesList({
                                     )}
 
                                     <div className={`max-w-[75%] space-y-1 ${isOwnMessage ? 'items-end flex flex-col' : 'items-start flex flex-col'}`}>
-                                        <div
-                                            className={`px-4 py-3 rounded-2xl shadow-sm text-sm ${isOwnMessage
+                                        <div className={`rounded-2xl shadow-sm text-sm overflow-hidden ${isOwnMessage
                                                 ? 'bg-brand-green text-white rounded-br-none'
                                                 : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
-                                                }`}
-                                        >
-                                            <p className="leading-relaxed">{message.content}</p>
+                                            }`}>
+                                            {/* Attachments */}
+                                            {message.attachments && message.attachments.length > 0 && (
+                                                <div className={`flex flex-col gap-1.5 ${message.content ? 'pt-2 px-2' : 'p-2'}`}>
+                                                    {message.attachments.map((url, ai) => (
+                                                        isImageUrl(url) ? (
+                                                            <a key={ai} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                <div className="relative w-48 h-36 rounded-lg overflow-hidden border border-black/10">
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img src={url} alt="attachment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-200" />
+                                                                </div>
+                                                            </a>
+                                                        ) : (
+                                                            <a key={ai} href={url} target="_blank" rel="noopener noreferrer"
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isOwnMessage
+                                                                    ? 'bg-white/15 hover:bg-white/25 text-white'
+                                                                    : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
+                                                                }`}>
+                                                                <FileText className="h-4 w-4 flex-shrink-0" />
+                                                                <span className="truncate max-w-[160px]">{getFileName(url)}</span>
+                                                                <Download className="h-3.5 w-3.5 flex-shrink-0 ml-auto" />
+                                                            </a>
+                                                        )
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {/* Text content */}
+                                            {message.content && (
+                                                <p className="px-4 py-3 leading-relaxed">{message.content}</p>
+                                            )}
                                         </div>
-                                        {/* Timestamp / Status (Only show for last in group or explicit) */}
+                                        {/* Timestamp / Status (only on last message in a group) */}
                                         {(index === selectedConversation.messages.length - 1 || selectedConversation.messages[index + 1]?.sender_id !== message.sender_id) && (
                                             <div className="flex items-center gap-1 px-1">
                                                 <p className="text-[10px] text-gray-400 font-medium">
                                                     {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                                 {isOwnMessage && (
-                                                    <span className="text-[10px] text-gray-400">
-                                                        • Sent
-                                                    </span>
+                                                    message.id.startsWith('temp-') ? (
+                                                        // Still uploading / sending
+                                                        <Clock className="h-3 w-3 text-gray-300" />
+                                                    ) : message.read_at ? (
+                                                        // Recipient has read it — double tick in brand green
+                                                        <CheckCheck className="h-3.5 w-3.5 text-brand-green" />
+                                                    ) : (
+                                                        // Delivered to DB, not yet read — single grey tick
+                                                        <Check className="h-3.5 w-3.5 text-gray-400" />
+                                                    )
                                                 )}
                                             </div>
                                         )}
@@ -621,9 +746,53 @@ export default function MessagesList({
 
                     {/* Input Area */}
                     <div className="p-4 bg-white border-t border-gray-200">
+                        {/* Attached file previews */}
+                        {attachedFiles.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3 px-1">
+                                {attachedFiles.map((file, i) => {
+                                    const isImg = file.type.startsWith('image/');
+                                    const previewUrl = isImg ? URL.createObjectURL(file) : null;
+                                    return (
+                                        <div key={i} className="relative group flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 max-w-[180px]">
+                                            {isImg && previewUrl ? (
+                                                <div className="relative h-8 w-8 rounded overflow-hidden flex-shrink-0">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={previewUrl} alt={file.name} className="h-full w-full object-cover" />
+                                                </div>
+                                            ) : (
+                                                <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                                            )}
+                                            <span className="text-xs text-gray-600 truncate max-w-[100px]">{file.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachedFile(i)}
+                                                className="flex-shrink-0 ml-auto p-0.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         <form onSubmit={handleSendMessage} className="bg-white rounded-xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-brand-green/20 focus-within:border-brand-green transition-all">
                             <div className="flex items-end p-2 gap-2">
-                                <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100">
+                                {/* Hidden file input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    accept="image/*,.pdf,.doc,.docx,.txt"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`p-2 transition-colors rounded-full hover:bg-gray-100 ${attachedFiles.length > 0 ? 'text-brand-green' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title="Attach files (max 5)"
+                                >
                                     <Paperclip className="h-5 w-5" />
                                 </button>
                                 <textarea
@@ -641,7 +810,7 @@ export default function MessagesList({
                                 />
                                 <button
                                     type="submit"
-                                    disabled={isSending || !messageText.trim()}
+                                    disabled={isSending || (!messageText.trim() && attachedFiles.length === 0)}
                                     className="p-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                                 >
                                     <Send className="h-5 w-5" />
