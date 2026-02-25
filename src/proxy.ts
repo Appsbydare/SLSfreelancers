@@ -133,20 +133,11 @@ export async function proxy(request: NextRequest) {
         return i18nResponse;
     }
 
-    // If i18nResponse is normal, we need to ensure our Supabase cookies (checked above) are set
-    // Re-create the response based on i18nResponse but managing supabase cookies
+    // Copy cookies from Supabase response over to i18nResponse
+    response.cookies.getAll().forEach(cookie => {
+        i18nResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
 
-    // Correction: We can't easily merge two middleware responses that both set cookies.
-    // BUT: createServerClient above already mutated `response`.
-    // If we return `i18nResponse`, we lose those mutations if we aren't careful.
-
-    // Simplest working approach for now:
-    // Supabase logic (above) primarily effectively just CHECKS session and does Redirects.
-    // The `refresh session` part is the tricky bit. 
-
-    // If we returned a Redirect above, we are good.
-
-    // If we are continuing:
     return i18nResponse;
 }
 

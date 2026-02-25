@@ -10,7 +10,8 @@ import {
     User,
     Menu,
     X,
-    PlusCircle
+    PlusCircle,
+    Bell
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -108,6 +109,13 @@ export default function CustomerSidebar({
             icon: MessageSquare,
             href: '/customer/dashboard/messages',
             badge: unreadCount > 0 ? unreadCount : null,
+        },
+        {
+            id: 'inbox',
+            label: 'Inbox',
+            icon: Bell,
+            href: '/inbox',
+            badge: null,
         },
         {
             id: 'profile',

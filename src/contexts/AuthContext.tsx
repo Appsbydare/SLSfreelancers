@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserProfile = async (authUser: SupabaseUser, forceRefresh = false) => {
     try {
       // Check cache first for faster loads
-      const cacheKey = `user_profile_${authUser.id}`;
+      const cacheKey = `user_profile_v2_${authUser.id}`;
       if (!forceRefresh) {
         const cachedProfile = sessionStorage.getItem(cacheKey);
         if (cachedProfile) {
@@ -90,14 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         location: profile.location,
         userType: profile.user_type as 'customer' | 'tasker' | 'admin',
         originalUserType: profile.user_type, // Default to same initially
-        profileImage: profile.profile_image,
+        profileImage: profile.profile_image_url || authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null,
         hasTaskerAccount: !!taskerProfile,
         hasCustomerAccount: true, // Assuming all users have a customer account
         isVerified: profile.is_verified || false,
       };
 
       // Cache for faster subsequent loads
-      sessionStorage.setItem(`user_profile_${authUser.id}`, JSON.stringify(mappedUser));
+      sessionStorage.setItem(`user_profile_v2_${authUser.id}`, JSON.stringify(mappedUser));
 
       return mappedUser;
     } catch (err) {
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     // Clear cache on logout
     if (session?.user?.id) {
-      sessionStorage.removeItem(`user_profile_${session.user.id}`);
+      sessionStorage.removeItem(`user_profile_v2_${session.user.id}`);
     }
     // Deep wipe to ensure no stale sessions
     Object.keys(sessionStorage).forEach(key => {
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProfile = async () => {
     if (session?.user) {
       // Clear cache to force fresh data
-      sessionStorage.removeItem(`user_profile_${session.user.id}`);
+      sessionStorage.removeItem(`user_profile_v2_${session.user.id}`);
       const profile = await fetchUserProfile(session.user, true);
       setUser(profile);
     }
@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Clear cache so next fetch gets fresh data with correct role
     if (session?.user?.id) {
-      sessionStorage.removeItem(`user_profile_${session.user.id}`);
+      sessionStorage.removeItem(`user_profile_v2_${session.user.id}`);
     }
 
     setUser({ ...user, userType: role });

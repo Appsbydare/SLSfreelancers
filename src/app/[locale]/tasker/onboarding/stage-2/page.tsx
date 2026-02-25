@@ -153,8 +153,12 @@ export default function TaskerStage2Page() {
           userId,
           verifications: [
             {
-              type: 'nic',
-              documents: [nicFrontUrl, nicBackUrl],
+              type: 'nic_front',
+              documents: [nicFrontUrl],
+            },
+            {
+              type: 'nic_back',
+              documents: [nicBackUrl],
             },
             ...(policeReportUrl ? [{
               type: 'police_report',

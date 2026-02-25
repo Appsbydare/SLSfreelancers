@@ -63,22 +63,91 @@ export default function SellerDashboardPage() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Filter to only the latest document for each type
-  const getLatestVerifications = (verifs: any[]) => {
-    const latest: Record<string, any> = {};
-    // They are ordered by submitted_at DESC, so the first one we see is the latest
-    for (const v of verifs) {
-      if (!latest[v.verification_type]) {
-        latest[v.verification_type] = v;
-      }
-    }
-    return Object.values(latest);
+  const getLatestDoc = (type: string) => {
+    const typeVerifs = verifications.filter((v: any) => v.verification_type === type);
+    if (typeVerifs.length === 0) return null;
+    return typeVerifs.reduce((latest: any, current: any) =>
+      new Date(current.submitted_at).getTime() > new Date(latest.submitted_at).getTime() ? current : latest
+    );
   };
 
-  const latestVerifications = getLatestVerifications(verifications);
-  const hasRejectedDocs = latestVerifications.some((v: any) => v.status === 'rejected');
+  const docTypes = [
+    { key: 'nic_front', required: true },
+    { key: 'nic_back', required: true },
+    { key: 'address_proof', required: true }
+  ];
+
+  const hasUploadedAllMandatory = docTypes.every(d => !!getLatestDoc(d.key));
+  const hasRejectedDocs = docTypes.some(d => getLatestDoc(d.key)?.status === 'rejected');
+  const hasPendingMandatory = docTypes.some(d => {
+    const doc = getLatestDoc(d.key);
+    return doc && (doc.status === 'submitted' || doc.status === 'pending');
+  });
 
   const isActuallyVerified = user?.isVerified || taskerData?.user?.is_verified;
+
+  const getProgressStyles = () => {
+    if (isActuallyVerified) {
+      return {
+        box: 'bg-green-50 border-green-200',
+        bannerBox: 'bg-green-50 border-green-200',
+        step1: 'bg-brand-green text-white',
+        line1: 'bg-brand-green',
+        step2: 'bg-brand-green text-white',
+        line2: 'bg-brand-green',
+        step3: 'bg-brand-green text-white ring-4 ring-green-100',
+        text1: 'text-gray-900',
+        text2: 'text-gray-900',
+        text3: 'text-gray-900',
+        icon: 'text-brand-green'
+      };
+    }
+    if (hasRejectedDocs) {
+      return {
+        box: 'bg-red-50 border-red-200',
+        bannerBox: 'bg-white border-red-200',
+        step1: hasUploadedAllMandatory ? 'bg-brand-green text-white' : 'bg-red-500 text-white',
+        line1: hasUploadedAllMandatory ? 'bg-brand-green' : 'bg-red-300',
+        step2: 'bg-red-500 text-white ring-4 ring-red-100',
+        line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+        step3: 'bg-gray-200 text-gray-500',
+        text1: 'text-gray-900',
+        text2: 'text-red-700 font-bold',
+        text3: 'text-gray-500',
+        icon: 'text-red-500'
+      };
+    }
+    if (hasUploadedAllMandatory) {
+      return {
+        box: 'bg-orange-50 border-orange-200',
+        bannerBox: 'bg-white border-orange-200',
+        step1: 'bg-brand-green text-white',
+        line1: 'bg-brand-green',
+        step2: 'bg-orange-500 text-white ring-4 ring-orange-100',
+        line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+        step3: 'bg-gray-200 text-gray-500',
+        text1: 'text-gray-900',
+        text2: 'text-orange-700 font-bold',
+        text3: 'text-gray-500',
+        icon: 'text-orange-500'
+      };
+    }
+    return {
+      box: 'bg-blue-50 border-blue-200',
+      bannerBox: 'bg-white border-blue-200',
+      step1: 'bg-blue-600 text-white ring-4 ring-blue-100',
+      line1: 'bg-gray-200',
+      step2: 'bg-gray-200 text-gray-500',
+      line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+      step3: 'bg-gray-200 text-gray-500',
+      text1: 'text-blue-700 font-bold',
+      text2: 'text-gray-500',
+      text3: 'text-gray-500',
+      icon: 'text-blue-500'
+    };
+  };
+
+  const pStyles = getProgressStyles();
 
   useEffect(() => {
     // Sync cache if backend says verified but context doesn't
@@ -105,48 +174,53 @@ export default function SellerDashboardPage() {
 
       {/* Pending Verification Banner & Progress */}
       {user && !isActuallyVerified && (
-        <div className={`mb-8 bg-white border rounded-lg shadow-sm overflow-hidden ${hasRejectedDocs ? 'border-red-200' : 'border-orange-200'}`}>
-          <div className={`border-b p-4 ${hasRejectedDocs ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
+        <div className={`mb-8 border rounded-lg shadow-sm overflow-hidden ${pStyles.bannerBox}`}>
+          <div className={`border-b p-4 ${pStyles.box}`}>
             <div className="flex">
               <div className="flex-shrink-0">
-                <ShieldCheck className={`h-5 w-5 ${hasRejectedDocs ? 'text-red-500' : 'text-orange-500'}`} />
+                <ShieldCheck className={`h-5 w-5 ${pStyles.icon}`} />
               </div>
               <div className="ml-3 flex-1">
-                <h3 className={`text-sm font-medium ${hasRejectedDocs ? 'text-red-800' : 'text-orange-800'}`}>
-                  {hasRejectedDocs ? 'Action Required: Document Rejected' : 'Verification Pending or Action Required'}
+                <h3 className={`text-sm font-medium ${hasRejectedDocs ? 'text-red-800' : hasUploadedAllMandatory ? 'text-orange-800' : 'text-blue-800'}`}>
+                  {hasRejectedDocs
+                    ? 'Action Required: Document Rejected'
+                    : hasUploadedAllMandatory
+                      ? 'Verification in Progress'
+                      : 'Action Required: Upload Identity Documents'}
                 </h3>
-                <div className={`mt-2 text-sm ${hasRejectedDocs ? 'text-red-700' : 'text-orange-700'}`}>
+                <div className={`mt-2 text-sm ${hasRejectedDocs ? 'text-red-700' : hasUploadedAllMandatory ? 'text-orange-700' : 'text-blue-700'}`}>
                   <p>
                     {hasRejectedDocs
                       ? "One or more of your submitted documents were rejected. Please review the reason and re-submit a valid document to unlock your account."
-                      : "Your account must be fully verified (NIC and Address Proof approved) before you can place bids or accept new orders. Please review your document status."}
+                      : hasUploadedAllMandatory
+                        ? "Your documents have been successfully uploaded and are currently being reviewed by our team. We will notify you once your account is fully verified."
+                        : "To activate your seller account and start accepting orders, you must upload your National Identity Card and Proof of Address for verification."}
                   </p>
                 </div>
                 <div className="mt-4">
                   <Link
                     href="/seller/dashboard/verifications"
-                    className={`inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-md transition ${hasRejectedDocs ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
+                    className={`inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-md transition ${hasRejectedDocs ? 'bg-red-600 hover:bg-red-700' : hasUploadedAllMandatory ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'
                       }`}
                   >
-                    Review Verification Status
+                    {hasUploadedAllMandatory && !hasRejectedDocs ? 'Check Verification Status' : 'Upload Documents'}
                   </Link>
                 </div>
               </div>
             </div>
           </div>
-          {/* Progress Tracker Strip */}
           <div className="p-4 bg-white flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex-1 w-full flex items-center">
-              <div className="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center font-bold text-sm shrink-0">1</div>
-              <div className="h-1 bg-brand-green w-full mx-2"></div>
-              <div className="text-xs font-semibold text-brand-green whitespace-nowrap hidden md:block mr-2">Documents Uploaded</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step1}`}>1</div>
+              <div className={`h-1.5 mx-2 w-full transition-all rounded-full ${pStyles.line1}`}></div>
+              <div className={`text-sm whitespace-nowrap hidden md:block mr-2 transition-all ${pStyles.text1}`}>Upload Documents</div>
 
-              <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shrink-0">2</div>
-              <div className="h-1 bg-gray-200 w-full mx-2 border-t border-dashed border-gray-300"></div>
-              <div className="text-xs font-semibold text-orange-600 whitespace-nowrap hidden md:block mr-2">In Review</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step2}`}>2</div>
+              <div className={`h-1.5 mx-2 w-full transition-all ${pStyles.line2}`}></div>
+              <div className={`text-sm whitespace-nowrap hidden md:block mr-2 transition-all ${pStyles.text2}`}>{hasRejectedDocs ? 'Action Required' : 'In Review'}</div>
 
-              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm shrink-0">3</div>
-              <div className="text-xs font-semibold text-gray-500 whitespace-nowrap hidden md:block ml-2">Verified</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step3}`}>3</div>
+              <div className={`text-sm font-semibold whitespace-nowrap hidden md:block ml-2 transition-all ${pStyles.text3}`}>Verified</div>
             </div>
           </div>
         </div>

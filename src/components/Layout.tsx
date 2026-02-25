@@ -32,6 +32,7 @@ export default function Layout({ children }: LayoutProps) {
       const isSellerPage = pathname?.includes('/seller') ||
         pathname?.includes('/tasker') ||
         pathname?.includes('/gigs') || // Allow taskers to view gig detail pages
+        pathname?.includes('/inbox') || // Allow taskers to view their inbox
         pathname?.includes('/login') ||
         pathname?.includes('/signup');
 

@@ -126,6 +126,59 @@ export default function Header() {
     await supabase.from('notifications').delete().eq('user_id', user.id);
   };
 
+  const handleNotificationClick = async (notif: any) => {
+    // 1. Mark as read
+    if (!notif.is_read) {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id);
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+
+    setIsNotificationMenuOpen(false);
+
+    // 2. Route based on type and payload
+    if (notif.notification_type === 'verification') {
+      // Switch to seller to view verification issues
+      if (user?.userType !== 'tasker') {
+        localStorage.setItem('userPreferredMode', 'seller');
+        setPreferredMode('seller');
+        await switchRole('tasker');
+      }
+      return router.push(`/${locale}/seller/dashboard/verifications`);
+    }
+
+    if (notif.notification_type === 'offer') {
+      // Go to orders or requests based on context
+      if (notif.data?.type === 'accepted') {
+        if (user?.userType !== 'tasker') {
+          localStorage.setItem('userPreferredMode', 'seller');
+          setPreferredMode('seller');
+          await switchRole('tasker');
+        }
+        return router.push(`/${locale}/seller/dashboard/orders`);
+      } else {
+        if (user?.userType !== 'customer') {
+          localStorage.setItem('userPreferredMode', 'customer');
+          setPreferredMode('customer');
+          await switchRole('customer');
+        }
+        return router.push(`/${locale}/customer/dashboard/requests`);
+      }
+    }
+
+    if (notif.notification_type === 'payout') {
+      if (user?.userType !== 'customer') {
+        localStorage.setItem('userPreferredMode', 'customer');
+        setPreferredMode('customer');
+        await switchRole('customer');
+      }
+      return router.push(`/${locale}/customer/dashboard`);
+    }
+
+    // Default: send to inbox to view full context if we don't know where else to go
+    return router.push(`/${locale}/inbox`);
+  };
+
   const handleLogout = async () => {
     await logout();
     router.push('/en');
@@ -180,29 +233,35 @@ export default function Header() {
     { name: 'Post Request', href: `/${locale}/post-task` },
   ];
 
-  // Check localStorage for user's preferred mode
-  const [preferredMode, setPreferredMode] = useState<string | null>(null);
+  // Check localStorage for user's preferred mode — initialized synchronously to avoid flash
+  const [preferredMode, setPreferredMode] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userPreferredMode');
+    }
+    return null;
+  });
 
   useEffect(() => {
-
     if (user && isLoggedIn) {
       const savedMode = localStorage.getItem('userPreferredMode');
 
-      // If we have a saved preference that differs from current auth state, sync it
+      // Sync the auth context role to match the saved preference
       if (savedMode === 'seller' && user.userType !== 'tasker' && (user.hasTaskerAccount || user.originalUserType === 'tasker')) {
         switchRole('tasker');
       } else if (savedMode === 'customer' && user.userType !== 'customer') {
         switchRole('customer');
+      } else if (!savedMode) {
+        // No preference saved — set based on current userType
+        const mode = user.userType === 'tasker' ? 'seller' : 'customer';
+        setPreferredMode(mode);
       }
-
-      setPreferredMode(savedMode);
     }
   }, [user?.id, isLoggedIn]); // Only run when user session loads/changes
 
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
-  // Trust user.userType as the source of truth for UI rendering
-  const isSeller = user?.userType === 'tasker';
+  // isSeller: prefer localStorage mode, fallback to auth userType
+  const isSeller = preferredMode === 'seller' || (preferredMode !== 'customer' && user?.userType === 'tasker');
 
   if (isSeller) {
     displayNavigation = [
@@ -362,7 +421,8 @@ export default function Header() {
 
   // Check if we're on a seller page
   const isSellerPage = pathname?.startsWith('/seller') || pathname?.startsWith('/tasker') ||
-    pathname?.startsWith(`/${locale}/seller`) || pathname?.startsWith(`/${locale}/tasker`);
+    pathname?.startsWith(`/${locale}/seller`) || pathname?.startsWith(`/${locale}/tasker`) ||
+    (pathname?.includes('/inbox') && isSeller);
 
   // Darker green color for seller pages: #007413 (darker than brand-green #0fcc17)
   const headerBgClass = isSellerPage
@@ -521,7 +581,11 @@ export default function Header() {
                           {notifications.length > 0 ? (
                             <div className="divide-y divide-gray-800 flex flex-col">
                               {notifications.map((notif: any) => (
-                                <div key={notif.id} className={`p-4 hover:bg-gray-900 transition-colors ${!notif.is_read ? 'bg-gray-900/50' : ''}`}>
+                                <button
+                                  key={notif.id}
+                                  onClick={() => handleNotificationClick(notif)}
+                                  className={`p-4 hover:bg-gray-900 transition-colors text-left w-full ${!notif.is_read ? 'bg-gray-900/50' : ''}`}
+                                >
                                   <div className="flex gap-3">
                                     <div className="mt-1 bg-brand-green/10 p-2 rounded-full h-fit flex-shrink-0">
                                       <Bell className="h-4 w-4 text-brand-green" />
@@ -534,7 +598,7 @@ export default function Header() {
                                       </span>
                                     </div>
                                   </div>
-                                </div>
+                                </button>
                               ))}
                             </div>
                           ) : (
@@ -546,11 +610,11 @@ export default function Header() {
                         </div>
                         <div className="p-3 border-t border-gray-800 bg-gray-900/50 text-center">
                           <Link
-                            href={isSeller ? `/${locale}/seller/dashboard` : `/${locale}/customer/dashboard/requests`}
+                            href={`/${locale}/inbox`}
                             className="text-brand-green text-xs font-medium hover:underline inline-block"
                             onClick={() => setIsNotificationMenuOpen(false)}
                           >
-                            Go to Dashboard
+                            View Full Inbox
                           </Link>
                         </div>
                       </div>
@@ -651,9 +715,7 @@ export default function Header() {
                               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:text-brand-green hover:bg-gray-800/50 rounded-md transition-all duration-300"
                             >
                               <ArrowLeftRight className="h-4 w-4" />
-                              {preferredMode === 'customer' || (user?.userType === 'customer' && !preferredMode)
-                                ? 'Switch to Seller Mode'
-                                : 'Switch to Customer Mode'}
+                              {isSeller ? 'Switch to Customer Mode' : 'Switch to Seller Mode'}
                             </button>
                           ) : user?.hasCustomerAccount && !user?.hasTaskerAccount ? (
                             <Link

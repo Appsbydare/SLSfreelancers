@@ -242,7 +242,8 @@ export async function rejectVerification(verificationId: string, userId: string,
 
     // 3. Format document name
     const docNameMap: Record<string, string> = {
-        'nic': 'NIC (National Identity Card)',
+        'nic_front': 'NIC (Front)',
+        'nic_back': 'NIC (Back)',
         'address_proof': 'Proof of Address',
         'police_report': 'Police Clearance Report'
     };
@@ -251,10 +252,10 @@ export async function rejectVerification(verificationId: string, userId: string,
     // 4. Notify the user
     await adminClient.from('notifications').insert({
         user_id: userId,
-        notification_type: 'alert',
+        notification_type: 'verification',
         title: `${docName} Rejected`,
         message: `Your submitted ${docName} was rejected. Reason: ${reason}. Please correct this and re-submit.`,
-        data: { verification_id: verificationId }
+        data: { verification_id: verificationId, type: 'document_rejected' }
     });
 
     return { success: true, message: 'Document rejected successfully' };
@@ -347,7 +348,7 @@ export async function deleteTaskAdmin(taskId: string, reason: string) {
     if (task?.customer_id) {
         await adminClient.from('notifications').insert({
             user_id: task.customer_id,
-            notification_type: 'alert',
+            notification_type: 'system',
             title: 'Task Removed by Admin',
             message: `Your task "${task.title}" was removed by a platform administrator. Reason: ${reason}.`,
             data: { task_id: taskId }
@@ -387,7 +388,7 @@ export async function deleteGigAdmin(gigId: string, reason: string) {
     if (gig?.seller_id) {
         await adminClient.from('notifications').insert({
             user_id: gig.seller_id,
-            notification_type: 'alert',
+            notification_type: 'system',
             title: 'Gig Removed by Admin',
             message: `Your gig "${gig.title}" was removed by a platform administrator. Reason: ${reason}.`,
             data: { gig_id: gigId }
@@ -437,7 +438,7 @@ export async function cancelOrderAdmin(orderId: string, reason: string) {
     if (order.customer_id) {
         await adminClient.from('notifications').insert({
             user_id: order.customer_id,
-            notification_type: 'alert',
+            notification_type: 'system',
             title: 'Order Cancelled by Admin',
             message: `Order #${order.order_number} was cancelled by a platform administrator. Reason: ${reason}.`,
             data: { order_id: orderId }
@@ -446,7 +447,7 @@ export async function cancelOrderAdmin(orderId: string, reason: string) {
     if (order.seller_id) {
         await adminClient.from('notifications').insert({
             user_id: order.seller_id,
-            notification_type: 'alert',
+            notification_type: 'system',
             title: 'Order Cancelled by Admin',
             message: `Order #${order.order_number} to your client was cancelled by a platform administrator. Reason: ${reason}.`,
             data: { order_id: orderId }
@@ -496,7 +497,7 @@ export async function refundEscrowAdmin(transactionId: string, reason: string) {
     if (tx.payer_id) {
         await adminClient.from('notifications').insert({
             user_id: tx.payer_id,
-            notification_type: 'payment',
+            notification_type: 'payout',
             title: 'Escrow Refunded',
             message: `An amount of LKR ${tx.amount} has been refunded to you by an administrator. Reason: ${reason}.`,
             data: { transaction_id: transactionId }

@@ -12,7 +12,8 @@ import {
   Play,
   Trash2,
   Eye,
-  Package
+  Package,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSellerGigs, pauseGig, activateGig, deleteGig } from '@/app/actions/seller';
@@ -104,13 +105,24 @@ export default function SellerGigsPage() {
           <h1 className="text-3xl font-bold text-gray-900">My Gigs</h1>
           <p className="text-gray-600 mt-1">Manage your service offerings</p>
         </div>
-        <Link
-          href={`/${locale}/seller/gigs/create`}
-          className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Create New Gig
-        </Link>
+        {user?.isVerified ? (
+          <Link
+            href={`/${locale}/seller/gigs/create`}
+            className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create New Gig
+          </Link>
+        ) : (
+          <button
+            disabled
+            className="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed cursor-help"
+            title="Please complete your verification to create a gig"
+          >
+            <Lock className="h-5 w-5 mr-2" />
+            Create New Gig
+          </button>
+        )}
       </div>
 
       {/* Gigs List */}
@@ -119,13 +131,24 @@ export default function SellerGigsPage() {
           <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No gigs yet</h3>
           <p className="text-gray-600 mb-6">Create your first gig to start selling services</p>
-          <Link
-            href={`/${locale}/seller/gigs/create`}
-            className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create Your First Gig
-          </Link>
+          {user?.isVerified ? (
+            <Link
+              href={`/${locale}/seller/gigs/create`}
+              className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Create Your First Gig
+            </Link>
+          ) : (
+            <button
+              disabled
+              className="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed cursor-help"
+              title="Please complete your verification to create a gig"
+            >
+              <Lock className="h-5 w-5 mr-2" />
+              Create Your First Gig
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-6">

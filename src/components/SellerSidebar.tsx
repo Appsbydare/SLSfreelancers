@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +13,9 @@ import {
   User,
   FileText,
   Menu,
-  X
+  X,
+  Lock,
+  Bell
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,7 +30,10 @@ export default function SellerSidebar({
 }: SellerSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
+  const { user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const isVerified = user?.isVerified;
 
   const menuItems = [
     {
@@ -36,6 +42,7 @@ export default function SellerSidebar({
       icon: LayoutDashboard,
       href: '/seller/dashboard',
       badge: null,
+      locked: false,
     },
     {
       id: 'gigs',
@@ -43,6 +50,7 @@ export default function SellerSidebar({
       icon: Package,
       href: '/seller/dashboard/gigs',
       badge: null,
+      locked: !isVerified,
     },
     {
       id: 'orders',
@@ -50,6 +58,7 @@ export default function SellerSidebar({
       icon: ShoppingBag,
       href: '/seller/dashboard/orders',
       badge: activeOrders > 0 ? activeOrders : null,
+      locked: !isVerified,
     },
     {
       id: 'messages',
@@ -57,6 +66,15 @@ export default function SellerSidebar({
       icon: MessageSquare,
       href: '/seller/dashboard/messages',
       badge: unreadMessages > 0 ? unreadMessages : null,
+      locked: false, // Messaging is usually allowed even if not verified? Or restricted? User said Gigs should be locked.
+    },
+    {
+      id: 'inbox',
+      label: 'Inbox',
+      icon: Bell,
+      href: '/inbox',
+      badge: null,
+      locked: false,
     },
     {
       id: 'earnings',
@@ -64,6 +82,7 @@ export default function SellerSidebar({
       icon: DollarSign,
       href: '/seller/dashboard/earnings',
       badge: null,
+      locked: !isVerified,
     },
     {
       id: 'profile',
@@ -71,6 +90,7 @@ export default function SellerSidebar({
       icon: User,
       href: '/seller/dashboard/profile',
       badge: null,
+      locked: false,
     },
     {
       id: 'requests',
@@ -78,6 +98,7 @@ export default function SellerSidebar({
       icon: FileText,
       href: '/seller/dashboard/requests',
       badge: null,
+      locked: !isVerified,
     },
   ];
 
@@ -121,31 +142,45 @@ export default function SellerSidebar({
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
+                const locked = item.locked;
 
                 return (
                   <li key={item.id}>
-                    <Link
-                      href={`/${locale}${item.href}`}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={`
-                        flex items-center justify-between px-4 py-3 rounded-lg
-                        transition-all duration-200
-                        ${active
-                          ? 'bg-brand-green/10 text-brand-green font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100'
-                        }
-                      `}
-                    >
-                      <div className="flex items-center">
-                        <Icon className={`h-5 w-5 mr-3 ${active ? 'text-brand-green' : 'text-gray-500'}`} />
-                        <span>{item.label}</span>
+                    {locked ? (
+                      <div
+                        className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-400 cursor-not-allowed opacity-70 group relative"
+                        title="Complete verification to unlock"
+                      >
+                        <div className="flex items-center">
+                          <Icon className="h-5 w-5 mr-3 text-gray-400" />
+                          <span>{item.label}</span>
+                        </div>
+                        <Lock className="h-4 w-4" />
                       </div>
-                      {item.badge && (
-                        <span className="bg-brand-green text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
+                    ) : (
+                      <Link
+                        href={`/${locale}${item.href}`}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={`
+                          flex items-center justify-between px-4 py-3 rounded-lg
+                          transition-all duration-200
+                          ${active
+                            ? 'bg-brand-green/10 text-brand-green font-semibold'
+                            : 'text-gray-700 hover:bg-gray-100'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center">
+                          <Icon className={`h-5 w-5 mr-3 ${active ? 'text-brand-green' : 'text-gray-500'}`} />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <span className="bg-brand-green text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
@@ -154,13 +189,25 @@ export default function SellerSidebar({
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-200">
-            <Link
-              href={`/${locale}/seller/gigs/create`}
-              className="w-full flex items-center justify-center px-4 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
-            >
-              <Package className="h-5 w-5 mr-2" />
-              Create New Gig
-            </Link>
+            {!isVerified ? (
+              <button
+                disabled
+                className="w-full flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
+                title="Complete verification to create a gig"
+              >
+                <Lock className="h-5 w-5 mr-2" />
+                Create New Gig
+              </button>
+            ) : (
+              <Link
+                href={`/${locale}/seller/gigs/create`}
+                className="w-full flex items-center justify-center px-4 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <Package className="h-5 w-5 mr-2" />
+                Create New Gig
+              </Link>
+            )}
           </div>
         </div>
       </aside>

@@ -97,7 +97,8 @@ export default function SellerVerificationsPage() {
     };
 
     const docTypes = [
-        { key: 'nic', label: 'National Identity Card (Front & Back)', required: true },
+        { key: 'nic_front', label: 'National Identity Card (Front)', required: true },
+        { key: 'nic_back', label: 'National Identity Card (Back)', required: true },
         { key: 'address_proof', label: 'Proof of Address (Utility Bill, Bank Statement)', required: true },
         { key: 'police_report', label: 'Police Clearance Certificate', required: false },
     ];
@@ -123,6 +124,10 @@ export default function SellerVerificationsPage() {
         }
     };
 
+    const hasUploadedAllMandatory = docTypes
+        .filter(d => d.required)
+        .every(d => !!getLatestDoc(d.key));
+
     const hasRejectedMandatory = docTypes
         .filter(d => d.required)
         .some(d => getLatestDoc(d.key)?.status === 'rejected');
@@ -131,10 +136,69 @@ export default function SellerVerificationsPage() {
         .filter(d => d.required)
         .some(d => {
             const doc = getLatestDoc(d.key);
-            return !doc || doc.status === 'submitted' || doc.status === 'pending';
+            return doc && (doc.status === 'submitted' || doc.status === 'pending');
         });
 
-    const isFullyApproved = user?.isVerified;
+    const isActuallyVerified = user?.isVerified;
+
+    const getProgressStyles = () => {
+        if (user?.isVerified) {
+            return {
+                box: 'bg-green-50 border-green-200',
+                step1: 'bg-brand-green text-white',
+                line1: 'bg-brand-green',
+                step2: 'bg-brand-green text-white',
+                line2: 'bg-brand-green',
+                step3: 'bg-brand-green text-white ring-4 ring-green-100',
+                text1: 'text-gray-900',
+                text2: 'text-gray-900',
+                text3: 'text-gray-900',
+                icon: 'text-brand-green'
+            };
+        }
+        if (hasRejectedMandatory) {
+            return {
+                box: 'bg-red-50 border-red-200',
+                step1: hasUploadedAllMandatory ? 'bg-brand-green text-white' : 'bg-red-500 text-white',
+                line1: hasUploadedAllMandatory ? 'bg-brand-green' : 'bg-red-300',
+                step2: 'bg-red-500 text-white ring-4 ring-red-100',
+                line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+                step3: 'bg-gray-200 text-gray-500',
+                text1: 'text-gray-900',
+                text2: 'text-red-700 font-bold',
+                text3: 'text-gray-500',
+                icon: 'text-red-500'
+            };
+        }
+        if (hasUploadedAllMandatory) {
+            return {
+                box: 'bg-orange-50 border-orange-200',
+                step1: 'bg-brand-green text-white',
+                line1: 'bg-brand-green',
+                step2: 'bg-orange-500 text-white ring-4 ring-orange-100',
+                line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+                step3: 'bg-gray-200 text-gray-500',
+                text1: 'text-gray-900',
+                text2: 'text-orange-700 font-bold',
+                text3: 'text-gray-500',
+                icon: 'text-orange-500'
+            };
+        }
+        return {
+            box: 'bg-white border-blue-200 shadow-sm',
+            step1: 'bg-blue-600 text-white ring-4 ring-blue-100',
+            line1: 'bg-gray-200',
+            step2: 'bg-gray-200 text-gray-500',
+            line2: 'bg-gray-200 border-t border-dashed border-gray-300',
+            step3: 'bg-gray-200 text-gray-500',
+            text1: 'text-blue-700 font-bold',
+            text2: 'text-gray-500',
+            text3: 'text-gray-500',
+            icon: 'text-blue-500'
+        };
+    };
+
+    const pStyles = getProgressStyles();
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -144,18 +208,18 @@ export default function SellerVerificationsPage() {
             </div>
 
             {/* Global Progress Tracker */}
-            <div className={`mb-10 p-6 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-6 ${isFullyApproved ? 'bg-green-50 border-green-200' : hasRejectedMandatory ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div className={`mb-10 p-6 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-6 ${pStyles.box}`}>
                 <div className="flex-1 w-full flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${isFullyApproved || !hasRejectedMandatory ? 'bg-brand-green text-white' : 'bg-gray-200 text-gray-500'}`}>1</div>
-                    <div className={`h-1.5 w-full mx-3 rounded-full ${isFullyApproved || !hasRejectedMandatory ? 'bg-brand-green' : 'bg-gray-200'}`}></div>
-                    <div className="text-sm font-semibold text-gray-900 whitespace-nowrap hidden md:block mr-3">Uploaded</div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step1}`}>1</div>
+                    <div className={`h-1.5 w-full mx-3 rounded-full transition-all ${pStyles.line1}`}></div>
+                    <div className={`text-sm whitespace-nowrap hidden md:block mr-3 transition-all ${pStyles.text1}`}>Upload Documents</div>
 
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${isFullyApproved ? 'bg-brand-green text-white' : hasRejectedMandatory ? 'bg-red-500 text-white' : hasPendingMandatory ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-500'}`}>2</div>
-                    <div className={`h-1.5 w-full mx-3 rounded-full ${isFullyApproved ? 'bg-brand-green' : 'bg-gray-200 border-t border-dashed border-gray-300'}`}></div>
-                    <div className="text-sm font-semibold text-gray-900 whitespace-nowrap hidden md:block mr-3">{hasRejectedMandatory ? 'Action Required' : 'In Review'}</div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step2}`}>2</div>
+                    <div className={`h-1.5 w-full mx-3 transition-all ${pStyles.line2}`}></div>
+                    <div className={`text-sm whitespace-nowrap hidden md:block mr-3 transition-all ${pStyles.text2}`}>{hasRejectedMandatory ? 'Action Required' : 'In Review'}</div>
 
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${isFullyApproved ? 'bg-brand-green text-white' : 'bg-gray-200 text-gray-500'}`}>3</div>
-                    <div className="text-sm font-semibold text-gray-900 whitespace-nowrap hidden md:block ml-3">Verified</div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-all ${pStyles.step3}`}>3</div>
+                    <div className={`text-sm font-semibold whitespace-nowrap hidden md:block ml-3 transition-all ${pStyles.text3}`}>Verified</div>
                 </div>
             </div>
 

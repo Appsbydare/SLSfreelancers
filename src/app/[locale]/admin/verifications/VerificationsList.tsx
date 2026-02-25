@@ -91,9 +91,10 @@ export default function VerificationsList({ verifications }: { verifications: Ve
                                 {/* The Master Approve Button */}
                                 {(() => {
                                     const isAlreadyVerified = (group.user as any)?.is_verified;
-                                    const hasApprovedNic = group.documents.some(d => d.verification_type === 'nic' && d.status === 'approved');
+                                    const hasApprovedNicFront = group.documents.some(d => d.verification_type === 'nic_front' && d.status === 'approved');
+                                    const hasApprovedNicBack = group.documents.some(d => d.verification_type === 'nic_back' && d.status === 'approved');
                                     const hasApprovedAddress = group.documents.some(d => d.verification_type === 'address_proof' && d.status === 'approved');
-                                    const canApprove = hasApprovedNic && hasApprovedAddress && !isAlreadyVerified;
+                                    const canApprove = hasApprovedNicFront && hasApprovedNicBack && hasApprovedAddress && !isAlreadyVerified;
 
                                     const handleMasterApprove = () => {
                                         startTransition(async () => {
@@ -139,7 +140,7 @@ export default function VerificationsList({ verifications }: { verifications: Ve
                                     onClick={() => toggleUser(group.user_id)}
                                     className="flex items-center justify-center gap-2 p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors bg-white border border-gray-200 shadow-sm"
                                 >
-                                    <span className="text-sm font-medium hidden sm:inline">{group.documents.length} Docs</span>
+                                    <span className="text-sm font-medium hidden sm:inline">{new Set(group.documents.map(d => d.verification_type)).size} Docs</span>
                                     {expandedUsers.has(group.user_id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                                 </button>
                             </div>
@@ -158,49 +159,67 @@ export default function VerificationsList({ verifications }: { verifications: Ve
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-100">
-                                        {group.documents.map((doc) => (
-                                            <tr key={doc.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                                                        {doc.verification_type.replace('_', ' ')}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                                                    {new Date(doc.submitted_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    {doc.document_url ? (
-                                                        <button
-                                                            onClick={() => { setViewerUrl(doc.document_url); setZoom(1); }}
-                                                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
-                                                        >
-                                                            <FileText className="w-4 h-4 text-brand-green" /> View Document
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-400 italic">No File</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-4">
-                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border
-                                                        ${doc.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                                doc.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                                    'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'}`}>
-                                                            {doc.status === 'approved' && <CheckCircle className="w-3.5 h-3.5" />}
-                                                            {doc.status === 'rejected' && <XCircle className="w-3.5 h-3.5" />}
-                                                            {doc.status === 'submitted' && <RefreshCw className="w-3.5 h-3.5" />}
-                                                            {doc.status.toUpperCase()}
-                                                        </span>
+                                        {[
+                                            { type: 'nic_front', label: 'NIC FRONT' },
+                                            { type: 'nic_back', label: 'NIC BACK' },
+                                            { type: 'address_proof', label: 'ADDRESS PROOF' },
+                                            { type: 'police_report', label: 'POLICE REPORT (OPTIONAL)' }
+                                        ].map((expectedDoc) => {
+                                            const docsOfType = group.documents.filter(d => d.verification_type === expectedDoc.type);
+                                            // Get the most recently submitted version if multiple exist
+                                            const doc = docsOfType.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
 
-                                                        {doc.status === 'submitted' && (
-                                                            <div className="ml-auto">
-                                                                <VerificationActions verificationId={doc.id} userId={doc.user_id} />
-                                                            </div>
+                                            return (
+                                                <tr key={doc?.id || expectedDoc.type} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md border
+                                                            ${doc ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-400 border-gray-200 bg-opacity-50 border-dashed'}`}>
+                                                            {expectedDoc.label}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                                        {doc ? new Date(doc.submitted_at).toLocaleDateString() : <span className="text-gray-400 italic">Not Uploaded</span>}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                        {doc?.document_url ? (
+                                                            <button
+                                                                onClick={() => { setViewerUrl(doc.document_url); setZoom(1); }}
+                                                                className="inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
+                                                            >
+                                                                <FileText className="w-4 h-4 text-brand-green" /> View Document
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">-</span>
                                                         )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {doc ? (
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border
+                                                              ${doc.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                                        doc.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                                            'bg-orange-50 text-orange-700 border-orange-200 animate-pulse'}`}>
+                                                                    {doc.status === 'approved' && <CheckCircle className="w-3.5 h-3.5" />}
+                                                                    {doc.status === 'rejected' && <XCircle className="w-3.5 h-3.5" />}
+                                                                    {doc.status === 'submitted' && <RefreshCw className="w-3.5 h-3.5" />}
+                                                                    {doc.status.toUpperCase()}
+                                                                </span>
+
+                                                                {doc.status === 'submitted' && (
+                                                                    <div className="ml-auto">
+                                                                        <VerificationActions verificationId={doc.id} userId={doc.user_id} />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-gray-50 text-gray-400 border-gray-200 border-dashed">
+                                                                MISSING
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

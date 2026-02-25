@@ -82,6 +82,11 @@ export default function CreateGigPage() {
       router.push(`/${locale}`);
       return;
     }
+
+    if (!user.isVerified) {
+      router.push(`/${locale}/seller/dashboard`);
+      return;
+    }
   }, [user, isLoading, router, locale]);
 
   const validateStep = (step: number): boolean => {

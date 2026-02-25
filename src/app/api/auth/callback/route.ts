@@ -46,9 +46,12 @@ export async function GET(request: Request) {
             // Check if user profile exists using query (using anon key with RLS)
             const { data: profile } = await supabase
                 .from('users')
-                .select('id')
+                .select('id, profile_image_url')
                 .eq('auth_user_id', user.id)
                 .single();
+
+            const { user_metadata, email } = user;
+            const profileImage = user_metadata.avatar_url || user_metadata.picture || null;
 
             if (!profile) {
                 // Safe check for service role key
@@ -61,7 +64,6 @@ export async function GET(request: Request) {
                 // Create user profile if it doesn't exist using service role
                 const supabaseAdmin = createClient(supabaseName, serviceRoleKey);
 
-                const { user_metadata, email } = user;
                 const fullName = user_metadata.full_name || '';
                 const givenName = user_metadata.given_name || fullName.split(' ')[0] || 'User';
                 const familyName = user_metadata.family_name || fullName.split(' ').slice(1).join(' ') || '';
@@ -82,6 +84,7 @@ export async function GET(request: Request) {
                         user_type: userType,
                         is_verified: false, // Must be verified by admin via documents
                         email_verified: true,
+                        profile_image_url: profileImage
                     })
                     .select('id')
                     .single();
@@ -99,6 +102,16 @@ export async function GET(request: Request) {
 
                     // Tasker record creation is deferred to the onboarding flow
                     // to prevent conflicts with the "Upgrade" logic in stage-1.
+                }
+            } else if (profileImage && !profile.profile_image_url) {
+                // If user exists but is missing a profile image, update it using their Google image
+                const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                if (serviceRoleKey) {
+                    const supabaseAdmin = createClient(supabaseName, serviceRoleKey);
+                    await supabaseAdmin
+                        .from('users')
+                        .update({ profile_image_url: profileImage })
+                        .eq('id', profile.id);
                 }
             }
 

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { ArrowLeft, User, Shield, Briefcase, Mail, Phone, MapPin, Calendar, ActivitySquare } from 'lucide-react';
 import UserActions from './UserActions';
+import UserDetailTabs from './UserDetailTabs';
 
 export const revalidate = 0;
 
@@ -39,18 +40,18 @@ export default async function AdminUserDetailPage({
         );
     }
 
-    // Get specific profile details if tasker or customer
-    let profileData = null;
-    let table = user.user_type === 'tasker' ? 'taskers' : 'customers';
-
-    // Attempt to fetch profile details 
-    const { data: profile } = await supabase
-        .from(table)
+    // Get all profile details (they might have both even if default type is one)
+    const { data: taskerProfile } = await supabase
+        .from('taskers')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-    if (profile) profileData = profile;
+    const { data: customerProfile } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
     // Fetch related audit logs
     const { data: auditLogs } = await supabase
@@ -59,6 +60,40 @@ export default async function AdminUserDetailPage({
         .eq('entity_id', userId)
         .order('created_at', { ascending: false })
         .limit(10);
+
+    // Fetch aggregate statistics
+    let stats = {
+        gigs: 0,
+        bids: 0,
+        requests: 0,
+        recentBids: [] as any[],
+        ordersAsSeller: 0,
+        ordersAsCustomer: 0,
+    };
+
+    if (taskerProfile) {
+        const [{ count: gigsCount }, { count: bidsCount }, { data: recentBids }, { count: ordersAsSellerCount }] = await Promise.all([
+            supabase.from('gigs').select('*', { count: 'exact', head: true }).eq('seller_id', taskerProfile.id),
+            supabase.from('offers').select('*', { count: 'exact', head: true }).eq('tasker_id', taskerProfile.id), // assuming offers=bids
+            supabase.from('offers').select('*, task:tasks(title, slug)').eq('tasker_id', taskerProfile.id).order('created_at', { ascending: false }).limit(5),
+            supabase.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', taskerProfile.id)
+        ]);
+        stats.gigs = gigsCount || 0;
+        stats.bids = bidsCount || 0;
+        stats.recentBids = recentBids || [];
+        stats.ordersAsSeller = ordersAsSellerCount || 0;
+    }
+
+    if (customerProfile) {
+        const [{ count: requestsCount }, { count: ordersAsCustomerCount }] = await Promise.all([
+            supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('customer_id', customerProfile.id),
+            supabase.from('orders').select('*', { count: 'exact', head: true }).eq('buyer_id', customerProfile.id) // note: buyer_id for customers table in orders 
+        ]);
+        stats.requests = requestsCount || 0;
+        stats.ordersAsCustomer = ordersAsCustomerCount || 0;
+    }
+
+    const primaryProfileData = user.user_type === 'tasker' ? taskerProfile : customerProfile;
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
@@ -88,14 +123,20 @@ export default async function AdminUserDetailPage({
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-6 text-center border-b border-gray-100">
                             <div className="w-24 h-24 bg-brand-green/10 text-brand-green text-3xl font-bold rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                                {profileData?.profile_image_url ? (
-                                    <img src={profileData.profile_image_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                                {primaryProfileData?.profile_image_url || user.profile_image_url ? (
+                                    <img src={primaryProfileData?.profile_image_url || user.profile_image_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
                                 ) : (
                                     user.first_name?.charAt(0) || user.email.charAt(0)
                                 )}
                             </div>
                             <h2 className="text-lg font-bold text-gray-900">{user.first_name} {user.last_name}</h2>
                             <p className="text-sm text-gray-500 capitalize">{user.user_type}</p>
+
+                            {/* Badges for account presence */}
+                            <div className="flex justify-center gap-1 mt-2">
+                                {taskerProfile && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">Tasker Profile</span>}
+                                {customerProfile && <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100">Customer Profile</span>}
+                            </div>
 
                             <div className="mt-4 flex flex-wrap gap-2 justify-center">
                                 {user.status === 'suspended' ? (
@@ -140,73 +181,15 @@ export default async function AdminUserDetailPage({
                     </div>
                 </div>
 
-                {/* Right Column - Activity & Logs */}
+                {/* Right Column - Activity & Logs inside Tabs */}
                 <div className="space-y-6 md:col-span-2">
-                    {user.user_type === 'tasker' && profileData && (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <Briefcase className="w-5 h-5 text-gray-400" /> Professional Details
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Rating</p>
-                                    <p className="text-xl font-bold text-gray-900">{profileData.rating?.toFixed(1) || '0.0'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Completed</p>
-                                    <p className="text-xl font-bold text-gray-900">{profileData.completed_tasks || 0}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Response Rate</p>
-                                    <p className="text-xl font-bold text-gray-900">{profileData.response_rate ? `${profileData.response_rate}%` : 'N/A'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Level Code</p>
-                                    <p className="text-sm font-bold text-gray-900 truncate">{profileData.level_code || 'None'}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-900 mb-2">Bio</p>
-                                <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                    {profileData.bio || 'No biography provided.'}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <ActivitySquare className="w-5 h-5 text-gray-400" /> Moderation & Audit History
-                            </h3>
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {auditLogs && auditLogs.length > 0 ? (
-                                auditLogs.map((log) => (
-                                    <div key={log.id} className="p-4 hover:bg-gray-50 transition-colors flex items-start gap-4">
-                                        <div className="w-2 h-2 rounded-full mt-2 shrink-0 bg-gray-300"
-                                            style={{ backgroundColor: log.action.includes('SUSPEND') ? '#ef4444' : log.action.includes('APPROVE') ? '#22c55e' : undefined }}
-                                        />
-                                        <div>
-                                            <p className="text-sm text-gray-900 font-medium">{log.action.replace(/_/g, ' ')}</p>
-                                            {log.details?.reason && (
-                                                <p className="text-xs text-red-600 mt-1 mb-1 bg-red-50 p-1.5 rounded border border-red-100">
-                                                    Reason: {log.details.reason}
-                                                </p>
-                                            )}
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                By: {(log.admin as any)?.first_name} {(log.admin as any)?.last_name} &bull; {new Date(log.created_at).toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="p-8 text-center text-gray-500 text-sm italic">
-                                    No administrative actions recorded for this user.
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <UserDetailTabs
+                        user={user}
+                        taskerProfile={taskerProfile}
+                        customerProfile={customerProfile}
+                        auditLogs={auditLogs || []}
+                        stats={stats}
+                    />
                 </div>
             </div>
         </div>
