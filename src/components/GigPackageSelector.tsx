@@ -8,23 +8,27 @@ interface GigPackageSelectorProps {
   packages: GigPackage[];
   selectedPackageId?: string;
   onSelect: (packageId: string, packageData: GigPackage) => void;
+  disabled?: boolean;
 }
 
 export default function GigPackageSelector({
   packages,
   selectedPackageId,
   onSelect,
+  disabled = false,
 }: GigPackageSelectorProps) {
   const [selected, setSelected] = useState(selectedPackageId);
+
 
   // Sort packages by tier
   const sortedPackages = [...packages].sort((a, b) => {
     const tierOrder = { basic: 1, standard: 2, premium: 3 };
-    return (tierOrder[a.tier as keyof typeof tierOrder] || 0) - 
-           (tierOrder[b.tier as keyof typeof tierOrder] || 0);
+    return (tierOrder[a.tier as keyof typeof tierOrder] || 0) -
+      (tierOrder[b.tier as keyof typeof tierOrder] || 0);
   });
 
   const handleSelect = (pkg: GigPackage) => {
+    if (disabled) return;
     setSelected(pkg.id);
     onSelect(pkg.id, pkg);
   };
@@ -42,23 +46,21 @@ export default function GigPackageSelector({
       {sortedPackages.map((pkg) => (
         <div
           key={pkg.id}
-          className={`border rounded-lg p-6 cursor-pointer transition-all ${
-            selected === pkg.id
-              ? 'border-brand-green bg-brand-green/5 shadow-md'
-              : 'border-gray-200 hover:border-brand-green/50 hover:shadow'
-          }`}
+          className={`border rounded-lg p-6 transition-all ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${selected === pkg.id
+            ? 'border-brand-green bg-brand-green/5 shadow-md'
+            : 'border-gray-200 hover:border-brand-green/50 hover:shadow'
+            }`}
           onClick={() => handleSelect(pkg)}
         >
           {/* Tier Badge */}
           <div className="mb-4">
             <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                pkg.tier === 'basic'
-                  ? 'bg-gray-100 text-gray-700'
-                  : pkg.tier === 'standard'
+              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${pkg.tier === 'basic'
+                ? 'bg-gray-100 text-gray-700'
+                : pkg.tier === 'standard'
                   ? 'bg-blue-100 text-blue-700'
                   : 'bg-purple-100 text-purple-700'
-              }`}
+                }`}
             >
               {pkg.tier.charAt(0).toUpperCase() + pkg.tier.slice(1)}
             </span>
@@ -106,15 +108,17 @@ export default function GigPackageSelector({
           {/* Select Button */}
           <button
             type="button"
-            className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-              selected === pkg.id
-                ? 'bg-brand-green text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${disabled
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : selected === pkg.id
+                  ? 'bg-brand-green text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               handleSelect(pkg);
             }}
+            disabled={disabled}
           >
             {selected === pkg.id ? 'Selected' : 'Select'}
           </button>

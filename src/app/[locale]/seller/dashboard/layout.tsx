@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
 import { getConversations } from '@/app/actions/messages';
+import { supabase } from '@/lib/supabase';
 
 export default function SellerDashboardLayout({
   children,
@@ -17,7 +18,7 @@ export default function SellerDashboardLayout({
   const locale = useLocale();
   const { user, isLoggedIn, isLoading, session } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [activeOrders, setActiveOrders] = useState(0);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
 
   /*
   useEffect(() => {
@@ -53,6 +54,50 @@ export default function SellerDashboardLayout({
     }
   }, [user, isLoading, session]);
 
+  // Clear orders badge when user visits any orders page
+  useEffect(() => {
+    if (!pathname) return;
+    const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), '');
+    if (pathWithoutLocale.startsWith('/seller/dashboard/orders')) {
+      setNewOrdersCount(0);
+      if (user?.id) {
+        localStorage.setItem(`orders_last_seen_${user.id}`, new Date().toISOString());
+      }
+    }
+  }, [pathname, locale, user?.id]);
+
+  // Subscribe to new orders via Supabase Realtime to update badge live
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Get the tasker ID for this user
+    let taskerIdRef: string | null = null;
+    supabase.from('taskers').select('id').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (!data?.id) return;
+        taskerIdRef = data.id;
+
+        const channel = supabase
+          .channel(`new-orders-${user.id}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'orders',
+            filter: `seller_id=eq.${data.id}`,
+          }, () => {
+            // Only bump if not currently on the orders page
+            const pathWithoutLocale = window.location.pathname.replace(new RegExp(`^/${locale}`), '');
+            if (!pathWithoutLocale.startsWith('/seller/dashboard/orders')) {
+              setNewOrdersCount(prev => prev + 1);
+            }
+          })
+          .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
 
   // Removed problematic redirect logic that was preventing access to valid dashboard sub-pages
   // The layout itself serves as the navigation guard implicitly
@@ -79,11 +124,17 @@ export default function SellerDashboardLayout({
     if (!user || !session?.user) return;
 
     try {
-      // Fetch active orders count
-      const ordersResponse = await fetch(`/api/orders?userId=${user.id}&userType=seller&status=in_progress`);
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
-        setActiveOrders(ordersData.orders?.length || 0);
+      // Fetch new (pending) orders the seller hasn't seen yet
+      const lastSeen = localStorage.getItem(`orders_last_seen_${user.id}`) || '1970-01-01';
+      const { data: tasker } = await supabase.from('taskers').select('id').eq('user_id', user.id).single();
+      if (tasker?.id) {
+        const { data: newOrders } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('seller_id', tasker.id)
+          .eq('status', 'pending')
+          .gt('created_at', lastSeen);
+        setNewOrdersCount(newOrders?.length || 0);
       }
 
       // Fetch unread messages count using server action
@@ -165,7 +216,11 @@ export default function SellerDashboardLayout({
       {/* Sidebar */}
       <SellerSidebar
         unreadMessages={unreadMessages}
-        activeOrders={activeOrders}
+        activeOrders={newOrdersCount}
+        onOrdersSeen={() => {
+          setNewOrdersCount(0);
+          if (user?.id) localStorage.setItem(`orders_last_seen_${user.id}`, new Date().toISOString());
+        }}
       />
 
       {/* Main Content */}

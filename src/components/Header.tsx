@@ -65,6 +65,7 @@ export default function Header() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const groupScrollRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -191,6 +192,47 @@ export default function Header() {
       return router.push(`/${locale}/customer/dashboard`);
     }
 
+    if (notif.notification_type === 'order' || notif.notification_type === 'task') {
+      const { order_id, action } = notif.data || {};
+      // If seller action (accepted/completed) → customer views their order
+      // If customer action (revision/completed) → seller views their order
+      if (order_id) {
+        if (action === 'accepted' || action === 'delivered' || action === 'cancelled') {
+          // Customer-facing: switch to customer mode and go to order
+          if (user?.userType !== 'customer' && (user?.hasTaskerAccount || user?.originalUserType === 'tasker')) {
+            localStorage.setItem('userPreferredMode', 'customer');
+            setPreferredMode('customer');
+            await switchRole('customer');
+          }
+          return router.push(`/${locale}/orders/${order_id}`);
+        }
+        if (action === 'completed') {
+          // Seller-facing: switch to seller mode and go to seller order page
+          if (user?.userType !== 'tasker' && (user?.hasTaskerAccount || user?.originalUserType === 'tasker')) {
+            localStorage.setItem('userPreferredMode', 'seller');
+            setPreferredMode('seller');
+            await switchRole('tasker');
+          }
+          return router.push(`/${locale}/seller/dashboard/orders/${order_id}`);
+        }
+        if (action === 'placed') {
+          // Seller received a new order — switch to seller mode
+          if (user?.userType !== 'tasker' && (user?.hasTaskerAccount || user?.originalUserType === 'tasker')) {
+            localStorage.setItem('userPreferredMode', 'seller');
+            setPreferredMode('seller');
+            await switchRole('tasker');
+          }
+          return router.push(`/${locale}/seller/dashboard/orders/${order_id}`);
+        }
+        // Fallback: go to the orders list for the current mode
+        return router.push(isSeller
+          ? `/${locale}/seller/dashboard/orders`
+          : `/${locale}/orders/${order_id}`
+        );
+      }
+      return router.push(isSeller ? `/${locale}/seller/dashboard/orders` : `/${locale}/orders`);
+    }
+
     // Default: send to inbox to view full context if we don't know where else to go
     return router.push(`/${locale}/inbox`);
   };
@@ -199,6 +241,10 @@ export default function Header() {
     await logout();
     router.push('/en');
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -277,7 +323,10 @@ export default function Header() {
   // Add Project Status for admin users and seller-specific links
   let displayNavigation = [...navigation];
   // isSeller: prefer localStorage mode, fallback to auth userType
-  const isSeller = preferredMode === 'seller' || (preferredMode !== 'customer' && user?.userType === 'tasker');
+  // Guard with `mounted` to prevent SSR/client hydration mismatch:
+  // On the server, localStorage doesn't exist so preferredMode is always null.
+  // On the client before mount, we must match that same null/false state.
+  const isSeller = mounted && (preferredMode === 'seller' || (preferredMode !== 'customer' && user?.userType === 'tasker'));
 
   if (isSeller) {
     displayNavigation = [

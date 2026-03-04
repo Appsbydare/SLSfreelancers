@@ -9,8 +9,8 @@ export async function getOrders(userId: string, userType: 'customer' | 'tasker')
         .select(`
             *,
             gig:gigs(title, images, slug),
-            seller:taskers(id, user:users(first_name, last_name)),
-            customer:customers(id, user:users(first_name, last_name))
+            seller:taskers!orders_seller_id_fkey(id, user:users!taskers_user_id_fkey(first_name, last_name)),
+            customer:customers!orders_customer_id_fkey(id, user:users!customers_user_id_fkey(first_name, last_name))
         `)
         .order('created_at', { ascending: false });
 
@@ -36,11 +36,10 @@ export async function getOrders(userId: string, userType: 'customer' | 'tasker')
     const { data, error } = await query;
     if (error) {
         console.error('Error fetching orders:', error);
-        throw new Error('Failed to fetch orders');
+        return [];
     }
 
-    // transform data slightly if needed, or return as is
-    return data;
+    return JSON.parse(JSON.stringify(data ?? []));
 }
 
 export async function getOrder(orderId: string) {
@@ -49,8 +48,8 @@ export async function getOrder(orderId: string) {
         .select(`
             *,
             gig:gigs(title, images, slug),
-            seller:taskers(id, level_code, user:users(first_name, last_name)),
-            customer:customers(id, user:users(first_name, last_name)),
+            seller:taskers!orders_seller_id_fkey(id, level_code, user:users!taskers_user_id_fkey(id, first_name, last_name)),
+            customer:customers!orders_customer_id_fkey(id, user:users!customers_user_id_fkey(id, first_name, last_name)),
             deliveries:order_deliveries(*),
             revisions:order_revisions(*)
         `)
@@ -61,7 +60,7 @@ export async function getOrder(orderId: string) {
         console.error('Error fetching order:', error);
         return null;
     }
-    return data;
+    return JSON.parse(JSON.stringify(data));
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {

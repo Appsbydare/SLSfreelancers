@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { sendOrderEventCard } from '@/app/actions/messages';
 
 // POST - Seller delivers work
 export async function POST(
@@ -87,20 +88,33 @@ export async function POST(
       throw updateError;
     }
 
-    // Create notification for customer
-    await supabaseServer
-      .from('notifications')
-      .insert({
-        user_id: orderData.customer.user_id,
-        notification_type: 'task',
-        title: 'Work Delivered',
-        message: `Your order ${orderData.order_number} has been delivered. Please review and approve.`,
-        data: {
-          order_id: orderId,
-          order_number: orderData.order_number,
-          delivery_id: deliveryData.id,
-        },
-      });
+    // Notification for customer
+    await supabaseServer.from('notifications').insert({
+      user_id: orderData.customer.user_id,
+      notification_type: 'order',
+      title: '📦 Work delivered — review now',
+      message: `Your order ${orderData.order_number} has been delivered. Please review and approve or request a revision.`,
+      data: { order_id: orderId, order_number: orderData.order_number, action: 'delivered', delivery_id: deliveryData.id },
+    });
+
+    // Send order_delivered card into existing gig chat
+    await sendOrderEventCard({
+      senderUserId: orderData.seller.user_id,
+      recipientUserId: orderData.customer.user_id,
+      gigId: orderData.gig_id,
+      event: 'order_delivered',
+      payload: {
+        order_id: orderId,
+        order_number: orderData.order_number,
+        gig_id: orderData.gig_id,
+        package_tier: orderData.package_tier,
+        total_amount: Number(orderData.total_amount),
+        seller_earnings: Number(orderData.seller_earnings),
+        platform_fee: Number(orderData.platform_fee),
+        delivery_id: deliveryData.id,
+        delivery_message: message || null,
+      },
+    });
 
     return NextResponse.json({
       message: 'Work delivered successfully',

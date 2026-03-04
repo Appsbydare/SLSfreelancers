@@ -17,16 +17,18 @@ import {
   Lock,
   Bell
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface SellerSidebarProps {
   unreadMessages?: number;
   activeOrders?: number;
+  onOrdersSeen?: () => void;
 }
 
 export default function SellerSidebar({
   unreadMessages = 0,
-  activeOrders = 0
+  activeOrders = 0,
+  onOrdersSeen,
 }: SellerSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
@@ -160,7 +162,10 @@ export default function SellerSidebar({
                     ) : (
                       <Link
                         href={`/${locale}${item.href}`}
-                        onClick={() => setIsMobileOpen(false)}
+                        onClick={() => {
+                          setIsMobileOpen(false);
+                          if (item.id === 'orders' && onOrdersSeen) onOrdersSeen();
+                        }}
                         className={`
                           flex items-center justify-between px-4 py-3 rounded-lg
                           transition-all duration-200

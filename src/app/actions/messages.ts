@@ -28,7 +28,8 @@ export async function getConversations(userId: string, userType: 'customer' | 't
     const { data: messages, error } = await supabaseServer
         .from('messages')
         .select(`
-            *,
+            id, task_id, gig_id, sender_id, recipient_id, content, event, payload,
+            attachments, read_at, created_at,
             sender:users!messages_sender_id_fkey(first_name, last_name, profile_image_url, status),
             recipient:users!messages_recipient_id_fkey(first_name, last_name, profile_image_url, status),
             task:tasks(
@@ -238,4 +239,78 @@ export async function sendMessage(formData: FormData) {
     revalidatePath('/customer/dashboard/messages');
     revalidatePath('/seller/dashboard/messages');
     return { success: true, message: 'Message sent', data: message };
+}
+
+/**
+ * Sends an automated system card into an existing conversation between two users.
+ * Only sends if a prior message exists between sender + recipient on the same gig.
+ * Uses `event` + `payload` columns — no plain-text content.
+ */
+export type OrderEventType = 'order_placed' | 'order_accepted' | 'order_delivered' | 'order_completed' | 'order_cancelled';
+
+export async function sendOrderEventCard({
+    senderUserId,
+    recipientUserId,
+    gigId,
+    event,
+    payload,
+}: {
+    senderUserId: string;
+    recipientUserId: string;
+    gigId: string;
+    event: OrderEventType;
+    payload: Record<string, any>;
+}) {
+    const { supabaseServer } = await import('@/lib/supabase-server');
+
+    // Only send if an existing conversation exists between these two users on this gig
+    const { data: existing } = await supabaseServer
+        .from('messages')
+        .select('id')
+        .eq('gig_id', gigId)
+        .or(`and(sender_id.eq.${senderUserId},recipient_id.eq.${recipientUserId}),and(sender_id.eq.${recipientUserId},recipient_id.eq.${senderUserId})`)
+        .limit(1)
+        .maybeSingle();
+
+    if (!existing) return; // No prior conversation — don't create one automatically
+
+    await supabaseServer.from('messages').insert({
+        gig_id: gigId,
+        sender_id: senderUserId,
+        recipient_id: recipientUserId,
+        content: '', // empty — card is rendered from payload
+        event,
+        payload,
+        created_at: new Date().toISOString(),
+    });
+}
+
+/**
+ * Always inserts an order event card — even if no prior conversation exists.
+ * Use this only for order_placed so the card starts the thread.
+ */
+export async function insertOrderEventCard({
+    senderUserId,
+    recipientUserId,
+    gigId,
+    event,
+    payload,
+}: {
+    senderUserId: string;
+    recipientUserId: string;
+    gigId: string;
+    event: OrderEventType;
+    payload: Record<string, any>;
+}) {
+    const { supabaseServer } = await import('@/lib/supabase-server');
+
+    await supabaseServer.from('messages').insert({
+        gig_id: gigId,
+        sender_id: senderUserId,
+        recipient_id: recipientUserId,
+        content: '',
+        event,
+        payload,
+        created_at: new Date().toISOString(),
+    });
 }

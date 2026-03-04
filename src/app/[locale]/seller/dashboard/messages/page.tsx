@@ -3,7 +3,17 @@ import { cookies } from 'next/headers';
 import MessagesList from '@/app/[locale]/customer/dashboard/messages/MessagesList';
 import { getConversations } from '@/app/actions/messages';
 
-export default async function SellerMessagesPage() {
+interface PageProps {
+  searchParams: Promise<{
+    recipientId?: string;
+    gigId?: string;
+    taskId?: string;
+  }>;
+}
+
+export default async function SellerMessagesPage({ searchParams }: PageProps) {
+  const { recipientId, gigId, taskId } = await searchParams;
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,8 +21,8 @@ export default async function SellerMessagesPage() {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cookies) => {
-          cookies.forEach(({ name, value, options }) => {
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options);
           });
         },
@@ -22,8 +32,6 @@ export default async function SellerMessagesPage() {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  console.log('[SellerMessagesPage] Auth user:', user?.id);
-
   if (!user) {
     return <div>Please log in to view messages.</div>;
   }
@@ -31,29 +39,26 @@ export default async function SellerMessagesPage() {
   // Fetch conversations for the seller
   const conversations = await getConversations(user.id, 'tasker');
 
-  console.log('[SellerMessagesPage] Conversations fetched:', conversations.length);
-
-  // Get Public User ID for realtime subscription
+  // Get Public User ID
   const { data: publicUser, error: profileError } = await supabase
     .from('users')
     .select('id')
     .eq('auth_user_id', user.id)
     .maybeSingle();
 
-  console.log('[SellerMessagesPage] Profile lookup:', {
-    authUserId: user.id,
-    publicUserId: publicUser?.id,
-    error: profileError
-  });
-
-  if (profileError) {
-    console.error('Error fetching user profile:', profileError);
-    return <div>Error loading profile: {profileError.message}</div>;
+  if (profileError || !publicUser) {
+    return <div>User profile not found. Please contact support.</div>;
   }
 
-  if (!publicUser) {
-    console.error('[SellerMessagesPage] No public user found for auth_user_id:', user.id);
-    return <div>User profile not found. Please contact support.</div>;
+  // Resolve recipient name/avatar if recipientId provided
+  let initialRecipient = null;
+  if (recipientId) {
+    const { data } = await supabase
+      .from('users')
+      .select('first_name, last_name, profile_image_url')
+      .eq('id', recipientId)
+      .single();
+    if (data) initialRecipient = data;
   }
 
   return (
@@ -67,6 +72,11 @@ export default async function SellerMessagesPage() {
         <MessagesList
           conversations={conversations}
           currentUserId={publicUser.id}
+          initialRecipientId={recipientId}
+          initialRecipient={initialRecipient}
+          initialGigId={gigId}
+          initialTaskId={taskId}
+          initialTaskTitle="Order Inquiry"
         />
       </div>
     </div>

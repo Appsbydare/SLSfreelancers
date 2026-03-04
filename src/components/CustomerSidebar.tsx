@@ -11,7 +11,8 @@ import {
     Menu,
     X,
     PlusCircle,
-    Bell
+    Bell,
+    Package
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -31,31 +32,25 @@ export default function CustomerSidebar({
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
-        if (!user) return;
-
-        let publicUserId: string | null = null;
-
         const fetchUnreadCount = async () => {
             if (!publicUserId) return;
             const { count } = await supabase
                 .from('messages')
                 .select('*', { count: 'exact', head: true })
                 .eq('recipient_id', publicUserId)
-                .is('read_at', null);
+                .neq('sender_id', publicUserId)   // Exclude self-messages (sender = recipient)
+                .is('read_at', null)
+                .is('event', null); // Exclude system order event cards (order_placed, etc.)
 
             setUnreadCount(count || 0);
         };
 
-        const init = async () => {
-            // Get Public User ID
-            const { data } = await supabase
-                .from('users')
-                .select('id')
-                .eq('auth_user_id', user.id)
-                .single();
+        if (!user) return;
 
-            if (data) {
-                publicUserId = data.id;
+        let publicUserId: string | null = user.id;
+
+        const init = async () => {
+            if (publicUserId) {
                 fetchUnreadCount();
 
                 // Subscribe to changes
@@ -104,6 +99,13 @@ export default function CustomerSidebar({
             badge: null,
         },
         {
+            id: 'my-orders',
+            label: 'My Orders',
+            icon: Package,
+            href: '/orders',
+            badge: null,
+        },
+        {
             id: 'messages',
             label: 'Messages',
             icon: MessageSquare,
@@ -127,7 +129,7 @@ export default function CustomerSidebar({
     ];
 
     const isActive = (href: string) => {
-        if (href === '/customer/dashboard') {
+        if (href === '/customer/dashboard' || href === '/orders') {
             return pathname === href;
         }
         return pathname.startsWith(href);

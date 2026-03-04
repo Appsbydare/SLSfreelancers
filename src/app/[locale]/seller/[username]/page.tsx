@@ -7,9 +7,11 @@ import Link from 'next/link';
 import { Star, CheckCircle, Clock, MapPin, Calendar, MessageCircle } from 'lucide-react';
 import GigCard from '@/components/GigCard';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function PublicSellerProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [seller, setSeller] = useState<any>(null);
   const [gigs, setGigs] = useState<any[]>([]);
@@ -97,6 +99,7 @@ export default function PublicSellerProfilePage({ params }: { params: Promise<{ 
   const user = seller.user;
   const tasker = seller.tasker;
   const memberSince = new Date(user?.created_at || Date.now());
+  const isOwner = currentUser?.id === username;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -151,15 +154,17 @@ export default function PublicSellerProfilePage({ params }: { params: Promise<{ 
             </div>
 
             {/* Contact Button */}
-            <div className="hidden md:block">
-              <button
-                onClick={() => alert('Messaging feature coming soon')}
-                className="flex items-center px-6 py-3 bg-white text-brand-green rounded-lg hover:bg-gray-50 font-semibold shadow-lg"
-              >
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Contact Me
-              </button>
-            </div>
+            {!isOwner && (
+              <div className="hidden md:block">
+                <button
+                  onClick={() => alert('Messaging feature coming soon')}
+                  className="flex items-center px-6 py-3 bg-white text-brand-green rounded-lg hover:bg-gray-50 font-semibold shadow-lg"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  Contact Me
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -183,8 +188,8 @@ export default function PublicSellerProfilePage({ params }: { params: Promise<{ 
                   <button
                     onClick={() => setActiveTab('gigs')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'gigs'
-                        ? 'border-brand-green text-brand-green'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-brand-green text-brand-green'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                   >
                     Gigs ({gigs.length})
@@ -192,8 +197,8 @@ export default function PublicSellerProfilePage({ params }: { params: Promise<{ 
                   <button
                     onClick={() => setActiveTab('reviews')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'reviews'
-                        ? 'border-brand-green text-brand-green'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-brand-green text-brand-green'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                   >
                     Reviews ({reviews.length})
@@ -360,15 +365,17 @@ export default function PublicSellerProfilePage({ params }: { params: Promise<{ 
               )}
 
               {/* Contact Button (Mobile) */}
-              <div className="mt-6 md:hidden">
-                <button
-                  onClick={() => alert('Messaging feature coming soon')}
-                  className="w-full flex items-center justify-center px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold"
-                >
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Contact Me
-                </button>
-              </div>
+              {!isOwner && (
+                <div className="mt-6 md:hidden">
+                  <button
+                    onClick={() => alert('Messaging feature coming soon')}
+                    className="w-full flex items-center justify-center px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold"
+                  >
+                    <MessageCircle className="h-5 w-5 mr-2" />
+                    Contact Me
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

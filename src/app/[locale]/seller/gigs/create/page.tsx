@@ -197,7 +197,7 @@ export default function CreateGigPage() {
       ...prev,
       requirements: [
         ...prev.requirements,
-        { question: '', answerType: 'text', isRequired: true },
+        { question: '', answerType: 'text', isRequired: true, options: [] },
       ],
     }));
   };
@@ -731,6 +731,7 @@ export default function CreateGigPage() {
                             >
                               <option value="text">Text</option>
                               <option value="choice">Multiple Choice</option>
+                              <option value="multiple_choice">Checkboxes</option>
                               <option value="file">File Upload</option>
                             </select>
                           </div>
@@ -747,6 +748,49 @@ export default function CreateGigPage() {
                             </label>
                           </div>
                         </div>
+
+                        {(req.answerType === 'choice' || req.answerType === 'multiple_choice') && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Options
+                            </label>
+                            {req.options?.map((opt: string, optIndex: number) => (
+                              <div key={optIndex} className="flex gap-2 mb-2">
+                                <input
+                                  type="text"
+                                  value={opt}
+                                  onChange={(e) => {
+                                    const newOptions = [...(req.options || [])];
+                                    newOptions[optIndex] = e.target.value;
+                                    updateRequirement(index, 'options', newOptions);
+                                  }}
+                                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green"
+                                  placeholder="Option text"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newOptions = (req.options || []).filter((_, i) => i !== optIndex);
+                                    updateRequirement(index, 'options', newOptions);
+                                  }}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded"
+                                >
+                                  <X className="h-5 w-5" />
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newOptions = [...(req.options || []), ''];
+                                updateRequirement(index, 'options', newOptions);
+                              }}
+                              className="text-sm text-brand-green hover:underline mt-2"
+                            >
+                              + Add Option
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

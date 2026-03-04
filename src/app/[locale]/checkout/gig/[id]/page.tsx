@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Check, CreditCard, Shield, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-export default function GigCheckoutPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GigCheckoutPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -16,64 +17,89 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
   const [gigDetails, setGigDetails] = useState<any>(null);
   const [packageDetails, setPackageDetails] = useState<any>(null);
   const [gigId, setGigId] = useState<string>('');
+  const [locale, setLocale] = useState<string>('en');
 
   // User info
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: authLoading } = useAuth();
 
   // Payment info (for demo purposes)
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
+  const [cardDetails, setCardDetails] = useState({
+    name: '',
+    number: '',
+    expiry: '',
+    cvv: ''
+  });
 
   useEffect(() => {
-    params.then(({ id }) => {
+    params.then(({ id, locale }) => {
       setGigId(id);
+      setLocale(locale || 'en');
     });
   }, [params]);
 
   const loadCheckoutData = useCallback(async () => {
+    if (authLoading) return; // Wait until auth is resolved
+
     try {
-      // Get user from localStorage
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        router.push('/login?redirect=/checkout/gig/' + gigId);
+      if (!user) {
+        setLoading(false);
+        router.push(`/${locale}/login?redirect=/${locale}/checkout/gig/${gigId}`);
         return;
       }
-      setUser(JSON.parse(userStr));
 
-      // Get pending order from session storage
+      // Get pending order from session storage (may be null if navigating directly)
       const pendingOrderStr = sessionStorage.getItem('pendingOrder');
-      if (!pendingOrderStr) {
-        router.push('/browse-gigs');
-        return;
+      const pendingOrder = pendingOrderStr ? JSON.parse(pendingOrderStr) : null;
+      if (pendingOrder) {
+        setOrderDetails(pendingOrder);
       }
 
-      const pendingOrder = JSON.parse(pendingOrderStr);
-      setOrderDetails(pendingOrder);
-
-      // Fetch gig details
+      // Fetch gig details regardless of pendingOrder
       const gigResponse = await fetch(`/api/gigs/${gigId}`);
-      if (gigResponse.ok) {
+      if (!gigResponse.ok) {
+        const text = await gigResponse.text();
+        setError(`Failed to fetch gig. Status: ${gigResponse.status}. Response: ${text}`);
+      } else {
         const gigData = await gigResponse.json();
         setGigDetails(gigData.gig);
 
-        // Find the selected package
-        const selectedPkg = gigData.gig.packages?.find(
-          (pkg: any) => pkg.id === pendingOrder.packageId
-        );
+        let selectedPkg: any = null;
+
+        if (pendingOrder) {
+          // Try to find the exact package by ID
+          selectedPkg = gigData.gig?.packages?.find(
+            (pkg: any) => pkg.id === pendingOrder.packageId
+          );
+          // Fallback by tier name if package was re-created
+          if (!selectedPkg && pendingOrder.packageTier) {
+            selectedPkg = gigData.gig?.packages?.find(
+              (pkg: any) => pkg.tier === pendingOrder.packageTier
+            );
+          }
+        }
+
+        // Ultimate fallback: always select the first available package
+        if (!selectedPkg && gigData.gig?.packages?.length > 0) {
+          selectedPkg = gigData.gig.packages[0];
+        }
+
         setPackageDetails(selectedPkg);
       }
-    } catch (error) {
-      console.error('Error loading checkout data:', error);
-      setError('Failed to load checkout information');
+    } catch (err: any) {
+      console.error('Error loading checkout data:', err);
+      setError(`Exception: ${err.message || err.toString()}`);
     } finally {
       setLoading(false);
     }
   }, [gigId, router]);
 
   useEffect(() => {
-    if (gigId) {
+    if (gigId && !authLoading) {
       loadCheckoutData();
     }
-  }, [gigId, loadCheckoutData]);
+  }, [gigId, authLoading, loadCheckoutData]);
 
   const calculateTotalAmount = () => {
     if (!packageDetails) return 0;
@@ -91,17 +117,26 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
       return;
     }
 
+    if (paymentMethod === 'card') {
+      if (!cardDetails.name || !cardDetails.number || !cardDetails.expiry || !cardDetails.cvv) {
+        setError('Please fill in all credit card details');
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError('');
 
     try {
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          userId: user?.id,
           gigId: gigId,
           packageId: orderDetails.packageId,
           requirementsResponse: orderDetails.requirementsResponse || {},
@@ -128,7 +163,7 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -144,10 +179,21 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Checkout Error</h1>
-          <p className="text-gray-600 mb-4">Unable to load order details</p>
+          <p className="text-gray-600 mb-4 max-w-xl text-left border p-4 bg-gray-100 rounded text-sm overflow-auto max-h-96">
+            Unable to load order details. Details: <br />
+            {JSON.stringify({
+              hasGigDetails: !!gigDetails,
+              hasPackageDetails: !!packageDetails,
+              errorDesc: error,
+              gigId,
+              pendingOrder: orderDetails,
+              selectedPkgTier: packageDetails?.tier,
+              rawGigData: (window as any)._debugGigData || null,
+            }, null, 2)}
+          </p>
           <button
             onClick={() => router.push('/browse-gigs')}
-            className="text-brand-green hover:underline font-semibold"
+            className="text-brand-green hover:underline font-semibold mt-4"
           >
             Return to Browse Gigs
           </button>
@@ -255,6 +301,102 @@ export default function GigCheckoutPage({ params }: { params: Promise<{ id: stri
                     to our terms and conditions.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Payment Method</h2>
+
+              <div className="space-y-4">
+                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-brand-green bg-brand-green/5' : 'border-gray-200'}`}>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={() => setPaymentMethod('card')}
+                      className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
+                    />
+                    <div className="ml-3 flex items-center">
+                      <CreditCard className="h-5 w-5 text-gray-500 mr-2" />
+                      <span className="font-medium text-gray-900">Credit / Debit Card</span>
+                    </div>
+                  </div>
+                </label>
+
+                {paymentMethod === 'card' && (
+                  <div className="pl-8 pr-4 py-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                      <input
+                        type="text"
+                        value={cardDetails.name}
+                        onChange={e => setCardDetails({ ...cardDetails, name: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+                        placeholder="Name on card"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                      <input
+                        type="text"
+                        value={cardDetails.number}
+                        onChange={e => setCardDetails({ ...cardDetails, number: e.target.value })}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+                        placeholder="0000 0000 0000 0000"
+                        maxLength={19}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
+                        <input
+                          type="text"
+                          value={cardDetails.expiry}
+                          onChange={e => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+                          placeholder="MM/YY"
+                          maxLength={5}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                        <input
+                          type="text"
+                          value={cardDetails.cvv}
+                          onChange={e => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green focus:border-brand-green"
+                          placeholder="123"
+                          maxLength={4}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${paymentMethod === 'paypal' ? 'border-brand-green bg-brand-green/5' : 'border-gray-200'}`}>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="paypal"
+                      checked={paymentMethod === 'paypal'}
+                      onChange={() => setPaymentMethod('paypal')}
+                      className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
+                    />
+                    <div className="ml-3 flex items-center">
+                      <span className="font-medium text-gray-900">PayPal</span>
+                    </div>
+                  </div>
+                </label>
+
+                {paymentMethod === 'paypal' && (
+                  <div className="pl-8 py-2 text-sm text-gray-600 animate-in fade-in">
+                    You will be redirected to PayPal to complete your purchase securely.
+                  </div>
+                )}
               </div>
             </div>
 

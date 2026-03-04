@@ -1,84 +1,108 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, MessageCircle, Package, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, MessageSquare, RotateCcw } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
 import DeliveryUploader from '@/components/DeliveryUploader';
 import { useAuth } from '@/contexts/AuthContext';
-import { getOrder, updateOrderStatus, deliverOrder, requestRevision } from '@/app/actions/orders';
 import { showToast } from '@/lib/toast';
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
   const isNewOrder = searchParams.get('new') === 'true';
   const { user, isLoading: authLoading } = useAuth();
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'messages' | 'delivery'>('details');
   const [showDeliveryForm, setShowDeliveryForm] = useState(false);
   const [revisionMessage, setRevisionMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
+  const hasFetched = useRef(false);
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
 
   useEffect(() => {
-    params.then(({ id }) => {
-      setOrderId(id);
-    });
+    params.then(({ id }) => setOrderId(id));
   }, [params]);
 
-  const loadOrderData = useCallback(async () => {
-    if (authLoading) return;
-    if (!user) {
-      // useAuth handles redirect usually, or we redirect here
-      router.push('/login');
-      return;
-    }
-
-    if (!orderId) return;
-
+  const fetchOrder = useCallback(async (id: string) => {
+    setLoadError(null);
+    setLoading(true);
     try {
-      // Fetch order details via Server Action
-      const data = await getOrder(orderId);
-
-      if (data) {
-        // Map data
-        const mappedOrder = {
-          ...data,
-          gigTitle: data.gig?.title || 'Unknown Gig',
-          gigImage: data.gig?.images?.[0] || null,
-          sellerName: data.seller?.user ? `${data.seller.user.first_name} ${data.seller.user.last_name}` : 'Unknown Seller',
-          customerName: data.customer?.user ? `${data.customer.user.first_name} ${data.customer.user.last_name}` : 'Unknown Customer',
-          sellerLevel: data.seller?.level_code || 'new_seller',
-          packageTier: data.package_tier,
-          // Ensure numeric
-          total_amount: Number(data.total_amount),
-          platform_fee: Number(data.platform_fee)
-        };
-        setOrder(mappedOrder);
-      } else {
-        console.error('Order not found');
+      const res = await fetch(`/api/orders/${id}`);
+      if (res.status === 404) {
+        setLoadError('Order not found');
+        setLoading(false);
+        setTimeout(() => routerRef.current.push('/orders'), 2000);
+        return;
       }
-    } catch (error) {
+      if (!res.ok) throw new Error('Failed to fetch order');
+      const json = await res.json();
+      const data = json.order;
+      if (data) {
+        setOrder({
+          ...data,
+          gigTitle: data.gigTitle || data.gig?.title || 'Unknown Gig',
+          gigImage: data.gigImage || data.gig?.images?.[0] || null,
+          sellerName: data.sellerName || (data.seller?.user ? `${data.seller.user.first_name} ${data.seller.user.last_name}` : 'Unknown Seller'),
+          customerName: data.customerName || (data.customer?.user ? `${data.customer.user.first_name} ${data.customer.user.last_name}` : 'Unknown Customer'),
+          sellerLevel: data.sellerLevel || data.seller?.level_code || 'new_seller',
+          packageTier: data.package_tier,
+          total_amount: Number(data.total_amount),
+          platform_fee: Number(data.platform_fee),
+        });
+      } else {
+        setLoadError('Order not found');
+        setTimeout(() => routerRef.current.push('/orders'), 2000);
+      }
+    } catch (error: any) {
       console.error('Error loading order:', error);
+      setLoadError('Failed to load order. Redirecting...');
+      setTimeout(() => routerRef.current.push('/orders'), 2000);
     } finally {
       setLoading(false);
     }
-  }, [orderId, user, authLoading, router]);
+  }, []);
 
+  // Only fetch once auth is resolved and we have the orderId
   useEffect(() => {
-    loadOrderData();
-  }, [loadOrderData]);
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    if (!orderId) return;
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchOrder(orderId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, orderId]);
+
+  const loadOrderData = useCallback(() => {
+    if (orderId) fetchOrder(orderId);
+  }, [orderId, fetchOrder]);
 
   const handleDeliverWork = async (message: string, attachments: string[]) => {
+    if (!user) return;
     try {
-      await deliverOrder(orderId, message, attachments);
+      const res = await fetch(`/api/orders/${orderId}/deliver`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, message, attachments }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Failed to deliver work');
       setShowDeliveryForm(false);
       showToast.success('Work delivered successfully!');
-      loadOrderData(); // Reload order data
+      loadOrderData();
     } catch (error: any) {
       console.error('Delivery error:', error);
       showToast.error(error.message || 'Failed to deliver work');
@@ -90,10 +114,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
     setSubmitting(true);
     try {
-      await requestRevision(orderId, user.id, revisionMessage.trim());
+      const res = await fetch(`/api/orders/${orderId}/revisions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, message: revisionMessage.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Failed to request revision');
       setRevisionMessage('');
       showToast.success('Revision requested successfully!');
-      loadOrderData(); // Reload order data
+      loadOrderData();
     } catch (error: any) {
       console.error('Revision request error:', error);
       showToast.error(error.message || 'Failed to request revision');
@@ -107,9 +137,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     if (!user) return;
 
     try {
-      await updateOrderStatus(orderId, 'completed');
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, status: 'completed' }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Failed to complete order');
       showToast.success('Order completed!');
-      loadOrderData(); // Reload order data
+      loadOrderData();
       router.push(`/orders/${orderId}?review=true`);
     } catch (error: any) {
       console.error('Complete order error:', error);
@@ -117,10 +153,27 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   };
 
+  const handleReorder = () => {
+    if (!order) return;
+    sessionStorage.setItem('pendingOrder', JSON.stringify({
+      gigId: order.gig?.id || order.gig_id,
+      packageId: order.package?.id || order.package_id,
+      packageTier: order.packageTier || order.package_tier,
+      requirementsResponse: order.requirements_response || {},
+    }));
+    router.push(`/${locale}/checkout/gig/${order.gig?.id || order.gig_id}`);
+  };
+
   const handleAcceptOrder = async () => {
     if (!user) return;
     try {
-      await updateOrderStatus(orderId, 'in_progress');
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, status: 'in_progress' }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Failed to accept order');
       showToast.success('Order accepted!');
       loadOrderData();
     } catch (error: any) {
@@ -144,7 +197,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Order not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {loadError || 'Order not found'}
+          </h1>
           <button
             onClick={() => router.push('/orders')}
             className="text-brand-green hover:underline font-semibold"
@@ -443,27 +498,52 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   {isSeller ? 'Customer' : 'Seller'}
                 </h3>
-                <div className="flex items-center space-x-3">
-                  <div className="relative h-12 w-12">
-                    <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center">
-                      <span className="text-brand-green text-lg font-semibold">
-                        {isSeller
-                          ? order.customerName?.charAt(0)
-                          : order.sellerName?.charAt(0)}
-                      </span>
-                    </div>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-brand-green text-lg font-semibold">
+                      {isSeller
+                        ? order.customerName?.charAt(0)
+                        : order.sellerName?.charAt(0)}
+                    </span>
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
                       {isSeller ? order.customerName : order.sellerName}
                     </p>
-                    {!isSeller && (
-                      <p className="text-sm text-gray-600">
-                        {order.sellerLevel?.replace('_', ' ')}
+                    {!isSeller && order.sellerLevel && (
+                      <p className="text-sm text-gray-500 capitalize">
+                        {order.sellerLevel.replace(/_/g, ' ')}
                       </p>
                     )}
                   </div>
                 </div>
+
+                {/* Contact button — customer contacts seller */}
+                {isCustomer && order.seller?.user?.id && (
+                  <button
+                    onClick={() => router.push(
+                      `/${locale}/customer/dashboard/messages?recipientId=${order.seller.user.id}`
+                    )}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-sm rounded-lg border border-blue-200 transition-colors"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Contact Seller
+                  </button>
+                )}
+
+                {/* Order Again button — shown after order is done */}
+                {isCustomer && (order.status === 'completed' || order.status === 'cancelled') && (
+                  <div className="mt-3">
+                    <button
+                      onClick={handleReorder}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-brand-green text-white font-bold text-sm rounded-lg hover:bg-brand-green/90 transition-colors shadow-sm"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Order Again
+                    </button>
+                    <p className="text-center text-xs text-gray-400 mt-1.5">Same package · Same requirements</p>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

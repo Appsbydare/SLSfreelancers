@@ -103,6 +103,10 @@ export default function NotificationListener() {
                     const newMessage = payload.new;
                     console.log('[NotificationListener] New message received:', newMessage);
 
+                    // Suppress system event cards (order accepted/delivered/etc.) — they have
+                    // an `event` field and no real content. They are not user messages.
+                    if (newMessage.event) return;
+
                     // Suppress all message notifications while the user is on any messages page
                     // — they can already see incoming messages live in the chat
                     const isOnMessagesPage = pathname?.includes('/messages');
@@ -284,6 +288,19 @@ export default function NotificationListener() {
                     // (with proper "viewing this conversation" suppression). Skip toasting here.
                     if (newNotif.notification_type === 'message') return;
 
+                    // Pick icon + accent colour based on notification type / action
+                    const action = newNotif.data?.action;
+                    const notifType = newNotif.notification_type;
+                    let accentColor = '#22c55e';
+                    let icon = '🔔';
+                    if (notifType === 'order' || notifType === 'task') {
+                        if (action === 'accepted')  { accentColor = '#22c55e'; icon = '🎉'; }
+                        else if (action === 'delivered') { accentColor = '#8b5cf6'; icon = '📦'; }
+                        else if (action === 'completed') { accentColor = '#22c55e'; icon = '✅'; }
+                        else if (action === 'cancelled') { accentColor = '#ef4444'; icon = '❌'; }
+                        else { accentColor = '#3b82f6'; icon = '📋'; }
+                    }
+
                     // Show Toast
                     reactHotToast.custom(
                         (t) => (
@@ -291,46 +308,44 @@ export default function NotificationListener() {
                                 background: 'white',
                                 color: '#1f2937',
                                 padding: '16px 20px',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                borderLeft: '4px solid #22c55e',
+                                borderRadius: '12px',
+                                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                                borderLeft: `4px solid ${accentColor}`,
                                 minWidth: '320px',
-                                maxWidth: '400px',
+                                maxWidth: '420px',
                                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                                 opacity: t.visible ? 1 : 0,
                                 transition: 'opacity 0.3s ease',
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
                                     <div style={{
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '42px',
+                                        height: '42px',
                                         borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                        background: `${accentColor}18`,
+                                        border: `1.5px solid ${accentColor}40`,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         flexShrink: 0,
-                                        color: 'white',
-                                        fontWeight: 600,
-                                        fontSize: '16px',
+                                        fontSize: '20px',
                                     }}>
-                                        🔔
+                                        {icon}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{
-                                            fontSize: '11px',
-                                            fontWeight: 600,
-                                            color: '#22c55e',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            color: '#111827',
                                             marginBottom: '4px',
+                                            lineHeight: 1.3,
                                         }}>
                                             {newNotif.title}
                                         </div>
                                         <div style={{
                                             fontSize: '13px',
                                             color: '#6b7280',
-                                            lineHeight: 1.4,
+                                            lineHeight: 1.5,
                                         }}>
                                             {newNotif.message}
                                         </div>
@@ -339,7 +354,7 @@ export default function NotificationListener() {
                             </div>
                         ),
                         {
-                            duration: 5000,
+                            duration: 6000,
                             position: 'top-right',
                         }
                     );

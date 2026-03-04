@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { insertOrderEventCard } from '@/app/actions/messages';
 
 // Generate unique order number
 function generateOrderNumber(): string {
@@ -235,32 +236,56 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', gigId);
 
-    // Create notification for seller
-    const { data: sellerUser } = await supabaseServer
-      .from('users')
-      .select('id')
-      .eq('id', (await supabaseServer
-        .from('taskers')
-        .select('user_id')
-        .eq('id', gigData.seller_id)
-        .single()
-      ).data?.user_id)
+    // Resolve user IDs for both parties
+    const { data: sellerTasker } = await supabaseServer
+      .from('taskers')
+      .select('user_id')
+      .eq('id', gigData.seller_id)
       .single();
 
-    if (sellerUser) {
-      await supabaseServer
-        .from('notifications')
-        .insert({
-          user_id: sellerUser.id,
-          notification_type: 'task',
-          title: 'New Order Received!',
-          message: `You have a new order for "${gigData.title}"`,
-          data: {
-            order_id: orderData.id,
-            order_number: orderData.order_number,
-            gig_id: gigId,
-          },
-        });
+    const { data: customerProfile } = await supabaseServer
+      .from('customers')
+      .select('user_id')
+      .eq('id', customerData.id)
+      .single();
+
+    const sellerUserId = sellerTasker?.user_id ?? null;
+    const customerUserId = customerProfile?.user_id ?? userId; // userId from body is already the customer user ID
+
+    // Notify seller of new order
+    if (sellerUserId) {
+      await supabaseServer.from('notifications').insert({
+        user_id: sellerUserId,
+        notification_type: 'order',
+        title: '🛒 New Order Received!',
+        message: `You have a new order for "${gigData.title}". Review and accept it to start working.`,
+        data: {
+          order_id: orderData.id,
+          order_number: orderData.order_number,
+          gig_id: gigId,
+          action: 'placed',
+        },
+      });
+    }
+
+    // Insert order_placed card into the gig chat (always — starts the thread)
+    if (sellerUserId && customerUserId) {
+      await insertOrderEventCard({
+        senderUserId: customerUserId,
+        recipientUserId: sellerUserId,
+        gigId,
+        event: 'order_placed',
+        payload: {
+          order_id: orderData.id,
+          order_number: orderData.order_number,
+          gig_id: gigId,
+          package_tier: selectedPackage.tier,
+          total_amount: totalAmount,
+          seller_earnings: sellerEarnings,
+          platform_fee: platformFee,
+          delivery_date: deliveryDate.toISOString(),
+        },
+      });
     }
 
     return NextResponse.json(

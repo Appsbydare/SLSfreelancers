@@ -9,10 +9,12 @@ import GigPackageSelector from '@/components/GigPackageSelector';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
 import RequirementsForm from '@/components/RequirementsForm';
 import { Gig, GigPackage } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function GigDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
     const router = useRouter();
     const locale = useLocale();
+    const { user } = useAuth();
     const [gig, setGig] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedPackage, setSelectedPackage] = useState<GigPackage | null>(null);
@@ -106,6 +108,8 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
             </div>
         );
     }
+
+    const isOwner = user?.id === gig.seller?.user?.id;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -226,10 +230,17 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
                         {/* Packages */}
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6">Select a Package</h2>
+                            {isOwner && (
+                                <div className="mb-6 p-4 bg-brand-green/10 text-brand-green rounded-lg border border-brand-green/20">
+                                    <p className="font-semibold text-sm">You are viewing your own gig</p>
+                                    <p className="text-sm mt-1">You cannot purchase your own services.</p>
+                                </div>
+                            )}
                             <GigPackageSelector
                                 packages={gig.packages || []}
                                 selectedPackageId={selectedPackage?.id}
                                 onSelect={handlePackageSelect}
+                                disabled={isOwner}
                             />
                         </div>
 
@@ -388,12 +399,21 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
                             )}
 
                             {/* Contact Seller Button */}
-                            <button
-                                onClick={() => router.push(`/${locale}/customer/dashboard/messages?recipientId=${gig.seller.user.id}&gigId=${gig.id}`)}
-                                className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
-                            >
-                                Contact Seller
-                            </button>
+                            {!isOwner ? (
+                                <button
+                                    onClick={() => router.push(`/${locale}/customer/dashboard/messages?recipientId=${gig.seller.user.id}&gigId=${gig.id}`)}
+                                    className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
+                                >
+                                    Contact Seller
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => router.push(`/${locale}/seller/gigs/${gig.id}/edit`)}
+                                    className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
+                                >
+                                    Edit Gig
+                                </button>
+                            )}
 
                             <button
                                 onClick={() => router.push(`/${locale}/seller/${gig.seller.user.id}`)}

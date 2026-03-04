@@ -107,7 +107,15 @@ export async function GET(
       }),
       requirements: (gigData.requirements || []).sort((a: any, b: any) =>
         (a.sort_order || 0) - (b.sort_order || 0)
-      ),
+      ).map((r: any) => ({
+        id: r.id,
+        gigId: r.gig_id,
+        question: r.question,
+        answerType: r.answer_type,
+        options: r.options,
+        isRequired: r.is_required,
+        sortOrder: r.sort_order,
+      })),
     };
 
     return NextResponse.json({ gig: formattedGig });

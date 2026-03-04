@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { sendOrderEventCard } from '@/app/actions/messages';
 
 // GET - Get order details
 export async function GET(
@@ -43,9 +44,10 @@ export async function GET(
           title,
           slug,
           images,
-          category
+          category,
+          requirements:gig_requirements(id, question, answer_type, options, is_required, sort_order)
         ),
-        package:gig_packages (
+        package:gig_packages!orders_package_id_fkey (
           id,
           tier,
           name,
@@ -207,59 +209,128 @@ export async function PUT(
       throw updateError;
     }
 
-    // Create notifications
-    const notificationUserId = orderData.customer.user_id === userId 
-      ? orderData.seller.user_id 
-      : orderData.customer.user_id;
+    // Determine who triggered the action and who receives the notification
+    const isSeller = orderData.seller.user_id === userId;
+    const customerUserId = orderData.customer.user_id;
+    const sellerUserId = orderData.seller.user_id;
 
-    let notificationTitle = '';
-    let notificationMessage = '';
+    // Build per-status notifications — may notify one or both parties
+    interface NotificationPayload {
+      user_id: string;
+      notification_type: string;
+      title: string;
+      message: string;
+      data: Record<string, any>;
+    }
+    const notifications: NotificationPayload[] = [];
+    const baseData = { order_id: orderId, order_number: orderData.order_number };
 
     switch (status) {
       case 'in_progress':
-        notificationTitle = 'Order Started';
-        notificationMessage = `The seller has started working on order ${orderData.order_number}`;
+        // Seller accepted the order — notify the customer
+        notifications.push({
+          user_id: customerUserId,
+          notification_type: 'order',
+          title: '🎉 Your order has been accepted!',
+          message: `Great news! The seller has accepted your order #${orderData.order_number} and is now working on it. You will be notified when the work is delivered.`,
+          data: { ...baseData, action: 'accepted' },
+        });
         break;
+
       case 'delivered':
-        notificationTitle = 'Order Delivered';
-        notificationMessage = `Your order ${orderData.order_number} has been delivered`;
+        // Seller delivered — notify the customer
+        notifications.push({
+          user_id: customerUserId,
+          notification_type: 'order',
+          title: '📦 Work delivered — review now',
+          message: `Your order #${orderData.order_number} has been delivered. Please review the work and either approve it or request a revision.`,
+          data: { ...baseData, action: 'delivered' },
+        });
         break;
+
       case 'completed':
-        notificationTitle = 'Order Completed';
-        notificationMessage = `Order ${orderData.order_number} has been marked as completed`;
-        
-        // Update seller stats
-        await supabaseServer
-          .from('taskers')
-          .update({ 
-            completed_tasks: (await supabaseServer
-              .from('taskers')
-              .select('completed_tasks')
-              .eq('id', orderData.seller_id)
-              .single()
-            ).data?.completed_tasks + 1 || 1
-          })
-          .eq('id', orderData.seller_id);
+        // Customer approved — notify the seller
+        notifications.push({
+          user_id: sellerUserId,
+          notification_type: 'order',
+          title: '✅ Order completed & payment released',
+          message: `Order #${orderData.order_number} has been approved by the customer. Your earnings have been released.`,
+          data: { ...baseData, action: 'completed' },
+        });
+        // Update seller completed_tasks count
+        try {
+          const { error: rpcError } = await supabaseServer.rpc('increment_completed_tasks', { tasker_id: orderData.seller_id });
+          if (rpcError) throw rpcError;
+        } catch {
+          // fallback if RPC doesn't exist
+          const { data: t } = await supabaseServer.from('taskers').select('completed_tasks').eq('id', orderData.seller_id).single();
+          await supabaseServer.from('taskers').update({ completed_tasks: (t?.completed_tasks || 0) + 1 }).eq('id', orderData.seller_id);
+        }
         break;
+
       case 'cancelled':
-        notificationTitle = 'Order Cancelled';
-        notificationMessage = `Order ${orderData.order_number} has been cancelled`;
+        // Notify the other party
+        notifications.push({
+          user_id: isSeller ? customerUserId : sellerUserId,
+          notification_type: 'order',
+          title: '❌ Order cancelled',
+          message: `Order #${orderData.order_number} has been cancelled${cancellationReason ? `: ${cancellationReason}` : '.'}`,
+          data: { ...baseData, action: 'cancelled' },
+        });
+        // Increment seller's cancelled_tasks when seller cancels
+        if (isSeller) {
+          const { data: t } = await supabaseServer.from('taskers')
+            .select('cancelled_tasks').eq('id', orderData.seller_id).single();
+          await supabaseServer.from('taskers')
+            .update({ cancelled_tasks: (t?.cancelled_tasks || 0) + 1 })
+            .eq('id', orderData.seller_id);
+        }
         break;
     }
 
-    if (notificationTitle) {
-      await supabaseServer
-        .from('notifications')
-        .insert({
-          user_id: notificationUserId,
-          notification_type: 'task',
-          title: notificationTitle,
-          message: notificationMessage,
-          data: {
-            order_id: orderId,
-            order_number: orderData.order_number,
-          },
-        });
+    if (notifications.length > 0) {
+      await supabaseServer.from('notifications').insert(notifications);
+    }
+
+    // Send order event card into the gig chat if a conversation already exists
+    const cardPayload = {
+      order_id: orderId,
+      order_number: orderData.order_number,
+      gig_id: orderData.gig_id,
+      package_tier: orderData.package_tier,
+      total_amount: Number(orderData.total_amount),
+      seller_earnings: Number(orderData.seller_earnings),
+      platform_fee: Number(orderData.platform_fee),
+      delivery_date: orderData.delivery_date,
+    };
+
+    if (status === 'in_progress') {
+      // Seller accepted → send card from seller to customer
+      await sendOrderEventCard({
+        senderUserId: sellerUserId,
+        recipientUserId: customerUserId,
+        gigId: orderData.gig_id,
+        event: 'order_accepted',
+        payload: cardPayload,
+      });
+    } else if (status === 'completed') {
+      // Customer approved → send card from customer to seller
+      await sendOrderEventCard({
+        senderUserId: customerUserId,
+        recipientUserId: sellerUserId,
+        gigId: orderData.gig_id,
+        event: 'order_completed',
+        payload: cardPayload,
+      });
+    } else if (status === 'cancelled') {
+      // Cancelled — send from whoever cancelled to the other party
+      await sendOrderEventCard({
+        senderUserId: isSeller ? sellerUserId : customerUserId,
+        recipientUserId: isSeller ? customerUserId : sellerUserId,
+        gigId: orderData.gig_id,
+        event: 'order_cancelled',
+        payload: { ...cardPayload, reason: cancellationReason || null },
+      });
     }
 
     return NextResponse.json({
