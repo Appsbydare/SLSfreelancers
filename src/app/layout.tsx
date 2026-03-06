@@ -40,6 +40,7 @@ export const metadata: Metadata = {
   description: 'Connect with skilled professionals in Sri Lanka. Get any task done quickly and reliably.',
 };
 
+
 export default async function RootLayout({
   children,
 }: {

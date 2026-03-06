@@ -65,6 +65,7 @@ export default function Header() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [overlayExiting, setOverlayExiting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isTopSeller, setIsTopSeller] = useState(false);
   const [taskerBadges, setTaskerBadges] = useState<{ trustScore: number; levelCode: string } | null>(null);
@@ -386,8 +387,13 @@ export default function Header() {
     setTimeout(() => {
       router.push(targetPath);
       setTimeout(() => {
-        setIsSwitchingMode(false);
-      }, 500); // fade out duration allowance
+        setOverlayExiting(true); // Start fade-out
+        setTimeout(() => {
+          setIsSwitchingMode(false);
+          setOverlayExiting(false);
+          window.dispatchEvent(new CustomEvent('mode:switched', { detail: { mode: newMode } }));
+        }, 500); // Match fade-out duration
+      }, 500);
     }, 1200);
   };
 
@@ -1064,7 +1070,12 @@ export default function Header() {
 
       {/* Mode Switch Animation Overlay */}
       {isSwitchingMode && (
-        <div className="fixed inset-0 z-[100] bg-black/85 flex flex-col items-center justify-center backdrop-blur-md animate-fadeIn">
+        <div
+          className={`fixed inset-0 z-[10001] flex flex-col items-center justify-center backdrop-blur-md transition-opacity duration-500 ease-out ${
+            overlayExiting ? 'opacity-0' : 'opacity-100 animate-fadeIn'
+          }`}
+          style={{ background: 'rgba(0,0,0,0.85)' }}
+        >
           <div className="w-16 h-16 border-4 border-brand-green border-t-transparent flex items-center justify-center rounded-full animate-spin mb-6">
             <div className="w-8 h-8 bg-brand-green rounded-full opacity-30"></div>
           </div>

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import { FloatingChatWidget } from '@/components/chat/FloatingChatWidget';
 
 interface LayoutProps {
   children: ReactNode;
@@ -54,6 +55,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className={`flex-1 ${isAdminPage ? '' : 'pt-16'}`}>
         {children}
       </main>
+      <FloatingChatWidget />
       {!isAdminPage && !isDashboardPage && <Footer />}
     </div>
   );
