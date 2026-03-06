@@ -34,6 +34,11 @@ export default function CreateGigPage() {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!user?.id) return;
+
+      // Fetch all available categories — category locking via tasker_skills
+      // is not enforced here since tasker_skills stores skill names, not category IDs.
+      // The backend API enforces limits per seller's verified documents.
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -46,8 +51,10 @@ export default function CreateGigPage() {
       }
     };
 
-    fetchCategories();
-  }, []);
+    if (user?.id) {
+      fetchCategories();
+    }
+  }, [user]);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -66,6 +73,10 @@ export default function CreateGigPage() {
     },
     requirements: [] as Array<{ question: string; answerType: string; options?: string[]; isRequired: boolean }>,
   });
+
+  // Derived state to check if selected category is high risk (must be after formData)
+  const isHighRiskCategory = categories.find(c => c.id === formData.category)?.is_high_risk;
+
 
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -446,6 +457,18 @@ export default function CreateGigPage() {
                     <option value="physical">Physical</option>
                   </select>
                 </div>
+
+                {isHighRiskCategory && (
+                  <div className="mt-4 col-span-2 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md flex items-start text-sm">
+                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 text-yellow-600 mt-0.5" />
+                    <div>
+                      <p className="font-semibold mb-1">High-Risk Service Category</p>
+                      <p>
+                        This category requires additional trust verification. To unlock the full 5 gig limit, you must upload a verified Police Clearance Report in your <a href={`/${locale}/seller/dashboard/verifications`} className="underline font-medium hover:text-yellow-900" target="_blank" rel="noopener noreferrer">verifications dashboard</a>. We also highly recommend providing your Life Insurance details to boost your Trust Score.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

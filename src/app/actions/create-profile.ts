@@ -101,7 +101,7 @@ export async function createProfile(authUserId: string, formData: any) {
                 user_id: publicUserId,
                 bio: bio || '',
                 skills: skillList,
-                level_code: 'starter_pro'
+                level_code: 'level_0'
             });
 
         if (taskerError) {

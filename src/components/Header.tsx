@@ -4,12 +4,12 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, LogOut, Grid3X3, ChevronRight, ChevronLeft, Search, ArrowLeftRight, User as UserIcon, LayoutDashboard, Bell, ShieldCheck, MessageCircle } from 'lucide-react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { animationClasses } from '@/lib/animations';
 import { useAuth } from '@/contexts/AuthContext';
-import VerifiedBadge from './VerifiedBadge';
 import Image from 'next/image';
+import SuperVerifiedAvatar from './SuperVerifiedAvatar';
 import serviceGroups from '@/data/service-groups.json';
 import { useDistrict } from '@/contexts/DistrictContext';
 import SriLankaMap from './SriLankaMap';
@@ -66,6 +66,8 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isTopSeller, setIsTopSeller] = useState(false);
+  const [taskerBadges, setTaskerBadges] = useState<{ trustScore: number; levelCode: string } | null>(null);
   const groupScrollRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -104,6 +106,29 @@ export default function Header() {
       };
     }
   }, [isLoggedIn, user?.id]);
+
+  const fetchTaskerBadges = useCallback(async () => {
+    if (!user?.id || !(user.userType === 'tasker' || user.hasTaskerAccount)) {
+      setIsTopSeller(false);
+      setTaskerBadges(null);
+      return;
+    }
+    const { data } = await supabase.from('taskers').select('trust_score, level_code').eq('user_id', user.id).maybeSingle();
+    setIsTopSeller(data?.level_code === 'level_3');
+    setTaskerBadges(data ? { trustScore: data.trust_score ?? 0, levelCode: data.level_code ?? 'level_0' } : null);
+  }, [user?.id, user?.userType, user?.hasTaskerAccount]);
+
+  // Fetch tasker status for nav bar styling and badges
+  useEffect(() => {
+    fetchTaskerBadges();
+  }, [fetchTaskerBadges]);
+
+  // Refetch when DevTester forces level change (dashboard:reload)
+  useEffect(() => {
+    const handler = () => fetchTaskerBadges();
+    window.addEventListener('dashboard:reload', handler);
+    return () => window.removeEventListener('dashboard:reload', handler);
+  }, [fetchTaskerBadges]);
 
   const handleNotificationsOpen = async () => {
     setIsNotificationMenuOpen(!isNotificationMenuOpen);
@@ -494,11 +519,20 @@ export default function Header() {
     pathname?.startsWith(`/${locale}/seller`) || pathname?.startsWith(`/${locale}/tasker`) ||
     (pathname?.includes('/inbox') && isSeller);
 
-  // Darker green color for seller pages: #007413 (darker than brand-green #0fcc17)
+  // Level 3: purple gradient; Level 2: golden gradient; other sellers: green; customers: black
+  const isLevel2 = taskerBadges?.levelCode === 'level_2';
   const headerBgClass = isSellerPage
-    ? (isScrolled
-      ? 'bg-[#007413]/95 backdrop-blur-md shadow-lg border-b border-[#004C0D]'
-      : 'bg-[#007413] shadow-sm border-b border-[#004C0D]')
+    ? isTopSeller
+      ? (isScrolled
+        ? 'bg-gradient-to-r from-purple-700 via-purple-600 to-pink-600/95 backdrop-blur-md shadow-lg shadow-purple-500/20 border-b border-purple-500/40'
+        : 'bg-gradient-to-r from-purple-700 via-purple-600 to-pink-600 shadow-sm shadow-purple-500/10 border-b border-purple-500/30')
+      : isLevel2
+        ? (isScrolled
+          ? 'bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700/95 backdrop-blur-md shadow-lg shadow-amber-500/20 border-b border-amber-500/40'
+          : 'bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 shadow-sm shadow-amber-500/10 border-b border-amber-500/30')
+        : (isScrolled
+          ? 'bg-[#007413]/95 backdrop-blur-md shadow-lg border-b border-[#004C0D]'
+          : 'bg-[#007413] shadow-sm border-b border-[#004C0D]')
     : (isScrolled
       ? 'bg-black/95 backdrop-blur-md shadow-lg border-b border-gray-800'
       : 'bg-black shadow-sm border-b border-gray-800');
@@ -557,21 +591,20 @@ export default function Header() {
                     </button>
                   );
                 }
+                const navActive = pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'));
+                const underlineClass = (isTopSeller && isSellerPage) ? 'bg-amber-300' : (isLevel2 && isSellerPage) ? 'bg-amber-200' : 'bg-brand-green';
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))
-                      ? 'text-brand-green'
-                      : 'text-white hover:text-brand-green'
-                      }`}
+                    className={`px-3 py-2 text-sm font-medium transition-all duration-300 relative group ${navActive ? ((isTopSeller || isLevel2) && isSellerPage ? 'text-amber-200' : 'text-brand-green') : 'text-white ' + ((isTopSeller || isLevel2) && isSellerPage ? 'hover:text-amber-200' : 'hover:text-brand-green')}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <span className="relative z-10">{item.name}</span>
-                    {(pathname === item.href || (item.href.includes('/seller/dashboard') && pathname.startsWith('/seller/dashboard'))) && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green animate-fade-in-up"></div>
+                    {navActive && (
+                      <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${underlineClass} animate-fade-in-up`}></div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-green scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${underlineClass} scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`}></div>
                   </Link>
                 );
               })}
@@ -706,30 +739,25 @@ export default function Header() {
                         setIsProfileDropdownOpen(!isProfileDropdownOpen);
                         setIsNotificationMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md text-white hover:text-brand-green transition-all duration-300 hover:bg-gray-800/50"
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-white transition-all duration-300 ${(isTopSeller || isLevel2) && isSellerPage ? 'hover:text-amber-200 hover:bg-white/10' : 'hover:text-brand-green hover:bg-gray-800/50'}`}
                       title="Profile Menu"
                     >
-                      <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                        {user?.profileImage ? (
-                          <Image
-                            src={user.profileImage}
-                            alt="Profile"
-                            width={32}
-                            height={32}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <UserIcon className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
+                      <SuperVerifiedAvatar
+                        src={user?.profileImage}
+                        name={user?.callingName || user?.firstName}
+                        size={32}
+                        isVerified={taskerBadges ? taskerBadges.trustScore >= 100 : !!user?.isVerified}
+                        isSuperVerified={(taskerBadges?.trustScore ?? 0) >= 200}
+                        isLevel2={taskerBadges?.levelCode === 'level_2'}
+                        isTopSeller={taskerBadges?.levelCode === 'level_3'}
+                        showBadge={false}
+                        className="flex-shrink-0"
+                      />
                       <div className="flex items-center gap-2">
                         <span className="text-white/70 text-sm">Welcome,</span>
                         <span className="text-white text-sm font-medium">
                           {user?.callingName || user?.firstName}
                         </span>
-                        {user?.userType === 'tasker' && user?.isVerified && (
-                          <VerifiedBadge size="sm" showText={false} />
-                        )}
                       </div>
                     </button>
 
@@ -738,22 +766,20 @@ export default function Header() {
                       <div className="absolute right-0 top-full mt-2 w-64 bg-gray-950 border border-gray-800 rounded-lg shadow-xl z-50">
                         <div className="p-4 border-b border-gray-800">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                              {user?.profileImage ? (
-                                <Image
-                                  src={user.profileImage}
-                                  alt="Profile"
-                                  width={40}
-                                  height={40}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <UserIcon className="h-6 w-6 text-gray-400" />
-                              )}
-                            </div>
-                            <div>
+                            <SuperVerifiedAvatar
+                              src={user?.profileImage}
+                              name={user?.callingName || user?.firstName}
+                              size={40}
+                              isVerified={taskerBadges ? taskerBadges.trustScore >= 100 : !!user?.isVerified}
+                              isSuperVerified={(taskerBadges?.trustScore ?? 0) >= 200}
+                              isLevel2={taskerBadges?.levelCode === 'level_2'}
+                              isTopSeller={taskerBadges?.levelCode === 'level_3'}
+                              showBadge={false}
+                              className="flex-shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
                               <p className="text-white font-medium">{user?.callingName || user?.firstName}</p>
-                              <p className="text-gray-400 text-sm">{user?.email}</p>
+                              <p className="text-gray-400 text-sm truncate">{user?.email}</p>
                             </div>
                           </div>
                         </div>
@@ -984,18 +1010,21 @@ export default function Header() {
                 <div className="pt-4 pb-3 border-t border-gray-800">
                   {isLoggedIn ? (
                     <>
-                      <div className="px-3 py-2 text-base font-medium text-white flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-600 flex-shrink-0 bg-gray-800 flex items-center justify-center">
-                          {user?.profileImage ? (
-                            <Image src={user.profileImage} alt="Profile" width={32} height={32} className="h-full w-full object-cover" />
-                          ) : (
-                            <UserIcon className="h-5 w-5 text-gray-400" />
-                          )}
+                      <div className="px-3 py-2">
+                        <div className="flex items-center gap-2 text-base font-medium text-white">
+                          <SuperVerifiedAvatar
+                            src={user?.profileImage}
+                            name={user?.callingName || user?.firstName}
+                            size={32}
+                            isVerified={taskerBadges ? taskerBadges.trustScore >= 100 : !!user?.isVerified}
+                            isSuperVerified={(taskerBadges?.trustScore ?? 0) >= 200}
+                            isLevel2={taskerBadges?.levelCode === 'level_2'}
+                            isTopSeller={taskerBadges?.levelCode === 'level_3'}
+                            showBadge={false}
+                            className="flex-shrink-0"
+                          />
+                          <span className="truncate max-w-[150px]">{user?.callingName || user?.firstName}</span>
                         </div>
-                        <span className="truncate max-w-[150px]">{user?.callingName || user?.firstName}</span>
-                        {user?.userType === 'tasker' && user?.isVerified && (
-                          <VerifiedBadge size="sm" showText={false} />
-                        )}
                       </div>
                       <button
                         onClick={() => {

@@ -172,15 +172,25 @@ export default function LoginPage() {
         // Small delay to allow toast to show
         setTimeout(() => {
           console.log('[LOGIN] Executing redirect...');
+          // Restore the user's last remembered mode from their previous session
+          const savedMode = typeof window !== 'undefined'
+            ? localStorage.getItem('userPreferredMode')
+            : null;
+
           if (nextUrl && nextUrl !== '/login') {
             router.push(nextUrl);
-          } else if (userActualType === 'admin') {
-            router.push(`/${locale}/project-status`);
+          } else if (savedMode === 'seller' && isTasker) {
+            router.push(`/${locale}/seller/dashboard`);
+          } else if (savedMode === 'customer') {
+            router.push(`/${locale}/customer/dashboard`);
           } else if (userActualType === 'tasker' || isTasker) {
-            // Redirect to seller dashboard if they are a tasker OR have a tasker profile
+            // First-time login: default taskers to seller dashboard
+            localStorage.setItem('userPreferredMode', 'seller');
             router.push(`/${locale}/seller/dashboard`);
           } else {
-            router.push(`/${locale}`);
+            // Default customers to customer dashboard
+            localStorage.setItem('userPreferredMode', 'customer');
+            router.push(`/${locale}/customer/dashboard`);
           }
           // Force stop loading in case redirect is slow
           // setIsLoading(false); 

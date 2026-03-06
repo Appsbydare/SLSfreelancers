@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { recalculateSellerLevel } from '@/utils/sellerLevelLogic';
 
 // GET - Fetch reviews
 export async function GET(request: NextRequest) {
@@ -118,6 +119,9 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', revieweeId);
+
+      // Recalculate seller level now that rating has changed
+      await recalculateSellerLevel(supabaseServer, { userId: revieweeId });
     }
 
     return NextResponse.json(

@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
         startingPrice: prices.length > 0 ? Math.min(...prices) : 0,
         sellerName: `${gig.seller?.user?.first_name || ''} ${gig.seller?.user?.last_name || ''}`.trim(),
         sellerAvatar: gig.seller?.user?.profile_image_url,
-        sellerLevel: gig.seller?.level_code || 'starter_pro',
+        sellerLevel: gig.seller?.level_code || 'level_0',
         sellerRating: gig.seller?.rating || 0,
       };
     });
@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
     // Get tasker (seller) data
     const { data: taskerData, error: taskerError } = await supabaseServer
       .from('taskers')
-      .select('id')
+      .select('id, trust_score')
       .eq('user_id', userId)
       .single();
 
@@ -241,6 +241,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { message: 'Seller profile not found. Please complete your profile first.' },
         { status: 404 }
+      );
+    }
+
+    // Validate category exists and get high_risk status
+    const { data: categoryData, error: catFetchError } = await supabaseServer
+      .from('categories')
+      .select('name, is_high_risk')
+      .eq('id', category)
+      .single();
+
+    if (catFetchError || !categoryData) {
+      return NextResponse.json(
+        { message: 'Invalid category selected.' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Category Locking
+    const { data: approvedCategories, error: skillsError } = await supabaseServer
+      .from('tasker_skills')
+      .select('skill_name')
+      .eq('tasker_id', taskerData.id);
+
+    if (skillsError || !approvedCategories || !approvedCategories.some(c => c.skill_name === categoryData.name)) {
+      return NextResponse.json(
+        { message: 'You are not approved to create gigs in this category. Please update your profile settings.' },
+        { status: 403 }
+      );
+    }
+
+    // Check gig creation limits
+    const { count: currentGigCount } = await supabaseServer
+      .from('gigs')
+      .select('*', { count: 'exact', head: true })
+      .eq('seller_id', taskerData.id);
+
+    const totalGigs = currentGigCount || 0;
+    let gigLimit = 5;
+
+    if (categoryData.is_high_risk) {
+      const isVerified = (taskerData.trust_score || 0) >= 100;
+      if (!isVerified) {
+        gigLimit = 3;
+      }
+    }
+
+    if (totalGigs >= gigLimit) {
+      return NextResponse.json(
+        { message: `You have reached your limit of ${gigLimit} gigs. ${gigLimit === 3 ? 'Get your profile Verified (100 Trust Score) to unlock more gigs for high-risk categories.' : ''}` },
+        { status: 403 }
       );
     }
 

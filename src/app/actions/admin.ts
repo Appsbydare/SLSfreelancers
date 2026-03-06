@@ -2,6 +2,7 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { recalculateSellerLevel } from '@/utils/sellerLevelLogic';
 
 /**
  * Validates if the current authenticated user is a super admin.
@@ -152,6 +153,42 @@ export async function approveVerification(verificationId: string, userId: string
         .single();
 
     if (verifyError) return { success: false, message: 'Failed to update verification record' };
+
+    // Update Trust Score
+    if (verif) {
+        let pointsToAdd = 0;
+        // Check if seller is in a high-risk category to evaluate point distribution
+        const { data: tasker } = await adminClient.from('taskers').select('id, trust_score').eq('user_id', userId).single();
+        let isHighRisk = false;
+
+        if (tasker) {
+            const { data: taskerCategories } = await adminClient.from('tasker_skills').select('skill_name').eq('tasker_id', tasker.id);
+            if (taskerCategories && taskerCategories.length > 0) {
+                const { data: highRiskCats } = await adminClient
+                    .from('categories')
+                    .select('id')
+                    .eq('is_high_risk', true)
+                    .in('name', taskerCategories.map((c: any) => c.skill_name));
+
+                if (highRiskCats && highRiskCats.length > 0) isHighRisk = true;
+            }
+        }
+
+        if (verif.verification_type === 'nic_front' || verif.verification_type === 'nic_back' || verif.verification_type === 'nic') pointsToAdd = isHighRisk ? 20 : 30;
+        else if (verif.verification_type === 'address_proof') pointsToAdd = isHighRisk ? 30 : 40;
+        else if (verif.verification_type === 'police_report') pointsToAdd = 100;
+
+        if (pointsToAdd > 0) {
+            const { data: tasker } = await adminClient.from('taskers').select('trust_score').eq('user_id', userId).single();
+            if (tasker) {
+                const newScore = (tasker.trust_score || 0) + pointsToAdd;
+                const isSuperVerified = newScore >= 200;
+                await adminClient.from('taskers').update({ trust_score: newScore, is_super_verified: isSuperVerified }).eq('user_id', userId);
+                // Recalculate seller level now that trust_score has changed
+                await recalculateSellerLevel(adminClient, { userId });
+            }
+        }
+    }
 
     // 2. Log the action
     await logAdminAction('APPROVED_VERIFICATION', 'verifications', verificationId, { user_id: userId });

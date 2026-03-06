@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { sendOrderEventCard } from '@/app/actions/messages';
+import { recalculateSellerLevel } from '@/utils/sellerLevelLogic';
 
 // GET - Get order details
 export async function GET(
@@ -266,6 +267,38 @@ export async function PUT(
           const { data: t } = await supabaseServer.from('taskers').select('completed_tasks').eq('id', orderData.seller_id).single();
           await supabaseServer.from('taskers').update({ completed_tasks: (t?.completed_tasks || 0) + 1 }).eq('id', orderData.seller_id);
         }
+        // Update on_time_delivery_rate based on completed orders for this seller
+        try {
+          const { data: sellerOrders } = await supabaseServer
+            .from('orders')
+            .select('delivery_date, deliveries:order_deliveries(delivered_at)')
+            .eq('seller_id', orderData.seller_id)
+            .eq('status', 'completed');
+
+          if (sellerOrders && sellerOrders.length > 0) {
+            let onTimeCount = 0;
+            for (const o of sellerOrders) {
+              const deliveries = (o as any).deliveries as { delivered_at: string }[] | null;
+              const firstDelivery = deliveries && deliveries.length > 0
+                ? deliveries.sort((a, b) => new Date(a.delivered_at).getTime() - new Date(b.delivered_at).getTime())[0]
+                : null;
+              if (firstDelivery && o.delivery_date) {
+                const deliveredAt = new Date(firstDelivery.delivered_at);
+                const deadline = new Date(o.delivery_date);
+                if (deliveredAt <= deadline) onTimeCount++;
+              }
+            }
+            const onTimeRate = Math.round((onTimeCount / sellerOrders.length) * 100);
+            await supabaseServer
+              .from('taskers')
+              .update({ on_time_delivery_rate: onTimeRate })
+              .eq('id', orderData.seller_id);
+          }
+        } catch (err) {
+          console.error('Failed to update on_time_delivery_rate:', err);
+        }
+        // Recalculate seller level now that completed_tasks and on_time_delivery_rate have changed
+        await recalculateSellerLevel(supabaseServer, { taskerId: orderData.seller_id });
         break;
 
       case 'cancelled':

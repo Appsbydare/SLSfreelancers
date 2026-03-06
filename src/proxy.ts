@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware({
     defaultLocale: 'en'
 });
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,

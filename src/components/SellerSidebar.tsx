@@ -20,12 +20,14 @@ import {
 import { useState, useCallback } from 'react';
 
 interface SellerSidebarProps {
+  levelCode?: string;
   unreadMessages?: number;
   activeOrders?: number;
   onOrdersSeen?: () => void;
 }
 
 export default function SellerSidebar({
+  levelCode = 'level_0',
   unreadMessages = 0,
   activeOrders = 0,
   onOrdersSeen,
@@ -36,6 +38,10 @@ export default function SellerSidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const isVerified = user?.isVerified;
+
+  const accent = levelCode === 'level_3' ? { text: 'text-purple-600', bg: 'bg-purple-600', bgHover: 'hover:bg-purple-500', bgLight: 'bg-purple-500/10' }
+    : levelCode === 'level_2' ? { text: 'text-amber-700', bg: 'bg-amber-500', bgHover: 'hover:bg-amber-600', bgLight: 'bg-amber-500/10' }
+    : { text: 'text-brand-green', bg: 'bg-brand-green', bgHover: 'hover:bg-brand-green/90', bgLight: 'bg-brand-green/10' };
 
   const menuItems = [
     {
@@ -116,7 +122,7 @@ export default function SellerSidebar({
       {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-brand-green text-white rounded-md shadow-lg"
+        className={`lg:hidden fixed top-4 left-4 z-50 p-2 ${accent.bg} text-white rounded-md shadow-lg`}
         aria-label="Toggle menu"
       >
         {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -170,17 +176,17 @@ export default function SellerSidebar({
                           flex items-center justify-between px-4 py-3 rounded-lg
                           transition-all duration-200
                           ${active
-                            ? 'bg-brand-green/10 text-brand-green font-semibold'
+                            ? `${accent.bgLight} ${accent.text} font-semibold`
                             : 'text-gray-700 hover:bg-gray-100'
                           }
                         `}
                       >
                         <div className="flex items-center">
-                          <Icon className={`h-5 w-5 mr-3 ${active ? 'text-brand-green' : 'text-gray-500'}`} />
+                          <Icon className={`h-5 w-5 mr-3 ${active ? accent.text : 'text-gray-500'}`} />
                           <span>{item.label}</span>
                         </div>
                         {item.badge && (
-                          <span className="bg-brand-green text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center">
+                          <span className={`${accent.bg} text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center`}>
                             {item.badge}
                           </span>
                         )}
@@ -206,7 +212,7 @@ export default function SellerSidebar({
             ) : (
               <Link
                 href={`/${locale}/seller/gigs/create`}
-                className="w-full flex items-center justify-center px-4 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+                className={`w-full flex items-center justify-center px-4 py-3 ${accent.bg} text-white rounded-lg font-semibold ${accent.bgHover} transition-colors`}
                 onClick={() => setIsMobileOpen(false)}
               >
                 <Package className="h-5 w-5 mr-2" />

@@ -16,7 +16,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getSellerGigs, pauseGig, activateGig, deleteGig } from '@/app/actions/seller';
+import { getSellerGigs, getSellerLevelCode, pauseGig, activateGig, deleteGig } from '@/app/actions/seller';
 import { showToast } from '@/lib/toast';
 
 export default function SellerGigsPage() {
@@ -26,6 +26,7 @@ export default function SellerGigsPage() {
 
   const [loading, setLoading] = useState(true);
   const [gigs, setGigs] = useState<any[]>([]);
+  const [levelCode, setLevelCode] = useState<string>('level_0');
 
   const loadGigs = useCallback(async () => {
     if (authLoading) return;
@@ -36,8 +37,9 @@ export default function SellerGigsPage() {
 
     try {
       setLoading(true);
-      const data = await getSellerGigs(user.id);
-      setGigs(data || []);
+      const [gigData, lvl] = await Promise.all([getSellerGigs(user.id), getSellerLevelCode(user.id)]);
+      setGigs(gigData || []);
+      setLevelCode(lvl);
     } catch (error) {
       console.error('Error loading gigs:', error);
     } finally {
@@ -89,10 +91,14 @@ export default function SellerGigsPage() {
     }
   };
 
+  const accent = levelCode === 'level_3' ? { text: 'text-purple-600', bg: 'bg-purple-600', bgHover: 'hover:bg-purple-500', badge: 'bg-purple-100 text-purple-800', activateBorder: 'border-purple-300', activateText: 'text-purple-700', activateHover: 'hover:bg-purple-50' }
+    : levelCode === 'level_2' ? { text: 'text-amber-700', bg: 'bg-amber-500', bgHover: 'hover:bg-amber-600', badge: 'bg-amber-100 text-amber-800', activateBorder: 'border-amber-300', activateText: 'text-amber-700', activateHover: 'hover:bg-amber-50' }
+    : { text: 'text-brand-green', bg: 'bg-brand-green', bgHover: 'hover:bg-brand-green/90', badge: 'bg-green-100 text-green-800', activateBorder: 'border-green-300', activateText: 'text-green-700', activateHover: 'hover:bg-green-50' };
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green"></div>
+        <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${accent.text.replace('text-', 'border-')}`}></div>
       </div>
     );
   }
@@ -108,7 +114,7 @@ export default function SellerGigsPage() {
         {user?.isVerified ? (
           <Link
             href={`/${locale}/seller/gigs/create`}
-            className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+            className={`inline-flex items-center px-6 py-3 ${accent.bg} text-white rounded-lg font-semibold ${accent.bgHover} transition-colors`}
           >
             <Plus className="h-5 w-5 mr-2" />
             Create New Gig
@@ -134,7 +140,7 @@ export default function SellerGigsPage() {
           {user?.isVerified ? (
             <Link
               href={`/${locale}/seller/gigs/create`}
-              className="inline-flex items-center px-6 py-3 bg-brand-green text-white rounded-lg font-semibold hover:bg-brand-green/90 transition-colors"
+              className={`inline-flex items-center px-6 py-3 ${accent.bg} text-white rounded-lg font-semibold ${accent.bgHover} transition-colors`}
             >
               <Plus className="h-5 w-5 mr-2" />
               Create Your First Gig
@@ -177,7 +183,7 @@ export default function SellerGigsPage() {
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-1">{gig.title}</h3>
                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${gig.status === 'active'
-                        ? 'bg-green-100 text-green-800'
+                        ? accent.badge
                         : gig.status === 'paused'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
@@ -201,7 +207,7 @@ export default function SellerGigsPage() {
                       <span className="font-semibold">{gig.rating?.toFixed(1) || '0.0'}</span> rating
                     </div>
                     <div>
-                      Starting at <span className="font-semibold text-brand-green">
+                      Starting at <span className={`font-semibold ${accent.text}`}>
                         LKR {gig.startingPrice?.toLocaleString() || '0'}
                       </span>
                     </div>
@@ -234,7 +240,7 @@ export default function SellerGigsPage() {
                     ) : (
                       <button
                         onClick={() => handleActivateGig(gig.id)}
-                        className="inline-flex items-center px-4 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"
+                        className={`inline-flex items-center px-4 py-2 border ${accent.activateBorder} rounded-lg text-sm font-medium ${accent.activateText} ${accent.activateHover} transition-colors`}
                       >
                         <Play className="h-4 w-4 mr-2" />
                         Activate

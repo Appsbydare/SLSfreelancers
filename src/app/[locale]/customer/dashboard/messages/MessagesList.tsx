@@ -8,6 +8,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
+import SuperVerifiedAvatar from '@/components/SuperVerifiedAvatar';
 
 interface Message {
     id: string;
@@ -689,26 +690,24 @@ export default function MessagesList({
                             >
                                 <div className="flex gap-3">
                                     <div className="relative h-12 w-12 flex-shrink-0">
-                                        <div className="h-full w-full rounded-full bg-gray-200 overflow-hidden relative">
-                                            {conv.other_user?.profile_image_url ? (
-                                                <Image src={conv.other_user.profile_image_url} alt="User" fill className="object-cover" />
-                                            ) : (
-                                                <div className="h-full w-full flex items-center justify-center bg-brand-green/10 text-brand-green font-bold text-lg">
-                                                    {(conv.other_user?.first_name || '?')[0]}
-                                                </div>
-                                            )}
-                                        </div>
-                                        {/* Status Dot */}
-                                        {/* Status Dot */}
-                                        <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${onlineUsers.has(conv.other_user_id) || (conv.other_user as any)?.status === 'online' ? 'bg-green-500' :
-                                            (conv.other_user as any)?.status === 'idle' ? 'bg-yellow-500' :
-                                                'bg-gray-300'
-                                            }`}></span>
+                                        <SuperVerifiedAvatar
+                                            src={conv.other_user?.profile_image_url}
+                                            name={conv.other_user?.first_name}
+                                            size={48}
+                                            isVerified={!!(Array.isArray((conv.other_user as any)?.tasker) ? ((conv.other_user as any)?.tasker?.[0]?.trust_score >= 100) : ((conv.other_user as any)?.tasker?.trust_score >= 100))}
+                                            isSuperVerified={!!(Array.isArray((conv.other_user as any)?.tasker) ? ((conv.other_user as any)?.tasker?.[0]?.trust_score >= 200) : ((conv.other_user as any)?.tasker?.trust_score >= 200))}
+                                            isLevel2={!!(Array.isArray((conv.other_user as any)?.tasker) ? ((conv.other_user as any)?.tasker?.[0]?.level_code === 'level_2') : ((conv.other_user as any)?.tasker?.level_code === 'level_2'))}
+                                            isTopSeller={!!(Array.isArray((conv.other_user as any)?.tasker) ? ((conv.other_user as any)?.tasker?.[0]?.level_code === 'level_3') : ((conv.other_user as any)?.tasker?.level_code === 'level_3'))}
+                                        />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h4 className={`font-semibold text-sm truncate ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+                                            <h4 className={`font-semibold text-sm truncate flex items-center gap-1.5 ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
                                                 {conv.other_user?.first_name || 'Unknown'} {conv.other_user?.last_name || ''}
+                                                {/* Online Status Indicator Next to Name */}
+                                                {(onlineUsers.has(conv.other_user_id) || (conv.other_user as any)?.status === 'online') && (
+                                                    <span className="h-2 w-2 rounded-full bg-green-500 shadow-sm flex-shrink-0" title="Online" />
+                                                )}
                                             </h4>
                                             <span className="text-xs text-gray-400 whitespace-nowrap">
                                                 {new Date(conv.last_message.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -754,19 +753,15 @@ export default function MessagesList({
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white z-20 shadow-sm flex-shrink-0">
                         <div className="flex items-center gap-4">
                             <div className="relative h-10 w-10 flex-shrink-0">
-                                <div className="h-full w-full rounded-full bg-gray-200 overflow-hidden relative">
-                                    {selectedConversation.other_user?.profile_image_url ? (
-                                        <Image src={selectedConversation.other_user.profile_image_url} alt="User" fill className="object-cover" />
-                                    ) : (
-                                        <div className="h-full w-full flex items-center justify-center bg-brand-green/10 text-brand-green font-bold">
-                                            {(selectedConversation.other_user?.first_name || '?')[0]}
-                                        </div>
-                                    )}
-                                </div>
-                                <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white ${onlineUsers.has(selectedConversation.other_user_id) || (selectedConversation.other_user as any)?.status === 'online' ? 'bg-green-500' :
-                                    (selectedConversation.other_user as any)?.status === 'idle' ? 'bg-yellow-500' :
-                                        'bg-gray-300'
-                                    }`}></span>
+                                <SuperVerifiedAvatar
+                                    src={selectedConversation.other_user?.profile_image_url}
+                                    name={selectedConversation.other_user?.first_name}
+                                    size={40}
+                                    isVerified={!!(Array.isArray((selectedConversation.other_user as any)?.tasker) ? ((selectedConversation.other_user as any)?.tasker?.[0]?.trust_score >= 100) : ((selectedConversation.other_user as any)?.tasker?.trust_score >= 100))}
+                                    isSuperVerified={!!(Array.isArray((selectedConversation.other_user as any)?.tasker) ? ((selectedConversation.other_user as any)?.tasker?.[0]?.trust_score >= 200) : ((selectedConversation.other_user as any)?.tasker?.trust_score >= 200))}
+                                    isLevel2={!!(Array.isArray((selectedConversation.other_user as any)?.tasker) ? ((selectedConversation.other_user as any)?.tasker?.[0]?.level_code === 'level_2') : ((selectedConversation.other_user as any)?.tasker?.level_code === 'level_2'))}
+                                    isTopSeller={!!(Array.isArray((selectedConversation.other_user as any)?.tasker) ? ((selectedConversation.other_user as any)?.tasker?.[0]?.level_code === 'level_3') : ((selectedConversation.other_user as any)?.tasker?.level_code === 'level_3'))}
+                                />
                             </div>
                             <div>
                                 <h2 className="font-bold text-gray-900 flex items-center gap-2">
@@ -900,8 +895,8 @@ export default function MessagesList({
 
                                     <div className={`max-w-[75%] space-y-1 ${isOwnMessage ? 'items-end flex flex-col' : 'items-start flex flex-col'}`}>
                                         <div className={`rounded-2xl shadow-sm text-sm overflow-hidden ${isOwnMessage
-                                                ? 'bg-brand-green text-white rounded-br-none'
-                                                : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+                                            ? 'bg-brand-green text-white rounded-br-none'
+                                            : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
                                             }`}>
                                             {/* Attachments */}
                                             {message.attachments && message.attachments.length > 0 && (
@@ -919,7 +914,7 @@ export default function MessagesList({
                                                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isOwnMessage
                                                                     ? 'bg-white/15 hover:bg-white/25 text-white'
                                                                     : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
-                                                                }`}>
+                                                                    }`}>
                                                                 <FileText className="h-4 w-4 flex-shrink-0" />
                                                                 <span className="truncate max-w-[160px]">{getFileName(url)}</span>
                                                                 <Download className="h-3.5 w-3.5 flex-shrink-0 ml-auto" />

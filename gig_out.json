@@ -1,0 +1,86 @@
+{
+  "gig": {
+    "id": "b9bf0511-9548-4472-acfb-a8b7df77d1e3",
+    "seller_id": "0903aae1-5e5c-4271-bc20-eecc2fac36fc",
+    "title": "i will create a professional video",
+    "slug": "i-will-create-a-professional-video-1771409355299",
+    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc,",
+    "category": "video-animation",
+    "subcategory": null,
+    "tags": [
+      "new"
+    ],
+    "images": [
+      "https://lmpaqwdaqwlogdsnhrtr.supabase.co/storage/v1/object/public/gigs/9c007999-4aa5-404b-bf2a-1d2dad3da78f/1771409353111_ths12s99wtf.png",
+      "https://lmpaqwdaqwlogdsnhrtr.supabase.co/storage/v1/object/public/gigs/9c007999-4aa5-404b-bf2a-1d2dad3da78f/1771409353964_qzegbix2oo.png",
+      "https://lmpaqwdaqwlogdsnhrtr.supabase.co/storage/v1/object/public/gigs/9c007999-4aa5-404b-bf2a-1d2dad3da78f/1771409354339_vcza9vkwqhg.png",
+      "https://lmpaqwdaqwlogdsnhrtr.supabase.co/storage/v1/object/public/gigs/9c007999-4aa5-404b-bf2a-1d2dad3da78f/1771409354696_b1tpq6fc0ru.png"
+    ],
+    "status": "active",
+    "delivery_type": "digital",
+    "is_featured": false,
+    "views_count": 29,
+    "orders_count": 0,
+    "rating": 0,
+    "reviews_count": 0,
+    "created_at": "2026-02-18T10:09:14.685062+00:00",
+    "updated_at": "2026-02-27T12:10:24.244216+00:00",
+    "seller": {
+      "id": "0903aae1-5e5c-4271-bc20-eecc2fac36fc",
+      "bio": "hgcfggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "user": {
+        "id": "9c007999-4aa5-404b-bf2a-1d2dad3da78f",
+        "last_name": "Wijewickarama",
+        "created_at": "2026-02-12T06:51:36.113652+00:00",
+        "first_name": "Sahindu",
+        "profile_image_url": "https://lh3.googleusercontent.com/a/ACg8ocL3q2GIIJXJL7X7AFVdKKtFSvwlWN5ZMSYpFmEOwTAEIAhbL9o=s96-c"
+      },
+      "rating": 0,
+      "level_code": "starter_pro",
+      "completed_tasks": 0,
+      "response_time_minutes": 0
+    },
+    "packages": [
+      {
+        "id": "dbbc01d1-3c0e-4c9c-8d26-9a3cd29b3a1a",
+        "name": "Basic",
+        "tier": "basic",
+        "price": 1000,
+        "features": [
+          "new"
+        ],
+        "revisions": null,
+        "description": null,
+        "delivery_days": 1
+      }
+    ],
+    "requirements": [
+      {
+        "id": "48e9e035-8527-4779-bd21-dc648bb56a3c",
+        "question": "tell your needs for the video length",
+        "answerType": "choice",
+        "options": [
+          "5m",
+          "10m"
+        ],
+        "isRequired": true,
+        "sortOrder": 0
+      }
+    ],
+    "sellerName": "Sahindu Wijewickarama",
+    "sellerAvatar": "https://lh3.googleusercontent.com/a/ACg8ocL3q2GIIJXJL7X7AFVdKKtFSvwlWN5ZMSYpFmEOwTAEIAhbL9o=s96-c",
+    "sellerLevel": "starter_pro",
+    "sellerRating": 0,
+    "sellerCompletedTasks": 0,
+    "sellerResponseTime": 0,
+    "sellerBio": "hgcfggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+    "sellerMemberSince": "2026-02-12T06:51:36.113652+00:00",
+    "sellerServiceAreas": [
+      {
+        "district": "Kilinochchi",
+        "city": null
+      }
+    ],
+    "reviews": []
+  }
+}

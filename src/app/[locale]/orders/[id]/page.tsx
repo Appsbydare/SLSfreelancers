@@ -54,7 +54,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           gigImage: data.gigImage || data.gig?.images?.[0] || null,
           sellerName: data.sellerName || (data.seller?.user ? `${data.seller.user.first_name} ${data.seller.user.last_name}` : 'Unknown Seller'),
           customerName: data.customerName || (data.customer?.user ? `${data.customer.user.first_name} ${data.customer.user.last_name}` : 'Unknown Customer'),
-          sellerLevel: data.sellerLevel || data.seller?.level_code || 'new_seller',
+          sellerLevel: data.sellerLevel || data.seller?.level_code || 'level_0',
           packageTier: data.package_tier,
           total_amount: Number(data.total_amount),
           platform_fee: Number(data.platform_fee),
@@ -83,7 +83,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     if (hasFetched.current) return;
     hasFetched.current = true;
     fetchOrder(orderId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, orderId]);
 
   const loadOrderData = useCallback(() => {

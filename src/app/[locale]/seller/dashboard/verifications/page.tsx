@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getSellerDashboardData } from '@/app/actions/seller';
+import { getSellerDashboardData, saveLifeInsurance } from '@/app/actions/seller';
 import FileUpload from '@/components/FileUpload';
 import { CheckCircle, Clock, AlertTriangle, UploadCloud, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -15,6 +15,13 @@ export default function SellerVerificationsPage() {
     const [loading, setLoading] = useState(true);
     const [verifications, setVerifications] = useState<any[]>([]);
     const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+    const [taskerData, setTaskerData] = useState<any>(null);
+    const [isHighRisk, setIsHighRisk] = useState(false);
+
+    // Life insurance state
+    const [insuranceProvider, setInsuranceProvider] = useState('');
+    const [policyNumber, setPolicyNumber] = useState('');
+    const [savingInsurance, setSavingInsurance] = useState(false);
 
     const loadData = useCallback(async () => {
         if (authLoading) return;
@@ -28,6 +35,12 @@ export default function SellerVerificationsPage() {
             const data = await getSellerDashboardData(user.id);
             if (data && data.verifications) {
                 setVerifications(data.verifications);
+                if (data.tasker) {
+                    setTaskerData(data.tasker);
+                    setInsuranceProvider(data.tasker.life_insurance_provider || '');
+                    setPolicyNumber(data.tasker.life_insurance_policy || '');
+                }
+                setIsHighRisk(data.isHighRisk || false);
             }
         } catch (error) {
             console.error('Error loading verifications:', error);
@@ -76,6 +89,26 @@ export default function SellerVerificationsPage() {
             toast.error(error.message || 'Error occurred while uploading.');
         } finally {
             setUploadingDoc(null);
+        }
+    };
+
+    const handleSaveInsurance = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        setSavingInsurance(true);
+
+        try {
+            const result = await saveLifeInsurance(user.id, insuranceProvider, policyNumber);
+            if (result.success) {
+                toast.success(result.message);
+                loadData(); // to get updated trust score if we were fetching it
+            } else {
+                toast.error(result.message);
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Error saving insurance details');
+        } finally {
+            setSavingInsurance(false);
         }
     };
 
@@ -207,6 +240,192 @@ export default function SellerVerificationsPage() {
                 <p className="text-gray-600 mt-2">Track the status of your submitted documents and re-upload if necessary.</p>
             </div>
 
+            {/* Trust Score Panel */}
+            <div className="mb-8 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Trust Score</h3>
+                        <p className="text-gray-500 text-sm mt-0.5">Earned by submitting and getting documents verified</p>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-4xl font-black text-brand-green">{taskerData?.trust_score ?? 0}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">/ 250 pts</div>
+                    </div>
+                </div>
+
+                {/* Three-milestone progress bar (no numbers on bar) */}
+                <div className="flex gap-1 mb-5">
+                    {/* Segment 1: 0 → 100 (Verified) */}
+                    <div className="flex-[2]">
+                        <div className="w-full bg-gray-100 rounded-l-full h-2.5 overflow-hidden">
+                            <div
+                                className="h-2.5 rounded-l-full bg-gradient-to-r from-brand-green to-emerald-400 transition-all duration-700"
+                                style={{ width: `${Math.min(((taskerData?.trust_score ?? 0) / 100) * 100, 100)}%` }}
+                            />
+                        </div>
+                        <div className={`text-[10px] mt-1 font-bold ${(taskerData?.trust_score ?? 0) >= 100 ? 'text-green-600' : 'text-gray-400'}`}>
+                            {(taskerData?.trust_score ?? 0) >= 100 ? '✅ Verified' : `🔒 Verified`}
+                        </div>
+                    </div>
+                    <div className="w-2 flex-shrink-0" />
+                    {/* Segment 2: 100 → 200 */}
+                    <div className="flex-[2]">
+                        <div className="w-full bg-gray-100 h-2.5 overflow-hidden">
+                            <div
+                                className="h-2.5 bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-700"
+                                style={{ width: `${(taskerData?.trust_score ?? 0) >= 100 ? Math.min((((taskerData?.trust_score ?? 0) - 100) / 100) * 100, 100) : 0}%` }}
+                            />
+                        </div>
+                        <div className={`text-[10px] mt-1 font-bold ${(taskerData?.trust_score ?? 0) >= 200 ? 'text-amber-600' : 'text-gray-400'}`}>
+                            {(taskerData?.trust_score ?? 0) >= 200 ? '⭐ Trust Verified' : '🔒 Trust Verified'}
+                        </div>
+                    </div>
+                    <div className="w-2 flex-shrink-0" />
+                    {/* Segment 3: 200 → 250 (Trust Verified — top tier) */}
+                    <div className="flex-1">
+                        <div className="w-full bg-gray-100 rounded-r-full h-2.5 overflow-hidden">
+                            <div
+                                className="h-2.5 rounded-r-full bg-gradient-to-r from-orange-500 to-red-400 transition-all duration-700"
+                                style={{ width: `${(taskerData?.trust_score ?? 0) >= 200 ? Math.min((((taskerData?.trust_score ?? 0) - 200) / 50) * 100, 100) : 0}%` }}
+                            />
+                        </div>
+                        <div className={`text-[10px] mt-1 font-bold ${(taskerData?.trust_score ?? 0) >= 250 ? 'text-orange-600' : 'text-gray-400'}`}>
+                            {(taskerData?.trust_score ?? 0) >= 250 ? '🏆 Top Seller' : '🔒 Top Seller'}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Milestone badges */}
+                <div className="flex gap-3 mb-5">
+                    <div className={`flex-1 rounded-xl p-3 border-2 text-center transition-all ${(taskerData?.trust_score ?? 0) >= 100 ? 'border-green-400 bg-green-50' : 'border-dashed border-gray-200 bg-gray-50'}`}>
+                        <div className="text-xl mb-1">{(taskerData?.trust_score ?? 0) >= 100 ? '✅' : '🔒'}</div>
+                        <div className={`text-xs font-bold ${(taskerData?.trust_score ?? 0) >= 100 ? 'text-green-700' : 'text-gray-500'}`}>Verified</div>
+                        <div className="text-[10px] text-gray-400">100 pts</div>
+                    </div>
+                    <div className={`flex-1 rounded-xl p-3 border-2 text-center transition-all ${(taskerData?.trust_score ?? 0) >= 200 ? 'border-amber-400 bg-amber-50' : 'border-dashed border-gray-200 bg-gray-50'}`}>
+                        <div className="text-xl mb-1">{(taskerData?.trust_score ?? 0) >= 200 ? '⭐' : '🔒'}</div>
+                        <div className={`text-xs font-bold ${(taskerData?.trust_score ?? 0) >= 200 ? 'text-amber-600' : 'text-gray-500'}`}>Trust Verified</div>
+                        <div className="text-[10px] text-gray-400">200 pts</div>
+                    </div>
+                    <div className={`flex-1 rounded-xl p-3 border-2 text-center transition-all ${(taskerData?.trust_score ?? 0) >= 250 ? 'border-orange-400 bg-orange-50' : 'border-dashed border-gray-200 bg-gray-50'}`}>
+                        <div className="text-xl mb-1">{(taskerData?.trust_score ?? 0) >= 250 ? '🏆' : '🔒'}</div>
+                        <div className={`text-xs font-bold ${(taskerData?.trust_score ?? 0) >= 250 ? 'text-orange-600' : 'text-gray-500'}`}>Top Seller</div>
+                        <div className="text-[10px] text-gray-400">250 pts</div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                        { key: 'nic_front', label: 'NIC Front', pts: 30 },
+                        { key: 'nic_back', label: 'NIC Back', pts: 30 },
+                        { key: 'address_proof', label: 'Address Proof', pts: 40 },
+                        { key: 'police_report', label: 'Police Report', pts: 100, optional: true },
+                    ].map(({ key, label, pts, optional }) => {
+                        const doc = verifications
+                            .filter(v => v.verification_type === key)
+                            .sort((a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0];
+                        const approved = doc?.status === 'approved';
+                        const pending = doc?.status === 'submitted' || doc?.status === 'pending';
+                        return (
+                            <div key={key} className={`rounded-lg px-3 py-2.5 border ${approved ? 'bg-green-50 border-green-200' :
+                                pending ? 'bg-yellow-50 border-yellow-200' :
+                                    'bg-gray-50 border-gray-200'
+                                }`}>
+                                <div className={`text-xs font-medium mb-1 ${approved ? 'text-green-700' : pending ? 'text-yellow-700' : 'text-gray-500'
+                                    }`}>{label}{(optional as any) && <span className="ml-1 font-normal text-gray-400">(optional)</span>}</div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-900 font-bold text-sm">+{pts} pts</span>
+                                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${approved ? 'bg-green-100 text-green-700' :
+                                        pending ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-gray-200 text-gray-500'
+                                        }`}>
+                                        {approved ? '✓ Earned' : pending ? '⏳ Pending' : 'Not yet'}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                {/* What to do next — tailored callout */}
+                {(taskerData?.trust_score ?? 0) >= 100 && (taskerData?.trust_score ?? 0) < 200 && !verifications.find((v: any) => v.verification_type === 'police_report' && v.status === 'approved') && (
+                    <div className="mt-5 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 rounded-xl p-4 flex items-start gap-4">
+                        <div className="text-2xl mt-0.5">📋</div>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-bold text-yellow-800 mb-1">You're 100 pts away from ⭐ Trust Verified</h4>
+                            <p className="text-xs text-yellow-700 mb-3">Upload your <strong>Police Clearance Certificate</strong> to earn <strong>+100 pts</strong> and unlock the Trust Verified badge. This badge appears on your profile and significantly increases buyer confidence.</p>
+                            <div className="flex items-center gap-2 text-xs">
+                                <span className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-2 py-1 rounded-lg font-semibold">🔒 Trust Verified (200 pts)</span>
+                                <span className="text-yellow-600">→</span>
+                                <span className="bg-white border border-yellow-300 text-yellow-800 px-2 py-1 rounded-lg font-semibold">⭐ Current score: {taskerData?.trust_score ?? 0} pts</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {(taskerData?.trust_score ?? 0) < 100 && (
+                    <div className="mt-5 bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-4">
+                        <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">🗺️ Your Roadmap to Verified</h4>
+                        <div className="space-y-2">
+                            {!verifications.find((v: any) => v.verification_type === 'nic_front' && v.status === 'approved') && (
+                                <div className="flex items-center gap-3 p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm">
+                                    <span className="text-base">🪪</span>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-gray-800">Upload NIC Front</p>
+                                        <p className="text-[10px] text-gray-500">+{isHighRisk ? 20 : 30} pts · Required</p>
+                                    </div>
+                                    <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full">DO THIS</span>
+                                </div>
+                            )}
+                            {!verifications.find((v: any) => v.verification_type === 'nic_back' && v.status === 'approved') && (
+                                <div className="flex items-center gap-3 p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm">
+                                    <span className="text-base">🪪</span>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-gray-800">Upload NIC Back</p>
+                                        <p className="text-[10px] text-gray-500">+{isHighRisk ? 20 : 30} pts · Required</p>
+                                    </div>
+                                    <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full">DO THIS</span>
+                                </div>
+                            )}
+                            {!verifications.find((v: any) => v.verification_type === 'address_proof' && v.status === 'approved') && (
+                                <div className="flex items-center gap-3 p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm">
+                                    <span className="text-base">🏠</span>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-gray-800">Upload Proof of Address</p>
+                                        <p className="text-[10px] text-gray-500">+{isHighRisk ? 30 : 40} pts · Required</p>
+                                    </div>
+                                    <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full">DO THIS</span>
+                                </div>
+                            )}
+                            {isHighRisk && !verifications.find((v: any) => v.verification_type === 'insurance' && v.status === 'approved') && (
+                                <div className="flex items-center gap-3 p-2.5 bg-white border border-orange-100 rounded-lg shadow-sm">
+                                    <span className="text-base">🛡️</span>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-gray-800">Add Life Insurance Details</p>
+                                        <p className="text-[10px] text-gray-500">+30 pts · Required for high-risk sellers</p>
+                                    </div>
+                                    <span className="text-[10px] text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded-full">DO THIS</span>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3 p-2.5 bg-white border border-yellow-100 rounded-lg">
+                                <span className="text-base">📋</span>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-gray-700">Police Clearance Certificate <span className="text-gray-400">(after Verified)</span></p>
+                                    <p className="text-[10px] text-gray-500">+100 pts · Upgrades you to ⭐ Trust Verified</p>
+                                </div>
+                                <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">LATER</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {(taskerData?.trust_score ?? 0) >= 200 && (
+                    <div className="mt-4 flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                        <span className="text-2xl">⭐</span>
+                        <div>
+                            <p className="text-sm font-bold text-yellow-700">You've reached Trust Verified! ⭐</p>
+                            <p className="text-xs text-yellow-600">The gold star badge now shows on your public profile. The final 50 pts are reserved for Top Sellers — awarded by the admin team.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Global Progress Tracker */}
             <div className={`mb-10 p-6 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-6 ${pStyles.box}`}>
                 <div className="flex-1 w-full flex items-center">
@@ -292,6 +511,57 @@ export default function SellerVerificationsPage() {
                     })}
                 </div>
             </div>
+
+            {/* Life Insurance Section — ONLY for high-risk category sellers */}
+            {isHighRisk && (
+                <div className="mt-8 bg-white rounded-xl shadow-sm border border-orange-200 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-orange-100 bg-orange-50 flex items-start gap-4">
+                        <AlertTriangle className="w-6 h-6 text-orange-600 shrink-0 mt-0.5" />
+                        <div>
+                            <h3 className="text-lg leading-6 font-medium text-gray-900">Life Insurance Details</h3>
+                            <p className="mt-1 text-sm text-gray-700">You offer <strong>high-risk services</strong>. Submitting life insurance details is required to reach <strong>Verified (100 pts)</strong> and unlock all 5 gig slots. It builds important trust with buyers for these categories.</p>
+                        </div>
+                    </div>
+
+                    <div className="p-6">
+                        <form onSubmit={handleSaveInsurance} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="insuranceProvider" className="block text-sm font-medium text-gray-700">Insurance Provider Name</label>
+                                    <input
+                                        type="text"
+                                        id="insuranceProvider"
+                                        value={insuranceProvider}
+                                        onChange={(e) => setInsuranceProvider(e.target.value)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green sm:text-sm px-4 py-2 border"
+                                        placeholder="e.g. Ceylinco Life"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="policyNumber" className="block text-sm font-medium text-gray-700">Policy Number</label>
+                                    <input
+                                        type="text"
+                                        id="policyNumber"
+                                        value={policyNumber}
+                                        onChange={(e) => setPolicyNumber(e.target.value)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green sm:text-sm px-4 py-2 border"
+                                        placeholder="e.g. POL-123456789"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={savingInsurance || (!insuranceProvider && !policyNumber)}
+                                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-green hover:bg-brand-green/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50"
+                                >
+                                    {savingInsurance ? 'Saving...' : 'Save Insurance Details'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

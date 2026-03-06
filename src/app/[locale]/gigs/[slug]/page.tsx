@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Star, Clock, CheckCircle, MapPin, Shield, ArrowLeft, Heart } from 'lucide-react';
 import GigPackageSelector from '@/components/GigPackageSelector';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
+import SuperVerifiedAvatar from '@/components/SuperVerifiedAvatar';
 import RequirementsForm from '@/components/RequirementsForm';
 import { Gig, GigPackage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -309,30 +310,59 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
 
                     {/* Sidebar - Seller Info */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow p-6 sticky top-4">
+                        <div className={`rounded-lg shadow p-6 sticky top-4 ${
+                          gig.sellerLevel === 'level_3'
+                            ? 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 shadow-purple-500/5'
+                            : gig.sellerLevel === 'level_2'
+                              ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 shadow-amber-500/5'
+                              : 'bg-white'
+                        }`}>
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">About the Seller</h3>
 
                             {/* Seller Profile */}
                             <div className="flex items-center mb-4">
-                                <div className="relative h-16 w-16 mr-4">
-                                    {gig.sellerAvatar ? (
-                                        <Image
-                                            src={gig.sellerAvatar}
-                                            alt={gig.sellerName}
-                                            fill
-                                            className="rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="h-16 w-16 rounded-full bg-brand-green/10 flex items-center justify-center">
-                                            <span className="text-brand-green text-xl font-semibold">
-                                                {gig.sellerName.charAt(0)}
-                                            </span>
-                                        </div>
-                                    )}
+                                <div className="mr-4 flex-shrink-0">
+                                    <SuperVerifiedAvatar
+                                        src={gig.sellerAvatar}
+                                        name={gig.sellerName}
+                                        size={64}
+                                        isVerified={gig.sellerIsVerified}
+                                        isSuperVerified={gig.sellerIsSuperVerified}
+                                        isLevel2={gig.sellerLevel === 'level_2'}
+                                        isTopSeller={gig.sellerLevel === 'level_3'}
+                                    />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-gray-900 mb-1">{gig.sellerName}</h4>
-                                    <SellerLevelBadge level={gig.sellerLevel} size="sm" />
+                                    <div className="flex flex-col gap-1.5 items-start">
+                                        <SellerLevelBadge level={gig.sellerLevel} size="sm" />
+
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                            {(gig.sellerTrustScore ?? 0) >= 200 && gig.sellerLevel !== 'level_3' && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 shadow-sm">
+                                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                                    Trust Verified
+                                                </span>
+                                            )}
+                                            {gig.sellerIsVerified && !gig.sellerIsSuperVerified && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                                    Verified
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Trust Score */}
+                            <div className="mb-6 bg-gray-50 rounded-lg p-3 border border-gray-100 flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700 flex items-center">
+                                    <Shield className={`w-4 h-4 mr-1.5 ${gig.sellerLevel === 'level_3' ? 'text-purple-600' : gig.sellerLevel === 'level_2' ? 'text-amber-600' : 'text-brand-green'}`} />
+                                    Trust Score
+                                </span>
+                                <div className={`text-xs font-bold px-2 py-1 rounded shadow-sm border ${gig.sellerLevel === 'level_3' ? 'bg-purple-100 text-purple-700 border-purple-200' : gig.sellerLevel === 'level_2' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
+                                    {gig.sellerTrustScore || 0} pts
                                 </div>
                             </div>
 
@@ -402,14 +432,14 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
                             {!isOwner ? (
                                 <button
                                     onClick={() => router.push(`/${locale}/customer/dashboard/messages?recipientId=${gig.seller.user.id}&gigId=${gig.id}`)}
-                                    className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
+                                    className={`w-full mb-3 px-4 py-3 text-white rounded-lg font-semibold transition-colors flex items-center justify-center ${gig.sellerLevel === 'level_3' ? 'bg-purple-600 hover:bg-purple-500' : gig.sellerLevel === 'level_2' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
                                 >
                                     Contact Seller
                                 </button>
                             ) : (
                                 <button
                                     onClick={() => router.push(`/${locale}/seller/gigs/${gig.id}/edit`)}
-                                    className="w-full mb-3 px-4 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 font-semibold transition-colors flex items-center justify-center"
+                                    className={`w-full mb-3 px-4 py-3 text-white rounded-lg font-semibold transition-colors flex items-center justify-center ${gig.sellerLevel === 'level_3' ? 'bg-purple-600 hover:bg-purple-500' : gig.sellerLevel === 'level_2' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-brand-green hover:bg-brand-green/90'}`}
                                 >
                                     Edit Gig
                                 </button>
@@ -417,7 +447,7 @@ export default function GigDetailPage({ params }: { params: Promise<{ locale: st
 
                             <button
                                 onClick={() => router.push(`/${locale}/seller/${gig.seller.user.id}`)}
-                                className="w-full px-4 py-3 border border-brand-green text-brand-green rounded-lg hover:bg-brand-green/5 font-semibold transition-colors"
+                                className={`w-full px-4 py-3 border rounded-lg font-semibold transition-colors ${gig.sellerLevel === 'level_3' ? 'border-purple-600 text-purple-600 hover:bg-purple-50' : gig.sellerLevel === 'level_2' ? 'border-amber-600 text-amber-700 hover:bg-amber-50' : 'border-brand-green text-brand-green hover:bg-brand-green/5'}`}
                             >
                                 View Full Profile
                             </button>

@@ -16,10 +16,12 @@ type Verification = {
     submitted_at: string;
     document_url: string;
     user: {
+        id: string;
         first_name: string;
         last_name: string;
         email: string;
         is_verified: boolean;
+        tasker?: { trust_score: number; is_super_verified: boolean }[] | null;
     };
 };
 
@@ -74,13 +76,29 @@ export default function VerificationsList({ verifications }: { verifications: Ve
                                     <User className="h-6 w-6 text-gray-500" />
                                 </div>
                                 <div className="ml-4">
-                                    <div className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                    <div className="text-base font-bold text-gray-900 flex flex-wrap items-center gap-2">
                                         {(group.user as any)?.first_name} {(group.user as any)?.last_name}
                                         {(group.user as any)?.is_verified && (
                                             <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-green-200">
                                                 <CheckCircle className="w-3 h-3" /> VERIFIED
                                             </span>
                                         )}
+                                        {(() => {
+                                            const tasker = (group.user as any)?.tasker;
+                                            const score = Array.isArray(tasker) ? tasker[0]?.trust_score : tasker?.trust_score;
+                                            const isSuperVerified = Array.isArray(tasker) ? tasker[0]?.is_super_verified : tasker?.is_super_verified;
+                                            if (score == null) return null;
+                                            return (
+                                                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${isSuperVerified
+                                                        ? 'bg-purple-100 text-purple-700 border-purple-200'
+                                                        : score >= 50
+                                                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                                                    }`}>
+                                                    {isSuperVerified ? '⭐' : '🛡️'} {score} pts{isSuperVerified ? ' · Trust Verified' : ''}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                     <div className="text-sm text-gray-500">{(group.user as any)?.email}</div>
                                     <div className="text-xs text-gray-400 mt-1 font-mono" title={group.user_id}>ID: {group.user_id}</div>

@@ -117,18 +117,25 @@ export default async function AdminCategoriesPage({
                                         <div className="text-xs text-gray-500 line-clamp-1 w-48" title={cat.description}>{cat.description || 'No description provided'}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        {cat.popular ? (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                                                <Star className="w-3 h-3 fill-current" /> Popular Spotlight
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                                                Standard
-                                            </span>
-                                        )}
+                                        <div className="flex flex-col gap-1">
+                                            {cat.popular ? (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                                    <Star className="w-3 h-3 fill-current" /> Popular
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                    Standard
+                                                </span>
+                                            )}
+                                            {cat.is_high_risk && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
+                                                    <ShieldAlert className="w-3 h-3" /> High Risk
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <CategoryActions categoryId={cat.id} isPopular={cat.popular} />
+                                        <CategoryActions categoryId={cat.id} isPopular={cat.popular} isHighRisk={cat.is_high_risk} />
                                     </td>
                                 </tr>
                             ))}

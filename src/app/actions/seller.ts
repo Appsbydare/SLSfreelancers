@@ -2,6 +2,17 @@
 
 import { supabaseServer } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
+import { recalculateSellerLevel } from '@/utils/sellerLevelLogic';
+
+export async function getSellerLevelCode(userId: string): Promise<string> {
+    const supabase = supabaseServer;
+    const { data } = await supabase
+        .from('taskers')
+        .select('level_code')
+        .eq('user_id', userId)
+        .single();
+    return data?.level_code || 'level_0';
+}
 
 export async function getSellerDashboardData(userId: string) {
     const supabase = supabaseServer;
@@ -93,12 +104,26 @@ export async function getSellerDashboardData(userId: string) {
         .order('created_at', { ascending: false })
         .limit(5);
 
+    // 11. Determine if seller is High Risk
+    let isHighRisk = false;
+    const { data: taskerCategories } = await supabase.from('tasker_skills').select('skill_name').eq('tasker_id', tasker.id);
+    if (taskerCategories && taskerCategories.length > 0) {
+        const { data: highRiskCats } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('is_high_risk', true)
+            .in('name', taskerCategories.map((c: any) => c.skill_name));
+
+        if (highRiskCats && highRiskCats.length > 0) isHighRisk = true;
+    }
+
     return {
         tasker,
         verifications: verifications || [],
         recentOrders: recentOrders || [],
         recentNotifs: recentNotifs || [],
         recentBids: recentBids || [],
+        isHighRisk,
         stats: {
             activeGigs: activeGigsCount || 0,
             activeOrders: activeOrdersCount || 0,
@@ -208,4 +233,50 @@ export async function deleteGig(gigId: string, userId: string) {
 
     if (error) throw error;
     revalidatePath('/seller/dashboard/gigs');
+}
+
+export async function saveLifeInsurance(userId: string, provider: string, policy: string) {
+    const supabase = supabaseServer;
+
+    // Get current tasker
+    const { data: tasker, error: taskerError } = await supabase
+        .from('taskers')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+    if (taskerError || !tasker) {
+        console.error('Error fetching tasker:', taskerError);
+        return { success: false, message: 'Seller profile not found' };
+    }
+
+    // Only add points if life insurance details are newly added
+    const pointsToAdd = (!tasker.life_insurance_provider && !tasker.life_insurance_policy) ? 30 : 0;
+    const newScore = (tasker.trust_score || 0) + pointsToAdd;
+    const isSuperVerified = newScore >= 200;
+
+    const { error: updateError } = await supabase
+        .from('taskers')
+        .update({
+            life_insurance_provider: provider,
+            life_insurance_policy: policy,
+            trust_score: newScore,
+            is_super_verified: isSuperVerified
+        })
+        .eq('id', tasker.id);
+
+    if (updateError) {
+        console.error('Failed to update life insurance details:', updateError);
+        return { success: false, message: 'Failed to update life insurance details' };
+    }
+
+    // Recalculate seller level now that trust_score has changed
+    if (pointsToAdd > 0) {
+        await recalculateSellerLevel(supabaseServer, { userId });
+    }
+
+    revalidatePath('/seller/dashboard/profile');
+    revalidatePath('/seller/dashboard/verifications');
+
+    return { success: true, message: 'Life insurance details saved successfully' };
 }

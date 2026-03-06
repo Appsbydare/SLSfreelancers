@@ -30,8 +30,8 @@ export async function getConversations(userId: string, userType: 'customer' | 't
         .select(`
             id, task_id, gig_id, sender_id, recipient_id, content, event, payload,
             attachments, read_at, created_at,
-            sender:users!messages_sender_id_fkey(first_name, last_name, profile_image_url, status),
-            recipient:users!messages_recipient_id_fkey(first_name, last_name, profile_image_url, status),
+            sender:users!messages_sender_id_fkey(first_name, last_name, profile_image_url, status, tasker:taskers(trust_score)),
+            recipient:users!messages_recipient_id_fkey(first_name, last_name, profile_image_url, status, tasker:taskers(trust_score)),
             task:tasks(
                 title,
                 customer:customers(user_id)

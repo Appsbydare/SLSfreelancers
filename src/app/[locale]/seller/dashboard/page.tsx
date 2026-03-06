@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,8 +11,20 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SellerLevelBadge from '@/components/SellerLevelBadge';
+import SellerLevelInfoModal from '@/components/SellerLevelInfoModal';
+import LevelUpCelebration from '@/components/LevelUpCelebration';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSellerDashboardData } from '@/app/actions/seller';
+import SuperVerifiedAvatar from '@/components/SuperVerifiedAvatar';
+import DevTester from '@/components/DevTester';
+import { supabase } from '@/lib/supabase';
+
+const LEVEL_ORDER = ['level_0', 'level_1', 'level_2', 'level_3'];
+
+function levelRank(code: string) {
+    const idx = LEVEL_ORDER.indexOf(code);
+    return idx === -1 ? 0 : idx;
+}
 
 function formatRelativeTime(dateString: string) {
     const date = new Date(dateString);
@@ -26,17 +38,17 @@ function formatRelativeTime(dateString: string) {
 }
 
 const orderStatusConfig: Record<string, { label: string; color: string; dot: string }> = {
-    pending:    { label: 'Pending',     color: 'bg-amber-50 text-amber-600',   dot: 'bg-amber-400' },
-    active:     { label: 'Active',      color: 'bg-blue-50 text-blue-600',     dot: 'bg-blue-500' },
-    in_progress:{ label: 'In Progress', color: 'bg-blue-50 text-blue-600',     dot: 'bg-blue-500' },
-    delivered:  { label: 'Delivered',   color: 'bg-purple-50 text-purple-600', dot: 'bg-purple-500' },
-    completed:  { label: 'Completed',   color: 'bg-green-50 text-green-600',   dot: 'bg-green-500' },
-    cancelled:  { label: 'Cancelled',   color: 'bg-red-50 text-red-500',       dot: 'bg-red-400' },
-    revision:   { label: 'Revision',    color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400' },
+    pending: { label: 'Pending', color: 'bg-amber-50 text-amber-600', dot: 'bg-amber-400' },
+    active: { label: 'Active', color: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' },
+    in_progress: { label: 'In Progress', color: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' },
+    delivered: { label: 'Delivered', color: 'bg-purple-50 text-purple-600', dot: 'bg-purple-500' },
+    completed: { label: 'Completed', color: 'bg-green-50 text-green-600', dot: 'bg-green-500' },
+    cancelled: { label: 'Cancelled', color: 'bg-red-50 text-red-500', dot: 'bg-red-400' },
+    revision: { label: 'Revision', color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400' },
 };
 
 const bidStatusConfig: Record<string, { label: string; color: string }> = {
-    pending:  { label: 'Pending',  color: 'bg-amber-50 text-amber-600' },
+    pending: { label: 'Pending', color: 'bg-amber-50 text-amber-600' },
     accepted: { label: 'Accepted', color: 'bg-green-50 text-green-600' },
     rejected: { label: 'Rejected', color: 'bg-red-50 text-red-500' },
 };
@@ -53,10 +65,16 @@ export default function SellerDashboardPage() {
     const [recentOrders, setRecentOrders] = useState<any[]>([]);
     const [recentNotifs, setRecentNotifs] = useState<any[]>([]);
     const [recentBids, setRecentBids] = useState<any[]>([]);
+    const [isHighRisk, setIsHighRisk] = useState<boolean>(false);
     const [stats, setStats] = useState({
         activeGigs: 0, activeOrders: 0, totalEarnings: 0,
         pendingEarnings: 0, completedOrders: 0, totalOrders: 0
     });
+    const [celebrationLevel, setCelebrationLevel] = useState<string | null>(null);
+    const [badgeCelebrateLevel, setBadgeCelebrateLevel] = useState<string | null>(null);
+    const [badgePrevLevel, setBadgePrevLevel] = useState<string | null>(null);
+    // track whether we've done the initial load (skip celebration on first paint)
+    const initialLoadDone = useRef(false);
 
     const loadDashboardData = useCallback(async () => {
         if (authLoading) return;
@@ -65,11 +83,36 @@ export default function SellerDashboardPage() {
             setLoading(true);
             const data = await getSellerDashboardData(user.id);
             if (data) {
+                const newLevel: string = data.tasker?.level_code || 'level_0';
+                const storageKey = `seller_level_${user.id}`;
+                const storedLevel = localStorage.getItem(storageKey) || 'level_0';
+
+                // Detect a real promotion (not first paint, not a demotion)
+                if (initialLoadDone.current && levelRank(newLevel) > levelRank(storedLevel)) {
+                    setBadgePrevLevel(storedLevel);
+                    setCelebrationLevel(newLevel);
+                    // Insert an in-app notification so the bell also lights up
+                    try {
+                        await supabase.from('notifications').insert({
+                            user_id: user.id,
+                            notification_type: 'level_up',
+                            title: `🏆 Congratulations! You reached ${newLevel.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}`,
+                            message: 'Your hard work has paid off — you\'ve unlocked a new seller level!',
+                            data: { level: newLevel },
+                        });
+                    } catch { /* non-critical */ }
+                }
+
+                // Always persist the latest known level
+                localStorage.setItem(storageKey, newLevel);
+                initialLoadDone.current = true;
+
                 setTaskerData(data.tasker);
                 setVerifications(data.verifications || []);
                 setRecentOrders(data.recentOrders || []);
                 setRecentNotifs(data.recentNotifs || []);
                 setRecentBids(data.recentBids || []);
+                setIsHighRisk(data.isHighRisk || false);
                 setStats(data.stats);
             }
         } catch (error) {
@@ -80,6 +123,13 @@ export default function SellerDashboardPage() {
     }, [user, authLoading, router]);
 
     useEffect(() => { loadDashboardData(); }, [loadDashboardData]);
+
+    // Listen for dev-tool reload trigger (fires after dev actions so celebration fires without full reload)
+    useEffect(() => {
+        const handler = () => loadDashboardData();
+        window.addEventListener('dashboard:reload', handler);
+        return () => window.removeEventListener('dashboard:reload', handler);
+    }, [loadDashboardData]);
 
     useEffect(() => {
         if (taskerData?.user?.is_verified && !user?.isVerified && refreshProfile) {
@@ -130,21 +180,26 @@ export default function SellerDashboardPage() {
         })),
     ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 8);
 
+    const levelCode = taskerData?.level_code || 'level_0';
+    const accent = levelCode === 'level_3' ? { text: 'text-purple-600', hover: 'group-hover:text-purple-600', bg: 'bg-purple-600', bgHover: 'hover:bg-purple-500', border: 'border-purple-300', borderHover: 'hover:border-purple-300', bgLight: 'bg-purple-500/10', bgLightHover: 'group-hover:bg-purple-500/20', barFrom: 'from-purple-600', barTo: 'to-purple-400', dot: 'bg-purple-600', card: 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 shadow-purple-500/5', cardHover: 'hover:border-purple-300' }
+        : levelCode === 'level_2' ? { text: 'text-amber-700', hover: 'group-hover:text-amber-700', bg: 'bg-amber-500', bgHover: 'hover:bg-amber-600', border: 'border-amber-300', borderHover: 'hover:border-amber-300', bgLight: 'bg-amber-500/10', bgLightHover: 'group-hover:bg-amber-500/20', barFrom: 'from-amber-500', barTo: 'to-amber-400', dot: 'bg-amber-500', card: 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 shadow-amber-500/5', cardHover: 'hover:border-amber-300' }
+        : { text: 'text-brand-green', hover: 'group-hover:text-brand-green', bg: 'bg-brand-green', bgHover: 'hover:bg-brand-green/90', border: 'border-brand-green/30', borderHover: 'hover:border-brand-green/30', bgLight: 'bg-brand-green/10', bgLightHover: 'group-hover:bg-brand-green/20', barFrom: 'from-brand-green', barTo: 'to-emerald-400', dot: 'bg-brand-green', card: 'bg-white border-gray-100', cardHover: 'hover:border-gray-200' };
+
     const typeIcon: Record<string, React.ReactNode> = {
-        order:        <ShoppingBag className="h-4 w-4 text-brand-green" />,
-        bid:          <FileText className="h-4 w-4 text-blue-500" />,
+        order: <ShoppingBag className={`h-4 w-4 ${accent.text}`} />,
+        bid: <FileText className="h-4 w-4 text-blue-500" />,
         notification: <MessageSquare className="h-4 w-4 text-amber-500" />,
     };
     const typeBg: Record<string, string> = {
-        order:        'bg-brand-green/10',
-        bid:          'bg-blue-50',
+        order: accent.bgLight,
+        bid: 'bg-blue-50',
         notification: 'bg-amber-50',
     };
 
     if (authLoading || loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${accent.text.replace('text-', 'border-')}`} />
             </div>
         );
     }
@@ -158,6 +213,19 @@ export default function SellerDashboardPage() {
 
     return (
         <div className="space-y-6">
+            {/* Level-up celebration — modal + confetti */}
+            {celebrationLevel && (
+                <LevelUpCelebration
+                    newLevel={celebrationLevel}
+                    onDone={(level) => {
+                        setCelebrationLevel(null);
+                        setBadgeCelebrateLevel(level);
+                        setTimeout(() => { setBadgeCelebrateLevel(null); setBadgePrevLevel(null); }, 3000);
+                    }}
+                />
+            )}
+
+            {user?.id && <DevTester userId={user.id} />}
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -206,18 +274,27 @@ export default function SellerDashboardPage() {
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className={`p-5 rounded-xl border shadow-sm ${accent.card}`}>
                     <div className="flex items-center gap-3 mb-3">
                         <div className="p-2 bg-amber-50 rounded-lg"><Star className="h-5 w-5 text-amber-400" /></div>
                         <span className="text-xs font-medium text-gray-500">Rating</span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">{taskerData?.rating ? taskerData.rating.toFixed(1) : '—'}</p>
-                    <p className="text-xs text-gray-400 mt-1">{stats.completedOrders} completed orders</p>
+                    <p className="text-3xl font-bold text-gray-900">{taskerData?.rating ? Number(taskerData.rating).toFixed(1) : '—'}</p>
+                    <p className="text-xs text-gray-400 mt-1">{taskerData?.total_reviews || 0} reviews</p>
+                </div>
+
+                <div className={`p-5 rounded-xl border shadow-sm ${accent.card}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2 ${accent.bgLight} rounded-lg`}><CheckCircle className={`h-5 w-5 ${accent.text}`} /></div>
+                        <span className="text-xs font-medium text-gray-500">Completed</span>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-900">{taskerData?.completed_tasks || 0}</p>
+                    <p className="text-xs text-gray-400 mt-1">orders completed</p>
                 </div>
 
                 <Link href={`/${locale}/seller/dashboard/gigs`}
-                    className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all group">
+                    className={`p-5 rounded-xl border shadow-sm hover:shadow-md transition-all group ${accent.card} ${levelCode !== 'level_0' ? accent.cardHover : 'hover:border-blue-100'}`}>
                     <div className="flex items-center gap-3 mb-3">
                         <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors"><Package className="h-5 w-5 text-blue-500" /></div>
                         <span className="text-xs font-medium text-gray-500">Active Gigs</span>
@@ -227,34 +304,35 @@ export default function SellerDashboardPage() {
                 </Link>
 
                 <Link href={`/${locale}/seller/dashboard/orders`}
-                    className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-green/30 transition-all group">
+                    className={`p-5 rounded-xl border shadow-sm hover:shadow-md transition-all group ${accent.card} ${levelCode !== 'level_0' ? accent.cardHover : accent.borderHover}`}>
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-brand-green/10 rounded-lg group-hover:bg-brand-green/20 transition-colors"><Clock className="h-5 w-5 text-brand-green" /></div>
+                        <div className={`p-2 ${accent.bgLight} rounded-lg ${accent.bgLightHover} transition-colors`}><Clock className={`h-5 w-5 ${accent.text}`} /></div>
                         <span className="text-xs font-medium text-gray-500">Active Orders</span>
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{stats.activeOrders}</p>
                     <p className="text-xs text-gray-400 mt-1">in progress</p>
                 </Link>
 
-                <Link href={`/${locale}/seller/dashboard/earnings`}
-                    className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all group">
+                <div className={`p-5 rounded-xl border shadow-sm ${accent.card}`}>
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors"><Wallet className="h-5 w-5 text-emerald-500" /></div>
-                        <span className="text-xs font-medium text-gray-500">Total Earnings</span>
+                        <div className="p-2 bg-purple-50 rounded-lg"><TrendingUp className="h-5 w-5 text-purple-500" /></div>
+                        <span className="text-xs font-medium text-gray-500">Acceptance</span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">LKR {stats.totalEarnings.toLocaleString()}</p>
-                    {stats.pendingEarnings > 0 && (
-                        <p className="text-xs text-amber-500 mt-1">+LKR {stats.pendingEarnings.toLocaleString()} pending</p>
-                    )}
-                </Link>
+                    <p className="text-3xl font-bold text-gray-900">
+                        {taskerData?.acceptance_rate != null ? `${Number(taskerData.acceptance_rate).toFixed(0)}%` : '—'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        {taskerData?.on_time_delivery_rate != null ? `${Number(taskerData.on_time_delivery_rate).toFixed(0)}% on-time` : 'acceptance rate'}
+                    </p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Activity Feed */}
-                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className={`lg:col-span-2 rounded-xl border shadow-sm overflow-hidden ${accent.card}`}>
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                         <h2 className="text-sm font-bold text-gray-900">Recent Activity</h2>
-                        <Link href={`/${locale}/inbox`} className="text-xs text-brand-green font-medium hover:underline">View all</Link>
+                        <Link href={`/${locale}/inbox`} className={`text-xs ${accent.text} font-medium hover:underline`}>View all</Link>
                     </div>
 
                     {activityItems.length === 0 ? (
@@ -265,7 +343,7 @@ export default function SellerDashboardPage() {
                             <p className="text-sm font-medium text-gray-900 mb-1">No activity yet</p>
                             <p className="text-xs text-gray-400 mb-4">Create your first gig to start receiving orders</p>
                             <Link href={isVerified ? `/${locale}/seller/dashboard/gigs/new` : `/${locale}/seller/dashboard/verifications`}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold bg-brand-green text-white px-4 py-2 rounded-lg hover:bg-brand-green/90 transition-colors">
+                                className={`inline-flex items-center gap-1.5 text-xs font-semibold ${accent.bg} text-white px-4 py-2 rounded-lg ${accent.bgHover} transition-colors`}>
                                 <Plus className="h-3.5 w-3.5" /> {isVerified ? 'Create a Gig' : 'Get Verified'}
                             </Link>
                         </div>
@@ -310,57 +388,150 @@ export default function SellerDashboardPage() {
                 {/* Right column */}
                 <div className="space-y-4">
                     {/* Profile card */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div className={`rounded-xl border shadow-sm p-5 ${
+                      taskerData?.level_code === 'level_3'
+                        ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 shadow-purple-500/5'
+                        : taskerData?.level_code === 'level_2'
+                          ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 shadow-amber-500/5'
+                          : 'bg-white border-gray-100'
+                    }`}>
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-bold text-gray-900">Your Profile</h2>
+                            <h2 className="text-sm font-bold text-gray-900 flex my-auto items-center gap-2">Your Profile <SellerLevelInfoModal
+                                trustScore={taskerData?.trust_score || 0}
+                                levelCode={taskerData?.level_code || 'level_0'}
+                                onTimeDeliveryRate={Number(taskerData?.on_time_delivery_rate ?? 0)}
+                                completedOrders={taskerData?.completed_tasks || 0}
+                                avgRating={Number(taskerData?.rating ?? 0)}
+                                isHighRisk={isHighRisk}
+                            /></h2>
                             <Link href={`/${locale}/seller/dashboard/profile`}
-                                className="flex items-center gap-1 text-xs text-brand-green font-medium hover:underline">
+                                className={`flex items-center gap-1 text-xs ${accent.text} font-medium hover:underline`}>
                                 <Edit className="h-3 w-3" /> Edit
                             </Link>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="relative h-12 w-12 flex-shrink-0">
-                                {taskerData?.user?.profile_image_url ? (
-                                    <Image src={taskerData.user.profile_image_url} alt="Profile" fill className="rounded-full object-cover" />
-                                ) : (
-                                    <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center">
-                                        <span className="text-brand-green text-lg font-bold">{user?.firstName?.charAt(0)}</span>
-                                    </div>
-                                )}
-                                {isVerified && (
-                                    <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-brand-green rounded-full flex items-center justify-center border-2 border-white">
-                                        <ShieldCheck className="h-2.5 w-2.5 text-white" />
-                                    </span>
-                                )}
-                            </div>
+                            <SuperVerifiedAvatar
+                                src={taskerData?.user?.profile_image_url}
+                                name={user?.firstName}
+                                size={48}
+                                isVerified={(taskerData?.trust_score ?? 0) >= 100}
+                                isSuperVerified={(taskerData?.trust_score ?? 0) >= 200}
+                                isLevel2={taskerData?.level_code === 'level_2'}
+                                isTopSeller={taskerData?.level_code === 'level_3'}
+                            />
                             <div className="min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">{user?.firstName} {user?.lastName}</p>
-                                <SellerLevelBadge level={taskerData?.level_code || 'starter_pro'} />
+                                <SellerLevelBadge level={taskerData?.level_code || 'starter_pro'} animate celebrate={badgeCelebrateLevel === (taskerData?.level_code || '')} prevLevel={badgePrevLevel || undefined} />
                             </div>
                         </div>
 
                         {/* Mini stats */}
-                        <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
                             {[
-                                { label: 'Orders', value: stats.totalOrders },
-                                { label: 'Done', value: stats.completedOrders },
-                                { label: 'Rating', value: taskerData?.rating ? taskerData.rating.toFixed(1) : '—' },
-                            ].map(s => (
-                                <div key={s.label} className="text-center">
-                                    <p className="text-base font-bold text-gray-900">{s.value}</p>
-                                    <p className="text-[10px] text-gray-400">{s.label}</p>
+                                { label: 'Orders', value: stats.totalOrders, icon: <Package className="h-4 w-4 text-blue-500" />, bg: 'bg-blue-50' },
+                                { label: 'Done', value: taskerData?.completed_tasks ?? 0, icon: <CheckCircle className={`h-4 w-4 ${accent.text}`} />, bg: accent.bgLight },
+                                { label: 'Rating', value: taskerData?.rating ? Number(taskerData.rating).toFixed(1) : '—', icon: <Star className="h-4 w-4 text-yellow-500" />, bg: 'bg-yellow-50' },
+                                { label: 'On Time', value: (taskerData?.on_time_delivery_rate ?? 0) > 0 ? `${Math.round(Number(taskerData.on_time_delivery_rate))}%` : '—', icon: <Clock className="h-4 w-4 text-purple-500" />, bg: 'bg-purple-50' },
+                            ].map((s, idx) => (
+                                <div key={idx} className={`flex flex-col items-center justify-center p-2 rounded-lg ${s.bg} border border-white shadow-sm`}>
+                                    <div className="mb-1">{s.icon}</div>
+                                    <p className="text-sm font-bold text-gray-900">{s.value}</p>
+                                    <p className="text-[10px] text-gray-500 font-medium tracking-wide uppercase">{s.label}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    {/* Trust Score Card */}
+                    <Link
+                        href={`/${locale}/seller/dashboard/verifications`}
+                        className={`block rounded-xl border shadow-sm p-5 transition-all group ${
+                          taskerData?.level_code === 'level_3'
+                            ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 hover:shadow-md hover:border-purple-300'
+                            : taskerData?.level_code === 'level_2'
+                              ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 hover:shadow-md hover:border-amber-300'
+                              : 'bg-white border-gray-100 hover:shadow-md hover:border-brand-green/30'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-sm font-bold text-gray-900">Trust Score</h2>
+                            {(taskerData?.trust_score ?? 0) >= 200 ? (
+                                <span className={`text-xs font-bold flex items-center gap-1 ${levelCode === 'level_3' ? 'text-purple-600' : 'text-amber-600'}`}>⭐ Trust Verified</span>
+                            ) : (
+                                <span className={`text-xs text-gray-400 ${accent.hover} transition-colors`}>View details →</span>
+                            )}
+                        </div>
+
+                        <div className="flex items-end justify-between mb-2">
+                            <span className={`text-4xl font-black ${accent.text}`}>{taskerData?.trust_score ?? 0}</span>
+                            <span className="text-sm text-gray-400 mb-1">/ 250 pts</span>
+                        </div>
+
+                        {/* Three-segment bar: 0→100 Verified (60%) | 100→200 Trust Verified (30%) | 200→250 Top Seller only (10%) */}
+                        <div className="relative mb-5 mt-2 px-1">
+                            <div className="w-full bg-gray-100 rounded-full h-2 flex overflow-hidden">
+                                {/* Segment 1: 0→100 Verified */}
+                                <div
+                                    className={`h-full bg-gradient-to-r ${accent.barFrom} ${accent.barTo} transition-all duration-700`}
+                                    style={{ width: `${Math.min(((taskerData?.trust_score ?? 0) / 100) * 60, 60)}%` }}
+                                />
+                                {/* Segment 2: 100→200 Trust Verified */}
+                                <div
+                                    className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-700"
+                                    style={{ width: `${(taskerData?.trust_score ?? 0) >= 100 ? Math.min((((taskerData?.trust_score ?? 0) - 100) / 100) * 30, 30) : 0}%` }}
+                                />
+                                {/* Segment 3: 200→250 Top Seller (admin-only) */}
+                                <div
+                                    className="h-full bg-gradient-to-r from-orange-500 to-red-400 transition-all duration-700"
+                                    style={{ width: `${(taskerData?.trust_score ?? 0) >= 200 ? Math.min((((taskerData?.trust_score ?? 0) - 200) / 50) * 10, 10) : 0}%` }}
+                                />
+                            </div>
+
+                            {/* Verified milestone dot at 60% */}
+                            <div className="absolute top-1/2 left-[60%] -translate-y-1/2 -translate-x-1/2 z-10 mt-[-0.5px]">
+                                <div className={`w-4 h-4 rounded-full border-2 border-white flex items-center justify-center ${(taskerData?.trust_score ?? 0) >= 100 ? accent.dot : 'bg-gray-200'} shadow-sm`}>
+                                    {(taskerData?.trust_score ?? 0) >= 100 && (
+                                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Trust Verified milestone dot at 90% */}
+                            <div className="absolute top-1/2 left-[90%] -translate-y-1/2 -translate-x-1/2 z-10 mt-[-0.5px]">
+                                <div className={`w-4 h-4 rounded-full border-2 border-white flex items-center justify-center ${(taskerData?.trust_score ?? 0) >= 200 ? 'bg-amber-400' : 'bg-gray-200'} shadow-sm`}>
+                                    {(taskerData?.trust_score ?? 0) >= 200 && <span className="text-[8px]">⭐</span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-[10px] mt-2">
+                            {(taskerData?.trust_score ?? 0) >= 250
+                                ? <span className={`font-medium ${accent.text}`}>🎉 Maximum trust level reached!</span>
+                                : ((taskerData?.trust_score ?? 0) >= 200
+                                    ? <span className="text-orange-600 font-medium">Top Seller tier — last 50 pts awarded by admin</span>
+                                    : ((taskerData?.trust_score ?? 0) >= 100
+                                        ? <span className="text-yellow-600 font-medium">{Math.max(0, 200 - (taskerData?.trust_score ?? 0))} pts to reach Trust Verified</span>
+                                        : <span className={`${accent.text} font-medium`}>{100 - Math.min(taskerData?.trust_score ?? 0, 100)} pts to reach Verified</span>
+                                    )
+                                )
+                            }
+                        </p>
+                    </Link>
+
+                    <div className={`rounded-xl border shadow-sm p-5 ${
+                      taskerData?.level_code === 'level_3'
+                        ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                        : taskerData?.level_code === 'level_2'
+                          ? 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200'
+                          : 'bg-white border-gray-100'
+                    }`}>
                         <h2 className="text-sm font-bold text-gray-900 mb-3">Quick Actions</h2>
                         <div className="space-y-2">
                             {[
                                 {
-                                    icon: <Plus className="h-4 w-4 text-white" />, bg: 'bg-brand-green',
+                                    icon: <Plus className="h-4 w-4 text-white" />, bg: accent.bg,
                                     label: 'Create Gig', sub: 'Add a new service offering',
                                     href: isVerified ? `/${locale}/seller/dashboard/gigs/new` : null,
                                     locked: !isVerified,

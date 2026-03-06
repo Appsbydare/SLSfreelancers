@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import SellerSidebar from '@/components/SellerSidebar';
 import { getConversations } from '@/app/actions/messages';
+import { getSellerLevelCode } from '@/app/actions/seller';
 import { supabase } from '@/lib/supabase';
 
 export default function SellerDashboardLayout({
@@ -19,6 +20,7 @@ export default function SellerDashboardLayout({
   const { user, isLoggedIn, isLoading, session } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [levelCode, setLevelCode] = useState<string>('level_0');
 
   /*
   useEffect(() => {
@@ -51,8 +53,17 @@ export default function SellerDashboardLayout({
   useEffect(() => {
     if (user && !isLoading && session) {
       loadBadgeCounts();
+      getSellerLevelCode(user.id).then(setLevelCode);
     }
   }, [user, isLoading, session]);
+
+  // Refetch level when DevTester forces level change (dashboard:reload)
+  useEffect(() => {
+    if (!user?.id) return;
+    const handler = () => getSellerLevelCode(user.id).then(setLevelCode);
+    window.addEventListener('dashboard:reload', handler);
+    return () => window.removeEventListener('dashboard:reload', handler);
+  }, [user?.id]);
 
   // Clear orders badge when user visits any orders page
   useEffect(() => {
@@ -215,6 +226,7 @@ export default function SellerDashboardLayout({
     <div className="flex min-h-[calc(100vh-64px)] bg-gray-50">
       {/* Sidebar */}
       <SellerSidebar
+        levelCode={levelCode}
         unreadMessages={unreadMessages}
         activeOrders={newOrdersCount}
         onOrdersSeen={() => {

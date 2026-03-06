@@ -33,7 +33,14 @@ export default async function AdminVerificationsPage({
             submitted_at,
             document_url,
             metadata,
-            user:users!verifications_user_id_fkey(first_name, last_name, email, is_verified)
+            user:users!verifications_user_id_fkey(
+                id,
+                first_name,
+                last_name,
+                email,
+                is_verified,
+                tasker:taskers(trust_score, is_super_verified)
+            )
         `)
         .order('submitted_at', { ascending: false });
 
